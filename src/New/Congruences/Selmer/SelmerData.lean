@@ -53,57 +53,69 @@ variable (ℓ : ℕ) [ThePrime ℓ] {E : Type} [Field E] [EmbeddedNumberField E]
 
 section Terms
 
-variable {O n : Type} [CommRing O] [PadicIntegerRing O ℓ] [Fintype n] [DecidableEq n]
+variable
+  {O n : Type} [CommRing O] [PadicIntegerRing O ℓ] [Fintype n] [DecidableEq n]
   (ρ : Gal(Ω/E) →* Matrix n n O)
 
-/-- The module `Hom_G(W, W^{*c})` for `G = Gal(Ω/E)` acting on `W = (O / a) ^ n` by the matrices
+/--
+The module `Hom_G(W, W^{*c})` for `G = Gal(Ω/E)` acting on `W = (O / a) ^ n` by the matrices
 `ρ g`. The dual `W^*` is the character module of `W`, on which `g` acts by `y ↦ cyc(g) · y ∘ g⁻¹`
 for the `ℓ`-adic cyclotomic character `cyc`; on `W^{*c}` the element `g` acts as its conjugate
-`g^c = conjGal g` under complex conjugation. -/
-def conjDualHom (a : O) :
-    Submodule O ((n → QuotSpan a) →ₗ[O] CharacterModule (n → QuotSpan a)) where
-  carrier := {η : (n → QuotSpan a) →ₗ[O] CharacterModule (n → QuotSpan a) |
-    ∀ (g : Gal(Ω/E)) (u m : n → QuotSpan a),
-    η (ρ g • u) m = η u ((cyclotomicCharIn O Ω ℓ (conjGal g) : O) • ρ (conjGal g)⁻¹ • m)}
+`g^c = conjGal g` under complex conjugation.
+-/
+def conjDualHom (a : O)
+    : Submodule O ((n → QuotSpan a) →ₗ[O] CharacterModule (n → QuotSpan a)) where
+  carrier :=
+    {η : (n → QuotSpan a) →ₗ[O] CharacterModule (n → QuotSpan a) |
+      ∀ (g : Gal(Ω/E)) (u m : n → QuotSpan a),
+      η (ρ g • u) m = η u ((cyclotomicCharIn O Ω ℓ (conjGal g) : O) • ρ (conjGal g)⁻¹ • m)}
   zero_mem' _ _ _ := rfl
   add_mem' {η η'} hη hη' g u m := by
     show η (ρ g • u) m + η' (ρ g • u) m = η u _ + η' u _
     rw [hη g u m, hη' g u m]
   smul_mem' t η hη g u m := by simpa [smul_comm t] using hη g u (t • m)
 
-/-- The global term of the lattice `O ^ n` with the action `ρ` of `G = Gal(Ω/E)`: the supremum
+/--
+The global term of the lattice `O ^ n` with the action `ρ` of `G = Gal(Ω/E)`: the supremum
 over `a ≠ 0` of the lengths of the modules `Hom_G(W, W^{*c})` for `W = (O / a) ^ n`
-(`conjDualHom`). -/
+(`conjDualHom`).
+-/
 def congruenceTerm : ℕ∞ := ⨆ (a : O) (_ : a ≠ 0), length O (conjDualHom ℓ ρ a)
 
-/-- The local term at a place `v` (used for `v` prime to `ℓ`): the supremum over `a ≠ 0` of the
+/--
+The local term at a place `v` (used for `v` prime to `ℓ`): the supremum over `a ≠ 0` of the
 excess of the length of `localCocycles` (restrictions to the decomposition group of global
 cocycles, with no condition) over the length of `W = (O / a) ^ n`. For all cocycles of the
 decomposition group the excess is the length of `H⁰(E_v, W^*)`, by the local Euler characteristic
-formula and local duality. -/
+formula and local duality.
+-/
 def localTerm (v : FinPlace E) : ℕ∞ :=
   ⨆ (a : O) (_ : a ≠ 0),
     length O (localCocycles ρ ∅ (placeOver v) (QuotSpan a)) - length O (n → QuotSpan a)
 
 open scoped Classical in
 /-- The sum of the local terms `localTerm ρ v` over the places `v` of `S` prime to `ℓ`. -/
-def placeTerms (S : Finset (FinPlace E)) : ℕ∞ :=
-  ∑ v ∈ S with v ∉ placesDividing E ℓ, localTerm ρ v
+def placeTerms (S : Finset (FinPlace E)) : ℕ∞ := ∑ v ∈ S with v ∉ placesDividing E ℓ, localTerm ρ v
 
-/-- The sum of `v(det(ρ g - 1))` over `g = g₀` and `g = g₀^{-c} = (conjGal g₀)⁻¹`, where `v` is the
-valuation of `O`. -/
-def firstPrimeTerms (g₀ : Gal(Ω/E)) : ℕ∞ :=
-  ∑ b : Bool, addVal O (ρ (idOrConjInv b g₀) - 1).det
+/--
+The sum of `v(det(ρ g - 1))` over `g = g₀` and `g = g₀^{-c} = (conjGal g₀)⁻¹`, where `v` is the
+valuation of `O`.
+-/
+def firstPrimeTerms (g₀ : Gal(Ω/E)) : ℕ∞ := ∑ b : Bool, addVal O (ρ (idOrConjInv b g₀) - 1).det
 
 end Terms
 
-/-- A Selmer datum for the set `S₀` of places and the element `g₀`: an action `ρ` on the lattice
+/--
+A Selmer datum for the set `S₀` of places and the element `g₀`: an action `ρ` on the lattice
 `T = O ^ n`, a set `S = places` of places outside which `T` is unramified, a module `Z_w` of local
 maps for each `w ∣ ℓ`, and an element `γ_*` that acts by a scalar. The set `S` lies in `S₀`, and
 `g₀` enters only through the local terms `v(det(ρ g - 1))` for `g = g₀, g₀^{-c}`, which are
-finite. -/
-structure SelmerDatum (S₀ : Finset (FinPlace E)) (g₀ : Gal(Ω/E)) (O : Type) [CommRing O]
-    [PadicIntegerRing O ℓ] (n : Type) [Fintype n] [DecidableEq n] where
+finite.
+-/
+structure SelmerDatum
+    (S₀ : Finset (FinPlace E)) (g₀ : Gal(Ω/E))
+    (O : Type) [CommRing O] [PadicIntegerRing O ℓ]
+    (n : Type) [Fintype n] [DecidableEq n] where
   /-- The rank of `T` is at least `1`. -/
   nonempty : Nonempty n
   /-- The action on the lattice `T = O ^ n`. -/
@@ -123,15 +135,20 @@ structure SelmerDatum (S₀ : Finset (FinPlace E)) (g₀ : Gal(Ω/E)) (O : Type)
   /-- `Z_w` is finitely generated. -/
   finite_Z (w : placesDividing E ℓ) : Module.Finite O (Z w)
   /-- `Z_w` contains the coboundaries. -/
-  coboundary_mem_Z (w : placesDividing E ℓ) (b : n → O) :
-    (fun g : decompGroup Gal(Ω/E) (placeOver w.1) ↦ ρ g • b - b) ∈ Z w
-  /-- `T / ϖ` is absolutely irreducible, in Burnside's form: the matrices `ρ g` span all
-  matrices. -/
+  coboundary_mem_Z (w : placesDividing E ℓ) (b : n → O)
+    : (fun g : decompGroup Gal(Ω/E) (placeOver w.1) ↦ ρ g • b - b) ∈ Z w
+  /--
+  `T / ϖ` is absolutely irreducible, in Burnside's form: the matrices `ρ g` span all
+  matrices.
+  -/
   span_range_eq_top : Submodule.span O (Set.range ρ) = ⊤
-  /-- `∑ (rk Z_w - r') ≤ f r'`, summed over `w ∣ ℓ`, where `r'` is the rank of `T` and `f` is the
-  number of infinite places. -/
-  sum_finrank_Z_le : ∑ w : placesDividing E ℓ, finrank O (Z w) ≤
-    (Fintype.card (placesDividing E ℓ) + Core.numInfPlaces E) * Fintype.card n
+  /--
+  `∑ (rk Z_w - r') ≤ f r'`, summed over `w ∣ ℓ`, where `r'` is the rank of `T` and `f` is the
+  number of infinite places.
+  -/
+  sum_finrank_Z_le
+    : ∑ w : placesDividing E ℓ, finrank O (Z w)
+      ≤ (Fintype.card (placesDividing E ℓ) + Core.numInfPlaces E) * Fintype.card n
   /-- The global term is finite. -/
   congruenceTerm_ne_top : congruenceTerm ℓ ρ ≠ ⊤
   /-- The sum of the local terms is finite. -/
@@ -153,12 +170,17 @@ namespace SelmerDatum
 
 open IsDiscreteValuationRing Module Matrix.Module
 
-variable {ℓ : ℕ} [ThePrime ℓ] {E : Type} [Field E] [EmbeddedNumberField E] [NumberField.IsCMField E]
-  {S₀ : Finset (FinPlace E)} {g₀ : Gal(Ω/E)} {O n : Type} [CommRing O] [PadicIntegerRing O ℓ]
-  [Fintype n] [DecidableEq n] (T : SelmerDatum ℓ S₀ g₀ O n)
+variable
+  {ℓ : ℕ} [ThePrime ℓ]
+  {E : Type} [Field E] [EmbeddedNumberField E] [NumberField.IsCMField E]
+  {S₀ : Finset (FinPlace E)} {g₀ : Gal(Ω/E)} {O n : Type}
+  [CommRing O] [PadicIntegerRing O ℓ] [Fintype n] [DecidableEq n]
+  (T : SelmerDatum ℓ S₀ g₀ O n)
 
-/-- The global term of the datum `T`: the supremum over `a ≠ 0` of the lengths of
-`Hom_G(W, W^{*c})` for `W = (O / a) ^ n` with the action `T.ρ`. -/
+/--
+The global term of the datum `T`: the supremum over `a ≠ 0` of the lengths of
+`Hom_G(W, W^{*c})` for `W = (O / a) ^ n` with the action `T.ρ`.
+-/
 abbrev globalTerm : ℕ∞ := congruenceTerm ℓ T.ρ
 
 /-- The sum of the local terms of the datum `T` at the places of `T.places` prime to `ℓ`. -/
@@ -179,45 +201,53 @@ lemma isUnit_ζ_sub_one : IsUnit (T.ζ - 1) :=
   isUnit_of_mul_isUnit_right (x := T.ζ + 1)
     (by simpa [sq, mul_self_sub_one] using T.isUnit_sq_sub_one)
 
-/-- The local conditions of the datum `T` as linear equations that do not depend on the
+/--
+The local conditions of the datum `T` as linear equations that do not depend on the
 coefficients: the relations `∑ j, a j • z (g j) = 0`, with matrices `a j` and with `g j` in the
-decomposition group at some `w ∣ ℓ`, that hold for all `z` in `Z_w = T.Z w`. -/
+decomposition group at some `w ∣ ℓ`, that hold for all `z` in `Z_w = T.Z w`.
+-/
 def localRelations : Set (Gal(Ω/E) →₀ Matrix n n O) :=
   ⋃ w : placesDividing E ℓ, Finsupp.mapDomain Subtype.val '' relationsOn (T.Z w)
 
-/-- A function `c` with values in `B ^ n` obeys a relation `f`, a finitely supported function to
+/--
+A function `c` with values in `B ^ n` obeys a relation `f`, a finitely supported function to
 matrices over `O`, if `∑ g, f g • c g = 0`, where a matrix multiplies a column vector. It obeys
 the local conditions `T.localRelations` if and only if, at each `w ∣ ℓ`, its restriction to the
 decomposition group obeys all the relations that the members of `Z_w = T.Z w` obey
-(`relationsOn`). -/
-lemma mem_obeying_localRelations_iff {B : Type} [AddCommGroup B] [Module O B]
-    {c : Gal(Ω/E) → n → B} :
-    c ∈ obeying T.localRelations B ↔ ∀ w : placesDividing E ℓ,
-      (fun g : decompGroup Gal(Ω/E) (placeOver w.1) ↦ c g) ∈ obeying (relationsOn (T.Z w)) B := by
+(`relationsOn`).
+-/
+lemma mem_obeying_localRelations_iff {B : Type} [AddCommGroup B] [Module O B] {c : Gal(Ω/E) → n → B}
+    : c ∈ obeying T.localRelations B
+      ↔ ∀ w : placesDividing E ℓ,
+        (fun g : decompGroup Gal(Ω/E) (placeOver w.1) ↦ c g) ∈ obeying (relationsOn (T.Z w)) B := by
   -- A relation pushed forward by `Finsupp.mapDomain` is evaluated on the restriction of `c`.
   simp [localRelations, obeying, forall_comm (α := _ →₀ _), Function.comp_def]
 
-/-- Let the Galois group act on `(O / a) ^ n` by the matrices `T.ρ g` of the Selmer datum `T`. The
+/--
+Let the Galois group act on `(O / a) ^ n` by the matrices `T.ρ g` of the Selmer datum `T`. The
 coboundary `g ↦ g b - b` of a vector `b` obeys the local conditions `T.localRelations`, the linear
 relations that hold on the modules `Z_w = T.Z w` of local cocycles at `w ∣ ℓ`: it lifts to a
-coboundary with values in `O ^ n`, which lies in each `Z_w`. -/
-lemma coboundary_mem_obeying_localRelations (a : O) (b : n → QuotSpan a) :
-    (fun g : Gal(Ω/E) ↦ T.ρ g • b - b) ∈ obeying (O := O) T.localRelations (QuotSpan a) := by
+coboundary with values in `O ^ n`, which lies in each `Z_w`.
+-/
+lemma coboundary_mem_obeying_localRelations (a : O) (b : n → QuotSpan a)
+    : (fun g : Gal(Ω/E) ↦ T.ρ g • b - b) ∈ obeying (O := O) T.localRelations (QuotSpan a) := by
   refine T.mem_obeying_localRelations_iff.2 fun w ↦ ?_
   have h_lift (k : n) : ∃ c : O, Ideal.Quotient.mk _ c = b k := Ideal.Quotient.mk_surjective _
   choose c hc using h_lift
-  have h_red (g : decompGroup Gal(Ω/E) (placeOver w.1)) :
-      T.ρ g • b - b = fun k : n ↦ (Ideal.span {a}).mkQ ((T.ρ g • c - c) k) := by
+  have h_red (g : decompGroup Gal(Ω/E) (placeOver w.1))
+      : T.ρ g • b - b = fun k : n ↦ (Ideal.span {a}).mkQ ((T.ρ g • c - c) k) := by
     ext k
     simp [Matrix.Module.smul_apply, hc, Algebra.smul_def]
   simpa only [h_red] using mkQ_mem_obeying_relationsOn _ (T.coboundary_mem_Z w c)
 
-/-- Let `T` be a Selmer datum and `w ∣ ℓ` a place. The restrictions to the decomposition group at
+/--
+Let `T` be a Selmer datum and `w ∣ ℓ` a place. The restrictions to the decomposition group at
 `w` of the cocycles for `T.ρ` with values in `(O / a) ^ n` that obey the local conditions
-`T.localRelations` form a module of length at most `rk (T.Z w) · len (O / a)`. -/
-lemma length_localCocycles_le_finrank_mul (a : O) (w : placesDividing E ℓ) :
-    length O (localCocycles T.ρ T.localRelations (placeOver w.1) (QuotSpan a)) ≤
-      finrank O (T.Z w) * length O (QuotSpan a) := by
+`T.localRelations` form a module of length at most `rk (T.Z w) · len (O / a)`.
+-/
+lemma length_localCocycles_le_finrank_mul (a : O) (w : placesDividing E ℓ)
+    : length O (localCocycles T.ρ T.localRelations (placeOver w.1) (QuotSpan a))
+      ≤ finrank O (T.Z w) * length O (QuotSpan a) := by
   have : Module.Finite O (T.Z w) := T.finite_Z w
   have : Nonempty n := T.nonempty
   refine (length_mono ?_).trans (length_obeying_relationsOn_le (Z := T.Z w))
@@ -226,27 +256,35 @@ lemma length_localCocycles_le_finrank_mul (a : O) (w : placesDividing E ℓ) :
   obtain ⟨-, -, h_obey, -⟩ := mem_selmerModule_iff.1 hz
   exact T.mem_obeying_localRelations_iff.1 h_obey w
 
-/-- The local conditions of `T` together with vanishing at `γ_* = T.γ`, which picks one cocycle in
-each cohomology class. -/
+/--
+The local conditions of `T` together with vanishing at `γ_* = T.γ`, which picks one cocycle in
+each cohomology class.
+-/
 def classRelations : Set (Gal(Ω/E) →₀ Matrix n n O) := T.localRelations ∪ {Finsupp.single T.γ 1}
 
-/-- The tied Selmer group modulo `a`: the locally constant cocycles `z` with values in
+/--
+The tied Selmer group modulo `a`: the locally constant cocycles `z` with values in
 `(O / a) ^ n` that vanish at `γ_*`, are unramified outside `T.places ∪ R ∪ R̄`, obey the local
 conditions `T.localRelations`, and satisfy the ties `z(γ_v) = s • z(φ_v)` and
 `z(γ_v^{-c}) = s • z(φ_v^{-c})` for `v ∈ J` (`tieRelations`). Here `γ_v` and `φ_v` are the tame
 generator and the Frobenius element in the data `(x v).1`, which also hold a character to `ℤ / q`,
 and `s = (x v).2 i` is the slope of datum `i`. It is used for `R = J`, and for `R = J ∪ {P}`, where
-there is no condition at `P` and `P̄`. -/
-def tiedSelmer {ι : Type} {q : ℕ} (R J : Finset (FinPlace E))
-    (x : FinPlace E → AuxPrimeData E q × (ι → O)) (i : ι) (a : O) :
-    Submodule O (Gal(Ω/E) → n → QuotSpan a) :=
+there is no condition at `P` and `P̄`.
+-/
+def tiedSelmer
+    {ι : Type} {q : ℕ}
+    (R J : Finset (FinPlace E)) (x : FinPlace E → AuxPrimeData E q × (ι → O)) (i : ι) (a : O)
+    : Submodule O (Gal(Ω/E) → n → QuotSpan a) :=
   selmerModule T.ρ (unionWithConj T.places R) (T.classRelations ∪ tieRelations J x i) (QuotSpan a)
 
-/-- The members of a tied Selmer group, which are cocycles with values in `(O / a) ^ n`, vanish at
-the element `γ_*` of `T`: this is one of the defining relations. -/
-lemma apply_γ_eq_zero {ι : Type} {q : ℕ} {R J : Finset (FinPlace E)}
-    {x : FinPlace E → AuxPrimeData E q × (ι → O)} {i : ι} {a : O}
-    {z : Gal(Ω/E) → n → QuotSpan a} (hz : z ∈ T.tiedSelmer R J x i a) : z T.γ = 0 := by
+/--
+The members of a tied Selmer group, which are cocycles with values in `(O / a) ^ n`, vanish at
+the element `γ_*` of `T`: this is one of the defining relations.
+-/
+lemma apply_γ_eq_zero
+    {ι : Type} {q : ℕ} {R J : Finset (FinPlace E)} {x : FinPlace E → AuxPrimeData E q × (ι → O)}
+    {i : ι} {a : O} {z : Gal(Ω/E) → n → QuotSpan a} (hz : z ∈ T.tiedSelmer R J x i a)
+    : z T.γ = 0 := by
   obtain ⟨-, -, h_obey, -⟩ := mem_selmerModule_iff.1 hz
   simpa using mem_obeying.1 h_obey (Finsupp.single T.γ 1) (by simp [classRelations])
 
@@ -258,33 +296,41 @@ section Values
 
 open Matrix.Module
 
-variable {E n O B : Type} [Field E] [EmbeddedNumberField E] [NumberField.IsCMField E]
-  [CommRing O] [CommRing B] [Algebra O B]
+variable
+  {E n O B : Type} [Field E] [EmbeddedNumberField E] [NumberField.IsCMField E] [CommRing O]
+  [CommRing B] [Algebra O B]
 
-/-- The values of a function at `g` (coordinates `(true, i)`) and at `g^{-c} = (conjGal g)⁻¹`
-(coordinates `(false, i)`). -/
+/--
+The values of a function at `g` (coordinates `(true, i)`) and at `g^{-c} = (conjGal g)⁻¹`
+(coordinates `(false, i)`).
+-/
 def evalConjPair (g : Gal(Ω/E)) : (Gal(Ω/E) → n → B) →ₗ[O] Bool × n → B where
   toFun z p := z (idOrConjInv p.1 g) p.2
   map_add' _ _ := rfl
   map_smul' _ _ := rfl
 
-lemma evalConjPair_apply (g : Gal(Ω/E)) (z : Gal(Ω/E) → n → B) (p : Bool × n) :
-    evalConjPair (O := O) g z p = z (idOrConjInv p.1 g) p.2 := rfl
+lemma evalConjPair_apply (g : Gal(Ω/E)) (z : Gal(Ω/E) → n → B) (p : Bool × n)
+    : evalConjPair (O := O) g z p = z (idOrConjInv p.1 g) p.2 :=
+  rfl
 
-/-- Let `z ∈ selmerModule ρ S L B`: a locally constant cocycle that is unramified outside `S` and
+/--
+Let `z ∈ selmerModule ρ S L B`: a locally constant cocycle that is unramified outside `S` and
 obeys the relations `L`. If `S ⊆ P ∪ Q` and `K ⊆ L`, then `z` is a Selmer cocycle (`New.selmerZ1`)
 for the following conditions: unramified outside `P ∪ Q`, and for each `v ∈ P` the restriction to
 the decomposition group at the chosen place `A v` is that of a cocycle obeying `K`
-(`localCocycles`). -/
-lemma mem_selmerZ1_of_mem_selmerModule {E n O B : Type} [Field E] [EmbeddedNumberField E]
-    [NumberField.IsCMField E] [Fintype n] [CommRing O] [CommRing B] [Algebra O B] [DecidableEq n]
-    [TopologicalSpace B] [DiscreteTopology B] {ρ : Gal(Ω/E) →* Matrix n n O}
-    {S P Q : Set (FinPlace E)} {K L : Set (Gal(Ω/E) →₀ Matrix n n O)} {z : Gal(Ω/E) → n → B}
-    {A : FinPlace E → ClosurePlace} {hρ : Continuous (Function.uncurry
-      fun (g : Gal(Ω/E)) (b : n → B) ↦ actionRep O (n → B) ρ g b)}
-    (hz : z ∈ selmerModule ρ S L B) (hKL : K ⊆ L) (hS : S ⊆ P ∪ Q) :
-    z ∈ selmerZ1 (.of (actionRep O (n → B) ρ) hρ) P A
-      (fun v : FinPlace E ↦ localCocycles ρ K (A v) B) Q := by
+(`localCocycles`).
+-/
+lemma mem_selmerZ1_of_mem_selmerModule
+    {E n O B : Type}
+    [Field E] [EmbeddedNumberField E] [NumberField.IsCMField E] [Fintype n] [CommRing O]
+    [CommRing B] [Algebra O B] [DecidableEq n] [TopologicalSpace B] [DiscreteTopology B]
+    {ρ : Gal(Ω/E) →* Matrix n n O} {S P Q : Set (FinPlace E)} {K L : Set (Gal(Ω/E) →₀ Matrix n n O)}
+    {z : Gal(Ω/E) → n → B} {A : FinPlace E → ClosurePlace}
+    {hρ : Continuous (Function.uncurry fun (g : Gal(Ω/E)) (b : n → B) ↦ actionRep O (n → B) ρ g b)}
+    (hz : z ∈ selmerModule ρ S L B) (hKL : K ⊆ L) (hS : S ⊆ P ∪ Q)
+    : z ∈ selmerZ1 (.of (actionRep O (n → B) ρ) hρ) P A
+      (fun v : FinPlace E ↦ localCocycles ρ K (A v) B)
+      Q := by
   -- `z` is unramified outside `S`, hence outside `P ∪ Q`.
   obtain ⟨h_cocycle, h_unram, -, h_const⟩ :=
     mem_selmerModule_iff.1 (mem_selmerModule_of_subset hz .rfl hS)
@@ -301,18 +347,20 @@ section Eligible
 
 open Matrix Module Set
 
-variable {ℓ : ℕ} {E ι O : Type} [Field E]
-  [EmbeddedNumberField E] [NumberField.IsCMField E] [CommRing O]
+variable
+  {ℓ : ℕ} {E ι O : Type} [Field E] [EmbeddedNumberField E] [NumberField.IsCMField E] [CommRing O]
   {V : ι → Gal(Ω/E) → Prop} {W : Set Gal(Ω/E)} {S₀ J : Finset (FinPlace E)} {N : ℕ}
   {P₀ : FinPlace E} {x : FinPlace E → AuxPrimeData E (ℓ ^ N) × (ι → O)}
 
 open scoped Classical in
 variable (ℓ S₀ V P₀ J x) in
-/-- The prime `P`, with the place, Frobenius element, tame generator and character to `ℤ / ℓ ^ N`
+/--
+The prime `P`, with the place, Frobenius element, tame generator and character to `ℤ / ℓ ^ N`
 given by `l`, is a new auxiliary prime for datum `i` and the primes `J` chosen so far, of which `P₀`
 is the first: it may be added to them with a nonzero slope for datum `i`. Here `(x v).1` are the
 data of `v ∈ J`, `S₀` is the set of places to avoid, and `V i` is the property asked of the
-Frobenius elements at the primes where datum `i` has a nonzero slope. -/
+Frobenius elements at the primes where datum `i` has a nonzero slope.
+-/
 structure IsNewAuxiliaryPrime (i : ι) (P : FinPlace E) (l : AuxPrimeData E (ℓ ^ N)) : Prop where
   /-- `P` has degree one: its absolute norm `P.q` is a prime number. -/
   prime_norm : P.q.Prime
@@ -326,26 +374,32 @@ structure IsNewAuxiliaryPrime (i : ι) (P : FinPlace E) (l : AuxPrimeData E (ℓ
   star_notMem_bad : star P ∉ S₀
   /-- `P` does not divide the absolute norm `P₀.q` of the first prime. -/
   notMem_placesDividing : P ∉ placesDividing E P₀.q
-  /-- The data `l` are auxiliary prime data at `P` (`IsAuxPrimeDataAt`) relative to every set of
+  /--
+  The data `l` are auxiliary prime data at `P` (`IsAuxPrimeDataAt`) relative to every set of
   places above `ℓ` and primes of `J` other than `P₀`; so the character of `P` vanishes on their
-  decomposition groups. -/
-  anticyclotomic : ∀ X : Set (FinPlace E), X ⊆ ↑(J.erase P₀) ∪ placesDividing E ℓ →
-    IsAuxPrimeDataAt X P l
+  decomposition groups.
+  -/
+  anticyclotomic
+    : ∀ X : Set (FinPlace E), X ⊆ ↑(J.erase P₀) ∪ placesDividing E ℓ → IsAuxPrimeDataAt X P l
   /-- The character of `P` vanishes at the Frobenius element of `P`. -/
   char_frob_eq_one : l.character l.frob = 1
   /-- The Frobenius element has value `1` under the character of `P₀` and `0` under the others. -/
-  char_frob_eq_ite : ∀ v ∈ J,
-    (x v).1.character l.frob = if v = P₀ then Multiplicative.ofAdd 1 else 1
+  char_frob_eq_ite
+    : ∀ v ∈ J, (x v).1.character l.frob = if v = P₀ then Multiplicative.ofAdd 1 else 1
   /-- `V i` holds at the Frobenius element `φ` and at `φ^{-c}`. -/
   apply_idOrConjInv_frob (b : Bool) : V i (idOrConjInv b l.frob)
 
 open scoped Classical in
-/-- Let `J` be a set of tied primes (`IsTiedPrimes`): primes of `E` outside `S₀`, no one of them
+/--
+Let `J` be a set of tied primes (`IsTiedPrimes`): primes of `E` outside `S₀`, no one of them
 conjugate to another or to itself. Then for `v, w ∈ J` the character of `w` takes the value
-`1 ∈ ℤ / ℓ ^ N` at the tame generator of `v` if `w = v`, and the value `0` otherwise. -/
-lemma IsTiedPrimes.character_tameGenerator_eq_ite (hJ : IsTiedPrimes ℓ S₀ V W N P₀ J x)
-    {v : FinPlace E} (hv : v ∈ J) (w : FinPlace E) (hw : w ∈ J) :
-    (x w).1.character (x v).1.tameGenerator = if w = v then Multiplicative.ofAdd 1 else 1 := by
+`1 ∈ ℤ / ℓ ^ N` at the tame generator of `v` if `w = v`, and the value `0` otherwise.
+-/
+lemma IsTiedPrimes.character_tameGenerator_eq_ite
+    (hJ : IsTiedPrimes ℓ S₀ V W N P₀ J x)
+    {v : FinPlace E} (hv : v ∈ J)
+    (w : FinPlace E) (hw : w ∈ J)
+    : (x w).1.character (x v).1.tameGenerator = if w = v then Multiplicative.ofAdd 1 else 1 := by
   obtain ⟨h_inertia, h_char, -⟩ := (hJ.isAuxPrimeDataAt v hv).tame_gen
   split_ifs with h_eq
   · rw [h_eq, h_char]
@@ -356,13 +410,18 @@ lemma IsTiedPrimes.character_tameGenerator_eq_ite (hJ : IsTiedPrimes ℓ S₀ V 
       ⟨v, h_notMem, (x v).1.place, (hJ.isAuxPrimeDataAt v hv).isPlaceOver, h_inertia⟩
 
 open scoped Classical in
-/-- A new auxiliary prime `P` with data `l` may be added to a set `J` of tied primes, with slope `t`
+/--
+A new auxiliary prime `P` with data `l` may be added to a set `J` of tied primes, with slope `t`
 for datum `i` and slope `0` for the other data: the result is again a set of tied primes with first
-prime `P₀`. -/
-lemma IsTiedPrimes.insert_of_isNewAuxiliaryPrime [DecidableEq ι]
-    (hp : IsTiedPrimes ℓ S₀ V W N P₀ J x) {i : ι} {P : FinPlace E} {l : AuxPrimeData E (ℓ ^ N)}
-    (hl : IsNewAuxiliaryPrime ℓ V S₀ J P₀ x i P l) (t : O) :
-    IsTiedPrimes ℓ S₀ V W N P₀ (insert P J) (Function.update x P (l, Pi.single i t)) := by
+prime `P₀`.
+-/
+lemma IsTiedPrimes.insert_of_isNewAuxiliaryPrime
+    [DecidableEq ι]
+    (hp : IsTiedPrimes ℓ S₀ V W N P₀ J x)
+    {i : ι} {P : FinPlace E} {l : AuxPrimeData E (ℓ ^ N)}
+    (hl : IsNewAuxiliaryPrime ℓ V S₀ J P₀ x i P l)
+    (t : O)
+    : IsTiedPrimes ℓ S₀ V W N P₀ (insert P J) (Function.update x P (l, Pi.single i t)) := by
   have h_old (v : FinPlace E) (hv : v ∈ J) : Function.update x P (l, Pi.single i t) v = x v :=
     Function.update_of_ne (ne_of_mem_of_not_mem hv hl.notMem) _ _
   -- The new character kills the decomposition groups at the old primes other than `P₀`.
@@ -393,8 +452,8 @@ lemma IsTiedPrimes.insert_of_isNewAuxiliaryPrime [DecidableEq ι]
     refine (Finset.forall_mem_insert ..).2 ⟨fun j hj ↦ ?_, fun v hv j hj ↦ ?_⟩
     · -- At the new prime the slope is nonzero for datum `i` only.
       obtain rfl : j = i := of_not_not fun h_ne ↦ by simp [h_ne] at hj
-      simpa [idOrConjInv] using And.intro (hl.apply_idOrConjInv_frob true)
-        (hl.apply_idOrConjInv_frob false)
+      simpa [idOrConjInv] using
+        And.intro (hl.apply_idOrConjInv_frob true) (hl.apply_idOrConjInv_frob false)
     · simpa [h_old v hv] using hp.frob_of_slope_ne_zero v hv j (by simpa [h_old v hv] using hj)
 
 end Eligible
@@ -406,18 +465,25 @@ section Sah
 open Matrix.Module Subgroup commutatorElement
 
 /-- If a matrix maps a set of vectors into its span, it maps the span into itself. -/
-lemma smul_mem_span_of_forall_smul_mem {O n B : Type} [CommRing O] [Fintype n] [DecidableEq n]
-    [AddCommGroup B] [Module O B] (A : Matrix n n O) {s : Set (n → B)}
-    (h : ∀ u ∈ s, A • u ∈ Submodule.span O s) {u : n → B} (hu : u ∈ Submodule.span O s) :
-    A • u ∈ Submodule.span O s :=
+lemma smul_mem_span_of_forall_smul_mem
+    {O n B : Type} [CommRing O] [Fintype n] [DecidableEq n] [AddCommGroup B] [Module O B]
+    (A : Matrix n n O)
+    {s : Set (n → B)} (h : ∀ u ∈ s, A • u ∈ Submodule.span O s)
+    {u : n → B} (hu : u ∈ Submodule.span O s)
+    : A • u ∈ Submodule.span O s :=
   (Submodule.span_le (p := (Submodule.span O s).comap (DistribSMul.toLinearMap O _ A))).2 h hu
 
-/-- Let `X` be a submodule of `(O / a) ^ n` that is stable under a set of matrices which spans all
-matrices over `O`. If `X` contains a vector with a unit coordinate, it is the whole module. -/
-lemma eq_top_of_stable_of_isUnit {O n : Type} [CommRing O] [Fintype n] [DecidableEq n] {a : O}
-    {s : Set (Matrix n n O)} (hs : Submodule.span O s = ⊤) {X : Submodule O (n → QuotSpan a)}
-    (h_stable : ∀ B ∈ s, ∀ u ∈ X, B • u ∈ X) {u : n → QuotSpan a} (hu : u ∈ X) {j : n}
-    (hu_unit : IsUnit (u j)) : X = ⊤ := by
+/--
+Let `X` be a submodule of `(O / a) ^ n` that is stable under a set of matrices which spans all
+matrices over `O`. If `X` contains a vector with a unit coordinate, it is the whole module.
+-/
+lemma eq_top_of_stable_of_isUnit
+    {O n : Type} [CommRing O] [Fintype n] [DecidableEq n]
+    {a : O} {s : Set (Matrix n n O)} (hs : Submodule.span O s = ⊤)
+    {X : Submodule O (n → QuotSpan a)} (h_stable : ∀ B ∈ s, ∀ u ∈ X, B • u ∈ X)
+    {u : n → QuotSpan a} (hu : u ∈ X)
+    {j : n} (hu_unit : IsUnit (u j))
+    : X = ⊤ := by
   have h_all (B : Matrix n n O) : B • u ∈ X := by
     induction Submodule.eq_top_iff'.1 hs B using Submodule.span_induction with
     | mem B hB => exact h_stable B hB u hu
@@ -437,9 +503,12 @@ lemma eq_top_of_stable_of_isUnit {O n : Type} [CommRing O] [Fintype n] [Decidabl
 
 namespace SelmerDatum
 
-variable {ℓ : ℕ} [ThePrime ℓ] {E : Type} [Field E] [EmbeddedNumberField E] [NumberField.IsCMField E]
-  {S₀ : Finset (FinPlace E)} {g₀ : Gal(Ω/E)} {O n : Type} [CommRing O] [PadicIntegerRing O ℓ]
-  [Fintype n] [DecidableEq n] (T : SelmerDatum ℓ S₀ g₀ O n)
+variable
+  {ℓ : ℕ} [ThePrime ℓ]
+  {E : Type} [Field E] [EmbeddedNumberField E] [NumberField.IsCMField E]
+  {S₀ : Finset (FinPlace E)} {g₀ : Gal(Ω/E)} {O n : Type}
+  [CommRing O] [PadicIntegerRing O ℓ] [Fintype n] [DecidableEq n]
+  (T : SelmerDatum ℓ S₀ g₀ O n)
 
 /-- The element `γ_* = T.γ` acts on `T` by the scalar `ζ_* = T.ζ`. -/
 lemma ρ_γ : T.ρ T.γ = T.ζ • 1 := by simpa [idOrConjInv] using T.ρ_eq_smul_one true
@@ -448,15 +517,19 @@ lemma ρ_γ : T.ρ T.γ = T.ζ • 1 := by simpa [idOrConjInv] using T.ρ_eq_smu
 lemma ρ_conjGal_γ_inv : T.ρ (conjGal T.γ)⁻¹ = T.ζ • 1 := by
   simpa [idOrConjInv] using T.ρ_eq_smul_one false
 
-/-- The `ℓ`-adic cyclotomic character is `1` at `γ_* = T.γ`, which lies in an inertia group at a
-place prime to `ℓ`. -/
+/--
+The `ℓ`-adic cyclotomic character is `1` at `γ_* = T.γ`, which lies in an inertia group at a
+place prime to `ℓ`.
+-/
 lemma cyclotomicChar_γ : cyclotomicChar Ω ℓ T.γ = 1 := by
   obtain ⟨v, ⟨-, hvℓ⟩, A, hA, hγ⟩ := T.γ_mem_inertiaAbove
   exact cyclotomicChar_eq_one_of_mem_inertiaAbove ⟨v, hvℓ, A, hA, hγ⟩
 
-/-- The group `H` generated, as an abstract group, by the commutators `[g, γ_*]` and
+/--
+The group `H` generated, as an abstract group, by the commutators `[g, γ_*]` and
 `[g, γ_*^c]`, where `γ_* = T.γ` is the element of the datum that acts by a scalar and
-`γ_*^c = conjGal T.γ` is its conjugate. -/
+`γ_*^c = conjGal T.γ` is its conjugate.
+-/
 def sahGroup : Subgroup Gal(Ω/E) :=
   closure (Set.range (fun g : Gal(Ω/E) ↦ ⁅g, T.γ⁆) ∪ Set.range fun g : Gal(Ω/E) ↦ ⁅g, conjGal T.γ⁆)
 
@@ -465,10 +538,14 @@ lemma commutator_γ_mem (g : Gal(Ω/E)) : ⁅g, T.γ⁆ ∈ T.sahGroup := subset
 lemma commutator_conjGal_γ_mem (g : Gal(Ω/E)) : ⁅g, conjGal T.γ⁆ ∈ T.sahGroup :=
   subset_closure (.inr ⟨g, rfl⟩)
 
-/-- A subgroup that contains all commutators with `γ_* = T.γ` and with `γ_*^c = conjGal T.γ`
-contains the group `T.sahGroup` that they generate. -/
-lemma sahGroup_le {K : Subgroup Gal(Ω/E)} (hγ : ∀ g : Gal(Ω/E), ⁅g, T.γ⁆ ∈ K)
-    (hγ' : ∀ g : Gal(Ω/E), ⁅g, conjGal T.γ⁆ ∈ K) : T.sahGroup ≤ K :=
+/--
+A subgroup that contains all commutators with `γ_* = T.γ` and with `γ_*^c = conjGal T.γ`
+contains the group `T.sahGroup` that they generate.
+-/
+lemma sahGroup_le
+    {K : Subgroup Gal(Ω/E)}
+    (hγ : ∀ g : Gal(Ω/E), ⁅g, T.γ⁆ ∈ K) (hγ' : ∀ g : Gal(Ω/E), ⁅g, conjGal T.γ⁆ ∈ K)
+    : T.sahGroup ≤ K :=
   (closure_le K).2 (Set.union_subset (Set.range_subset_iff.2 hγ) (Set.range_subset_iff.2 hγ'))
 
 /-- The group `H = T.sahGroup` is normal, as `g' [g, δ] g'⁻¹ = [g' g, δ] [g', δ]⁻¹`. -/
@@ -476,51 +553,64 @@ instance : T.sahGroup.Normal where
   conj_mem h hh g' := by
     have h_conj (g δ : Gal(Ω/E)) : MulAut.conj g' ⁅g, δ⁆ = ⁅g' * g, δ⁆ * ⁅g', δ⁆⁻¹ := by
       simp [commutatorElement_def, mul_assoc]
-    refine T.sahGroup_le (K := T.sahGroup.comap (MulAut.conj g').toMonoidHom) (fun g ↦ ?_)
-      (fun g ↦ ?_) hh
+    refine T.sahGroup_le (K := T.sahGroup.comap (MulAut.conj g').toMonoidHom)
+      (fun g ↦ ?_)
+      (fun g ↦ ?_)
+      hh
     all_goals simp only [mem_comap, MulEquiv.coe_toMonoidHom, h_conj]
     · exact mul_mem (T.commutator_γ_mem _) (inv_mem (T.commutator_γ_mem g'))
     · exact mul_mem (T.commutator_conjGal_γ_mem _) (inv_mem (T.commutator_conjGal_γ_mem g'))
 
 variable {T}
 
-/-- The group `T.sahGroup`, generated by the commutators with `T.γ` and its conjugate, is stable
-under the conjugation `conjGal` by complex conjugation. -/
+/--
+The group `T.sahGroup`, generated by the commutators with `T.γ` and its conjugate, is stable
+under the conjugation `conjGal` by complex conjugation.
+-/
 lemma conjGal_mem_sahGroup {h : Gal(Ω/E)} (hh : h ∈ T.sahGroup) : conjGal h ∈ T.sahGroup := by
-  refine T.sahGroup_le (K := T.sahGroup.comap conjGal) ?_ ?_ hh <;>
-    simp [map_commutatorElement, commutator_γ_mem, commutator_conjGal_γ_mem]
+  refine T.sahGroup_le (K := T.sahGroup.comap conjGal) ?_ ?_ hh
+    <;> simp [map_commutatorElement, commutator_γ_mem, commutator_conjGal_γ_mem]
 
-/-- Homomorphisms to commutative groups are trivial on `H = T.sahGroup`, which is generated by
-commutators. -/
-lemma map_eq_one_of_mem_sahGroup {C : Type*} [CommGroup C] (χ : Gal(Ω/E) →* C) {h : Gal(Ω/E)}
-    (hh : h ∈ T.sahGroup) : χ h = 1 := by
-  refine T.sahGroup_le (K := χ.ker) ?_ ?_ hh <;>
-    simp [map_commutatorElement, commutatorElement_eq_one_iff_mul_comm, mul_comm]
+/--
+Homomorphisms to commutative groups are trivial on `H = T.sahGroup`, which is generated by
+commutators.
+-/
+lemma map_eq_one_of_mem_sahGroup
+    {C : Type*} [CommGroup C] (χ : Gal(Ω/E) →* C) {h : Gal(Ω/E)} (hh : h ∈ T.sahGroup)
+    : χ h = 1 := by
+  refine T.sahGroup_le (K := χ.ker) ?_ ?_ hh
+    <;> simp [map_commutatorElement, commutatorElement_eq_one_iff_mul_comm, mul_comm]
 
-/-- The group `H = T.sahGroup`, generated by commutators with `γ_* = T.γ` and its conjugate
-`γ_*^c`, acts trivially through `T.ρ`, because `γ_*` and `γ_*^c` act by scalars. -/
+/--
+The group `H = T.sahGroup`, generated by commutators with `γ_* = T.γ` and its conjugate
+`γ_*^c`, acts trivially through `T.ρ`, because `γ_*` and `γ_*^c` act by scalars.
+-/
 lemma ρ_eq_one_of_mem_sahGroup {h : Gal(Ω/E)} (hh : h ∈ T.sahGroup) : T.ρ h = 1 := by
-  have h_comm {δ : Gal(Ω/E)} (hδ : T.ρ δ = T.ζ • 1) (g : Gal(Ω/E)) :
-      Commute (T.ρ.toHomUnits g) (T.ρ.toHomUnits δ) := Units.ext (by simp [hδ])
+  have h_comm {δ : Gal(Ω/E)} (hδ : T.ρ δ = T.ζ • 1) (g : Gal(Ω/E))
+      : Commute (T.ρ.toHomUnits g) (T.ρ.toHomUnits δ) :=
+    Units.ext (by simp [hδ])
   suffices h ∈ T.ρ.toHomUnits.ker by simpa [Units.ext_iff] using this
-  refine T.sahGroup_le (fun g ↦ ?_) (fun g ↦ ?_) hh <;>
-    rw [MonoidHom.mem_ker, map_commutatorElement, commutatorElement_eq_one_iff_commute]
+  refine T.sahGroup_le (fun g ↦ ?_) (fun g ↦ ?_) hh
+    <;> rw [MonoidHom.mem_ker, map_commutatorElement, commutatorElement_eq_one_iff_commute]
   · exact h_comm T.ρ_γ g
   · simpa using (h_comm T.ρ_conjGal_γ_inv g).inv_right
 
-/-- Let `R` contain the places of `T.places` prime to `ℓ` and their conjugates. Then `T.sahGroup`,
+/--
+Let `R` contain the places of `T.places` prime to `ℓ` and their conjugates. Then `T.sahGroup`,
 the group generated by the commutators with `γ_*` and with its complex conjugate
 `γ_*^c = conjGal T.γ`, lies in the normal subgroup generated by `inertiaAbove R`, the union of the
-inertia groups at places above `R`. -/
-lemma sahGroup_le_normalClosure {T : SelmerDatum ℓ S₀ g₀ O n} {R : Set (FinPlace E)}
-    (hR : ∀ v ∈ T.places, v ∉ placesDividing E ℓ → v ∈ R ∧ star v ∈ R) :
-    T.sahGroup ≤ normalClosure (inertiaAbove R) := by
+inertia groups at places above `R`.
+-/
+lemma sahGroup_le_normalClosure
+    {T : SelmerDatum ℓ S₀ g₀ O n} {R : Set (FinPlace E)}
+    (hR : ∀ v ∈ T.places, v ∉ placesDividing E ℓ → v ∈ R ∧ star v ∈ R)
+    : T.sahGroup ≤ normalClosure (inertiaAbove R) := by
   obtain ⟨v, ⟨hv, hvℓ⟩, B, hB, hγ⟩ := T.γ_mem_inertiaAbove
   -- Both `γ_*` and `γ_*^c` lie in this normal subgroup.
   have h_mem (b : Bool) : idOrConjInv b T.γ ∈ normalClosure (inertiaAbove R) :=
     subset_normalClosure (idOrConjInv_mem_inertiaAbove hB hγ (hR v hv hvℓ) b)
-  have h_comm {δ : Gal(Ω/E)} (hδ : δ ∈ normalClosure (inertiaAbove R)) (g : Gal(Ω/E)) :
-      ⁅g, δ⁆ ∈ normalClosure (inertiaAbove R) :=
+  have h_comm {δ : Gal(Ω/E)} (hδ : δ ∈ normalClosure (inertiaAbove R)) (g : Gal(Ω/E))
+      : ⁅g, δ⁆ ∈ normalClosure (inertiaAbove R) :=
     mul_mem (normalClosure_normal.conj_mem δ hδ g) (inv_mem hδ)
   exact T.sahGroup_le (h_comm (by simpa [idOrConjInv] using h_mem true))
     (h_comm (by simpa [idOrConjInv] using h_mem false))
@@ -529,35 +619,47 @@ section Cocycles
 
 variable {B : Type} [AddCommGroup B] [Module O B]
 
-/-- The map `b ↦ T.ρ T.γ • b - b` is bijective on `n → B`, since `γ_* = T.γ` acts by the scalar
-`ζ_* = T.ζ` and `ζ_* - 1` is a unit. -/
-lemma bijective_γ_smul_sub (T : SelmerDatum ℓ S₀ g₀ O n) {B : Type} [AddCommGroup B]
-    [Module O B] : Function.Bijective fun b : n → B ↦ T.ρ T.γ • b - b := by
+/--
+The map `b ↦ T.ρ T.γ • b - b` is bijective on `n → B`, since `γ_* = T.γ` acts by the scalar
+`ζ_* = T.ζ` and `ζ_* - 1` is a unit.
+-/
+lemma bijective_γ_smul_sub (T : SelmerDatum ℓ S₀ g₀ O n) {B : Type} [AddCommGroup B] [Module O B]
+    : Function.Bijective fun b : n → B ↦ T.ρ T.γ • b - b := by
   simpa [T.ρ_γ, sub_smul] using T.isUnit_ζ_sub_one.smul_bijective (β := n → B)
 
-/-- Let `z` be a cocycle with values in `B ^ n` for the action `T.ρ`. If `h` acts trivially, then
-`z (g h g⁻¹) = g z(h)`. -/
-lemma cocycle_conj_of_fixed {z : Gal(Ω/E) → n → B}
-    (hz : ∀ g h : Gal(Ω/E), z (g * h) = z g + T.ρ g • z h) (g : Gal(Ω/E)) {h : Gal(Ω/E)}
-    (hh : ∀ b : n → B, T.ρ h • b = b) : z (g * h * g⁻¹) = T.ρ g • z h := by
-  have h_inv : T.ρ g • z g⁻¹ = -z g := by simp [cocycle_apply_inv hz, ← mul_smul, ← map_mul]
+/--
+Let `z` be a cocycle with values in `B ^ n` for the action `T.ρ`. If `h` acts trivially, then
+`z (g h g⁻¹) = g z(h)`.
+-/
+lemma cocycle_conj_of_fixed
+    {z : Gal(Ω/E) → n → B} (hz : ∀ g h : Gal(Ω/E), z (g * h) = z g + T.ρ g • z h)
+    (g : Gal(Ω/E))
+    {h : Gal(Ω/E)} (hh : ∀ b : n → B, T.ρ h • b = b)
+    : z (g * h * g⁻¹) = T.ρ g • z h := by
+  have h_inv : T.ρ g • z g⁻¹ = - z g := by simp [cocycle_apply_inv hz, ← mul_smul, ← map_mul]
   simp [hz, mul_smul, hh, h_inv]
 
-/-- Sah's identity `z [g, γ_*] = (1 - ζ_*) z(g)` for a cocycle `z` that vanishes at `γ_* = T.γ`,
-which acts by the scalar `ζ_* = T.ζ`. -/
-lemma cocycle_commutator_γ {z : Gal(Ω/E) → n → B}
-    (hz : ∀ g h : Gal(Ω/E), z (g * h) = z g + T.ρ g • z h) (hγ : z T.γ = 0) (g : Gal(Ω/E)) :
-    z ⁅g, T.γ⁆ = (1 - T.ζ) • z g := by
+/--
+Sah's identity `z [g, γ_*] = (1 - ζ_*) z(g)` for a cocycle `z` that vanishes at `γ_* = T.γ`,
+which acts by the scalar `ζ_* = T.ζ`.
+-/
+lemma cocycle_commutator_γ
+    {z : Gal(Ω/E) → n → B} (hz : ∀ g h : Gal(Ω/E), z (g * h) = z g + T.ρ g • z h) (hγ : z T.γ = 0)
+    (g : Gal(Ω/E))
+    : z ⁅g, T.γ⁆ = (1 - T.ζ) • z g := by
   have h_mul : ⁅g, T.γ⁆ * (T.γ * g) = g * T.γ := by simp [commutatorElement_def, mul_assoc]
   have h_val : z ⁅g, T.γ⁆ + T.ζ • z g = z g := by
     simpa [hz, ρ_eq_one_of_mem_sahGroup (T.commutator_γ_mem g), hγ, T.ρ_γ] using congrArg z h_mul
   simp [sub_smul, eq_sub_iff_add_eq, h_val]
 
-/-- A cocycle `z` with values in `B ^ n` that vanishes at `γ_* = T.γ` and on the group
-`H = T.sahGroup` is zero, by Sah's identity. -/
-lemma cocycle_eq_zero_of_sahGroup {z : Gal(Ω/E) → n → B}
-    (hz : ∀ g h : Gal(Ω/E), z (g * h) = z g + T.ρ g • z h) (hγ : z T.γ = 0)
-    (hH : ∀ h ∈ T.sahGroup, z h = 0) : z = 0 := by
+/--
+A cocycle `z` with values in `B ^ n` that vanishes at `γ_* = T.γ` and on the group
+`H = T.sahGroup` is zero, by Sah's identity.
+-/
+lemma cocycle_eq_zero_of_sahGroup
+    {z : Gal(Ω/E) → n → B} (hz : ∀ g h : Gal(Ω/E), z (g * h) = z g + T.ρ g • z h) (hγ : z T.γ = 0)
+    (hH : ∀ h ∈ T.sahGroup, z h = 0)
+    : z = 0 := by
   funext g
   have h_smul : (1 - T.ζ) • z g = 0 := by
     rw [← cocycle_commutator_γ hz hγ, hH _ (T.commutator_γ_mem g)]
@@ -565,19 +667,21 @@ lemma cocycle_eq_zero_of_sahGroup {z : Gal(Ω/E) → n → B}
 
 end Cocycles
 
-/-- Let `O` be the integer ring of a finite extension of `ℚ_ℓ`, and let `O / a` be nonzero. Let `z`
+/--
+Let `O` be the integer ring of a finite extension of `ℚ_ℓ`, and let `O / a` be nonzero. Let `z`
 be a cocycle for `T.ρ` with values in `(O / a) ^ n` that vanishes at `γ_*`. If some value of `z` has
 a unit coordinate, then so does some value on `H = T.sahGroup`, the group generated by the
-commutators with `γ_*` and with its conjugate `conjGal T.γ`. -/
-lemma exists_mem_sahGroup_isUnit_apply {T : SelmerDatum ℓ S₀ g₀ O n} {a : O}
-    [Nontrivial (QuotSpan a)] {z : Gal(Ω/E) → n → QuotSpan a}
-    (hz : ∀ g h : Gal(Ω/E), z (g * h) = z g + T.ρ g • z h) (hγ : z T.γ = 0)
-    (hz_unit : ∃ (g : Gal(Ω/E)) (j : n), IsUnit (z g j)) :
-    ∃ h ∈ T.sahGroup, ∃ j : n, IsUnit (z h j) := by
+commutators with `γ_*` and with its conjugate `conjGal T.γ`.
+-/
+lemma exists_mem_sahGroup_isUnit_apply
+    {T : SelmerDatum ℓ S₀ g₀ O n} {a : O} [Nontrivial (QuotSpan a)]
+    {z : Gal(Ω/E) → n → QuotSpan a} (hz : ∀ g h : Gal(Ω/E), z (g * h) = z g + T.ρ g • z h)
+    (hγ : z T.γ = 0) (hz_unit : ∃ (g : Gal(Ω/E)) (j : n), IsUnit (z g j))
+    : ∃ h ∈ T.sahGroup, ∃ j : n, IsUnit (z h j) := by
   have : IsLocalRing (QuotSpan a) :=
     .of_surjective' (Ideal.Quotient.mk _) Ideal.Quotient.mk_surjective
-  let z₀ : Gal(Ω/E) → n → IsLocalRing.ResidueField (QuotSpan a) :=
-    fun g j ↦ IsLocalRing.residue _ (z g j)
+  let z₀ : Gal(Ω/E) → n → IsLocalRing.ResidueField (QuotSpan a) := fun g j ↦
+    IsLocalRing.residue _ (z g j)
   have hz₀ (g h : Gal(Ω/E)) : z₀ (g * h) = z₀ g + T.ρ g • z₀ h := by
     funext j
     simp [z₀, hz, Matrix.Module.smul_apply, Algebra.smul_def,
@@ -589,14 +693,16 @@ lemma exists_mem_sahGroup_isUnit_apply {T : SelmerDatum ℓ S₀ g₀ O n} {a : 
   obtain ⟨g, j, hj⟩ := hz_unit
   exact (IsLocalRing.residue_ne_zero_iff_isUnit _).2 hj (congrFun₂ h_zero g j)
 
-/-- Let `z` be a cocycle for `T.ρ` with values in `W = (O / a) ^ n` that vanishes at `γ_*`. Suppose
+/--
+Let `z` be a cocycle for `T.ρ` with values in `W = (O / a) ^ n` that vanishes at `γ_*`. Suppose
 some value of `z` has a unit coordinate. Then `z(H)` spans `W`, where `H = T.sahGroup` is the group
-generated by the commutators with `γ_*` and with its conjugate `γ_*^c = conjGal T.γ`. -/
-lemma span_image_sahGroup_eq_top {T : SelmerDatum ℓ S₀ g₀ O n} {a : O}
-    {z : Gal(Ω/E) → n → QuotSpan a}
+generated by the commutators with `γ_*` and with its conjugate `γ_*^c = conjGal T.γ`.
+-/
+lemma span_image_sahGroup_eq_top
+    {T : SelmerDatum ℓ S₀ g₀ O n} {a : O} {z : Gal(Ω/E) → n → QuotSpan a}
     (hz : ∀ g h : Gal(Ω/E), z (g * h) = z g + T.ρ g • z h) (hγ : z T.γ = 0)
-    (hz_unit : ∃ (g : Gal(Ω/E)) (j : n), IsUnit (z g j)) :
-    Submodule.span O (z '' T.sahGroup) = ⊤ := by
+    (hz_unit : ∃ (g : Gal(Ω/E)) (j : n), IsUnit (z g j))
+    : Submodule.span O (z '' T.sahGroup) = ⊤ := by
   nontriviality QuotSpan a
   set X : Submodule O (n → QuotSpan a) := Submodule.span O (z '' T.sahGroup)
   have h_mem {h : Gal(Ω/E)} (hh : h ∈ T.sahGroup) : z h ∈ X :=
@@ -609,8 +715,8 @@ lemma span_image_sahGroup_eq_top {T : SelmerDatum ℓ S₀ g₀ O n} {a : O}
     exact h_mem (Normal.conj_mem h hh g)
   -- It contains a vector with a unit coordinate.
   obtain ⟨h, hh, j, h_unit⟩ := exists_mem_sahGroup_isUnit_apply hz hγ hz_unit
-  exact eq_top_of_stable_of_isUnit T.span_range_eq_top (Set.forall_mem_range.2 h_stable)
-    (h_mem hh) h_unit
+  exact eq_top_of_stable_of_isUnit T.span_range_eq_top (Set.forall_mem_range.2 h_stable) (h_mem hh)
+    h_unit
 
 end SelmerDatum
 
@@ -624,19 +730,22 @@ open IsDiscreteValuationRing Module Matrix.Module Submodule
 
 variable {O n : Type} [CommRing O] [Fintype n] [DecidableEq n]
 
-/-- Over a discrete valuation ring `O`, the `ε`-torsion of `(O / a) ^ n` has length at most
-`#n · v(ε)`, for the valuation `v` of `O`. -/
-lemma length_torsionBy_pi_quot_le [DVR O] (a ε : O) :
-    length O (torsionBy O (n → QuotSpan a) ε) ≤ Fintype.card n * addVal O ε :=
-  calc _ ≤ length O (LinearMap.ker ((ε • 1 : Matrix n n O) • 1 : Module.End O (n → QuotSpan a))) :=
-        length_mono fun b hb ↦ by simpa using hb
+/--
+Over a discrete valuation ring `O`, the `ε`-torsion of `(O / a) ^ n` has length at most
+`#n · v(ε)`, for the valuation `v` of `O`.
+-/
+lemma length_torsionBy_pi_quot_le [DVR O] (a ε : O)
+    : length O (torsionBy O (n → QuotSpan a) ε) ≤ Fintype.card n * addVal O ε :=
+  calc
+    _ ≤ length O (LinearMap.ker ((ε • 1 : Matrix n n O) • 1 : Module.End O (n → QuotSpan a))) :=
+      length_mono fun b hb ↦ by simpa using hb
     _ ≤ addVal O (ε • 1 : Matrix n n O).det := length_ker_le_addVal_det _ a
     _ = Fintype.card n * addVal O ε := by simp
 
 /-- If the matrices `ρ g` span all matrices, the translates of a basis vector span `(O / a) ^ n`. -/
-lemma span_range_smul_single_eq_top {G : Type} [Monoid G] {ρ : G →* Matrix n n O}
-    (hρ : span O (Set.range ρ) = ⊤) (a : O) (i : n) :
-    span O (Set.range fun g : G ↦ ρ g • (Pi.single i 1 : n → QuotSpan a)) = ⊤ := by
+lemma span_range_smul_single_eq_top
+    {G : Type} [Monoid G] {ρ : G →* Matrix n n O} (hρ : span O (Set.range ρ) = ⊤) (a : O) (i : n)
+    : span O (Set.range fun g : G ↦ ρ g • (Pi.single i 1 : n → QuotSpan a)) = ⊤ := by
   set X : Submodule O (n → QuotSpan a) := span O (Set.range fun g : G ↦ ρ g • Pi.single i 1)
   have h_stable (g : G) : ∀ u ∈ X, ρ g • u ∈ X := by
     refine fun _ ↦ smul_mem_span_of_forall_smul_mem (ρ g) ?_
@@ -645,12 +754,16 @@ lemma span_range_smul_single_eq_top {G : Type} [Monoid G] {ρ : G →* Matrix n 
   exact eq_top_of_stable_of_isUnit hρ (Set.forall_mem_range.2 h_stable)
     (subset_span ⟨1, by simp⟩ : Pi.single i 1 ∈ X) (j := i) (by simp)
 
-/-- Let `O` be the integer ring of a finite extension of `ℚ_ℓ`, and let `X` be a finite `O`-module.
+/--
+Let `O` be the integer ring of a finite extension of `ℚ_ℓ`, and let `X` be a finite `O`-module.
 The `ε`-torsion of its character module `CharacterModule X` (the dual `Hom(X, ℚ/ℤ)`) has length at
-most that of the `ε`-torsion of `X`. -/
-lemma length_torsionBy_characterModule_le {ℓ : ℕ} [ThePrime ℓ] [PadicIntegerRing O ℓ] {X : Type}
-    [AddCommGroup X] [Module O X] [Finite X] (ε : O) :
-    length O (torsionBy O (CharacterModule X) ε) ≤ length O (torsionBy O X ε) := by
+most that of the `ε`-torsion of `X`.
+-/
+lemma length_torsionBy_characterModule_le
+    {ℓ : ℕ} [ThePrime ℓ] [PadicIntegerRing O ℓ]
+    {X : Type} [AddCommGroup X] [Module O X] [Finite X]
+    (ε : O)
+    : length O (torsionBy O (CharacterModule X) ε) ≤ length O (torsionBy O X ε) := by
   -- A character killed by `ε` is a character of `X / ε X`, which has as many elements as `X[ε]`.
   let δ : X →ₗ[O] X := LinearMap.lsmul O X ε
   have h_range : torsionBy O (CharacterModule X) ε ≤ map (CharacterModule.dual δ.range.mkQ) ⊤ := by
@@ -666,36 +779,47 @@ lemma length_torsionBy_characterModule_le {ℓ : ℕ} [ThePrime ℓ] [PadicInteg
   grw [length_le_of_le_map _ _ h_range, length_top]
   exact length_le_of_card_dvd_or_le ℓ (.inl h_card.dvd)
 
-variable {ℓ : ℕ} [ThePrime ℓ] [PadicIntegerRing O ℓ] {E : Type} [Field E]
-  [EmbeddedNumberField E] [NumberField.IsCMField E] {ρ : Gal(Ω/E) →* Matrix n n O}
+variable
+  {ℓ : ℕ} [ThePrime ℓ] [PadicIntegerRing O ℓ]
+  {E : Type} [Field E] [EmbeddedNumberField E] [NumberField.IsCMField E]
+  {ρ : Gal(Ω/E) →* Matrix n n O}
 
-/-- Let `g` act on `T = O ^ n` through `ρ` by the scalar `α` and let `g^{-c} = (conjGal g)⁻¹` act by
+/--
+Let `g` act on `T = O ^ n` through `ρ` by the scalar `α` and let `g^{-c} = (conjGal g)⁻¹` act by
 `α'`, so that `g` acts on `T^{*c}` by `cyc(g^c) α'`. The difference `α - cyc(g^c) α'` annihilates
-every element of `conjDualHom ℓ ρ a`. -/
-lemma smul_apply_eq_zero_of_mem_conjDualHom {g : Gal(Ω/E)} {α α' a : O} (hα : ρ g = α • 1)
-    (hα' : ρ (conjGal g)⁻¹ = α' • 1)
+every element of `conjDualHom ℓ ρ a`.
+-/
+lemma smul_apply_eq_zero_of_mem_conjDualHom
+    {g : Gal(Ω/E)} {α α' a : O} (hα : ρ g = α • 1) (hα' : ρ (conjGal g)⁻¹ = α' • 1)
     {η : (n → QuotSpan a) →ₗ[O] CharacterModule (n → QuotSpan a)} (hη : η ∈ conjDualHom ℓ ρ a)
-    (u : n → QuotSpan a) : (α - cyclotomicCharIn O Ω ℓ (conjGal g) * α') • η u = 0 := by
+    (u : n → QuotSpan a)
+    : (α - cyclotomicCharIn O Ω ℓ (conjGal g) * α') • η u = 0 := by
   ext m
   have h_comm : η u (α • m) = η u ((cyclotomicCharIn O Ω ℓ (conjGal g) * α') • m) := by
-    simpa only [hα, hα', smul_one_smul, map_smul, CharacterModule.smul_apply, mul_smul]
-      using hη g u m
+    simpa only [hα, hα', smul_one_smul, map_smul, CharacterModule.smul_apply, mul_smul] using
+      hη g u m
   rw [CharacterModule.smul_apply, sub_smul, map_sub, h_comm, sub_self]
   exact (AddMonoidHom.zero_apply m).symm
 
-/-- Let `g` act on `T = O ^ n` through `ρ` by the scalar `α`, and let `g^{-c} = (conjGal g)⁻¹` act
+/--
+Let `g` act on `T = O ^ n` through `ρ` by the scalar `α`, and let `g^{-c} = (conjGal g)⁻¹` act
 by `α'`. Suppose the matrices in the range of `ρ` span all matrices. Then `congruenceTerm ℓ ρ` is at
-most `#n · addVal O (α - cyclotomicCharIn O Ω ℓ (conjGal g) * α')`. -/
-lemma congruenceTerm_le [Nonempty n] (hρ : span O (Set.range ρ) = ⊤) {g : Gal(Ω/E)} {α α' : O}
-    (hα : ρ g = α • 1) (hα' : ρ (conjGal g)⁻¹ = α' • 1) :
-    congruenceTerm ℓ ρ ≤ Fintype.card n * addVal O
-      (α - cyclotomicCharIn O Ω ℓ (conjGal g) * α') := by
+most `#n · addVal O (α - cyclotomicCharIn O Ω ℓ (conjGal g) * α')`.
+-/
+lemma congruenceTerm_le
+    [Nonempty n]
+    (hρ : span O (Set.range ρ) = ⊤)
+    {g : Gal(Ω/E)} {α α' : O} (hα : ρ g = α • 1) (hα' : ρ (conjGal g)⁻¹ = α' • 1)
+    : congruenceTerm ℓ ρ
+      ≤ Fintype.card n * addVal O (α - cyclotomicCharIn O Ω ℓ (conjGal g) * α') := by
   refine iSup₂_le fun a ha ↦ ?_
   have : NeZero a := ⟨ha⟩
   obtain ⟨i⟩ : Nonempty n := inferInstance
   let e : n → QuotSpan a := Pi.single i 1
-  let ev : ((n → QuotSpan a) →ₗ[O] CharacterModule (n → QuotSpan a)) →ₗ[O]
-      CharacterModule (n → QuotSpan a) := LinearMap.applyₗ e
+  let ev
+      : ((n → QuotSpan a) →ₗ[O] CharacterModule (n → QuotSpan a)) →ₗ[O]
+        CharacterModule (n → QuotSpan a) :=
+    LinearMap.applyₗ e
   let Δ : O := α - cyclotomicCharIn O Ω ℓ (conjGal g) * α'
   have h_maps : ∀ η ∈ conjDualHom ℓ ρ a, ev η ∈ torsionBy O _ Δ := fun η hη ↦
     (mem_torsionBy_iff Δ (ev η)).2 (smul_apply_eq_zero_of_mem_conjDualHom hα hα' hη e)
@@ -705,9 +829,10 @@ lemma congruenceTerm_le [Nonempty n] (hρ : span O (Set.range ρ) = ⊤) {g : Ga
     refine LinearMap.ext_on_range (span_range_smul_single_eq_top hρ a i) fun k ↦ ?_
     ext m
     exact (hη k e m).trans (by rw [h_e]; rfl)
-  calc _ ≤ length O (torsionBy O (CharacterModule (n → QuotSpan a)) Δ) := by
-        rw [← relLength_bot, ← relLength_bot]
-        exact relLength_le_of_mapsTo ev h_maps h_inj
+  calc
+    _ ≤ length O (torsionBy O (CharacterModule (n → QuotSpan a)) Δ) := by
+      rw [← relLength_bot, ← relLength_bot]
+      exact relLength_le_of_mapsTo ev h_maps h_inj
     _ ≤ length O (torsionBy O (n → QuotSpan a) Δ) := length_torsionBy_characterModule_le (ℓ := ℓ) Δ
     _ ≤ Fintype.card n * addVal O Δ := length_torsionBy_pi_quot_le a Δ
 

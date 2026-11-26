@@ -53,7 +53,7 @@ open MulSemiringAction Variety Polynomial PreTilt IsOfFinOrder nonZeroDivisors W
 lemma _root_.New.mk_complex_eq_mk_padicAlgCl {p : ℕ} [Fact p.Prime] : #ℂ = #(PadicAlgCl p) := by
   -- `PadicAlgCl p` is algebraic over `ℚ_[p]`, a quotient of a set of rational sequences, so it has
   -- at most continuum many elements
-  have h_padic : #ℚ_[p] ≤ continuum := mk_quotient_le.trans ((mk_subtype_le _).trans (by simp))
+  have h_padic : # ℚ_[p] ≤ continuum := mk_quotient_le.trans ((mk_subtype_le _).trans (by simp))
   refine mk_complex.trans ((continuum_le_cardinal_of_module ℚ_[p] _).antisymm ?_)
   exact (Algebra.IsAlgebraic.cardinalMk_le_max ℚ_[p] (PadicAlgCl p)).trans
     (max_le h_padic aleph0_le_continuum)
@@ -62,15 +62,19 @@ variable {p : ℕ} [ThePrime p]
 
 /-! ### The rings -/
 
-/-- The monoid ℕ × G_p, with G_p the absolute Galois group of Q_p; on the period rings with a
-Frobenius φ, the pair (n, g) acts as φ^n g. -/
+/--
+The monoid ℕ × G_p, with G_p the absolute Galois group of Q_p; on the period rings with a
+Frobenius φ, the pair (n, g) acts as φ^n g.
+-/
 abbrev FrobGal : Type := Multiplicative ℕ × Gp p
 
-/-- The ring O^♭, the inverse limit of O_C/p along x ↦ x^p, where O_C is the ring of integers of
-C_p. -/
+/--
+The ring O^♭, the inverse limit of O_C/p along x ↦ x^p, where O_C is the ring of integers of
+C_p.
+-/
 @[instance_reducible]
 def OFlat : Type := PreTilt OC p
-  deriving CommRing, CharP _ p, PerfectRing _ p, IsDomain, ValuationRing
+deriving CommRing, CharP _ p, PerfectRing _ p, IsDomain, ValuationRing
 
 /-- The ring A_inf of p-typical Witt vectors over the tilt O^♭ of the ring of integers of C_p. -/
 abbrev Ainf : Type := WittVector p OFlat
@@ -78,41 +82,49 @@ abbrev Ainf : Type := WittVector p OFlat
 /-- The fraction field C^♭ of the tilt O^♭ of the ring of integers of C_p. -/
 @[instance_reducible]
 def CFlat : Type := FractionRing OFlat
-  deriving Field, Algebra OFlat, IsFractionRing OFlat, FaithfulSMul OFlat, CharP _ p
+deriving Field, Algebra OFlat, IsFractionRing OFlat, FaithfulSMul OFlat, CharP _ p
 
 /-- The ring W(C^♭) of p-typical Witt vectors over the fraction field C^♭ of O^♭. -/
 @[instance_reducible]
 def WittCFlat : Type := WittVector p CFlat
-  deriving CommRing, IsDomain
+deriving CommRing, IsDomain
 
-/-- Fontaine's ring homomorphism θ from A_inf to the ring of integers of C_p, sending the
-Teichmüller lift [x] to x^♯. -/
+/--
+Fontaine's ring homomorphism θ from A_inf to the ring of integers of C_p, sending the
+Teichmüller lift [x] to x^♯.
+-/
 abbrev theta : Ainf →+* OC := fontaineTheta OC p
 
 @[simp]
 lemma theta_teichmuller (x : OFlat) : theta (WittVector.teichmuller p x) = x.untilt :=
   fontaineTheta_teichmuller x
 
-/-- For a ℚ≥0-module G, the monoid Multiplicative G is perfect: its p-th power map is multiplication
-by p on G, which is bijective. -/
+/--
+For a ℚ≥0-module G, the monoid Multiplicative G is perfect: its p-th power map is multiplication
+by p on G, which is bijective.
+-/
 instance {G : Type*} [AddCommMonoid G] [Module ℚ≥0 G] : PerfectRing (Multiplicative G) p where
   bijective_frobenius := mod_cast MulAction.bijective₀ (G₀ := ℚ≥0) (α := G) (a := p) out
 
 /-! ### The elements ε, τ, μ, ξ -/
 
-/-- The untilt of the reduction modulo `p` of a sequence `y` of successive `p`-th roots in `O_C` is
-the zeroth term of `y`. -/
-private lemma untilt_mapMonoidHom_idealQuotientMk (y : Perfection OC p) :
-    PreTilt.untilt (O := OC) (p := p)
-        (mapMonoidHom p (Ideal.Quotient.mk (Ideal.span {(p : OC)})).toMonoidHom y) =
-      coeffMonoidHom OC p 0 y :=
+/--
+The untilt of the reduction modulo `p` of a sequence `y` of successive `p`-th roots in `O_C` is
+the zeroth term of `y`.
+-/
+private lemma untilt_mapMonoidHom_idealQuotientMk (y : Perfection OC p)
+    : PreTilt.untilt (O := OC) (p := p)
+        (mapMonoidHom p (Ideal.Quotient.mk (Ideal.span {(p : OC)})).toMonoidHom y)
+      = coeffMonoidHom OC p 0 y :=
   teichmuller₀_mapMonoidHom_idealQuotientMk
 
-/-- Every homomorphism a from the additive group ℚ to the multiplicative monoid of C_p with a(1) = 1
-lifts to the tilt: some homomorphism χ: ℚ → O^♭ has χ(s)^♯ = a(s) for all s. -/
-lemma exists_tilt_lift_of_character (a : Multiplicative ℚ →* ℂ_[p])
-    (ha : a (Multiplicative.ofAdd 1) = 1) :
-    ∃ χ : Multiplicative ℚ →* OFlat, ∀ s : Multiplicative ℚ, (χ s).untilt = a s := by
+/--
+Every homomorphism a from the additive group ℚ to the multiplicative monoid of C_p with a(1) = 1
+lifts to the tilt: some homomorphism χ: ℚ → O^♭ has χ(s)^♯ = a(s) for all s.
+-/
+lemma exists_tilt_lift_of_character
+    (a : Multiplicative ℚ →* ℂ_[p]) (ha : a (Multiplicative.ofAdd 1) = 1)
+    : ∃ χ : Multiplicative ℚ →* OFlat, ∀ s : Multiplicative ℚ, (χ s).untilt = a s := by
   -- The values of `a` are roots of unity, so they lie in `OC`.
   have h_mem (s : Multiplicative ℚ) : a s ∈ valRingCp p := by
     have h_den : s ^ s.toAdd.den = .ofAdd 1 ^ s.toAdd.num := by aesop
@@ -122,8 +134,10 @@ lemma exists_tilt_lift_of_character (a : Multiplicative ℚ →* ℂ_[p])
   -- then reduce the sequence modulo `p`.
   let roots : Multiplicative ℚ →* Perfection OC p :=
     liftMonoidHom p (Multiplicative ℚ) OC (a.codRestrict _ h_mem)
-  refine ⟨(mapMonoidHom p (Ideal.Quotient.mk (Ideal.span {(p : OC)})).toMonoidHom).comp roots,
-    fun s ↦ ?_⟩
+  refine ⟨
+    (mapMonoidHom p (Ideal.Quotient.mk (Ideal.span {(p : OC)})).toMonoidHom).comp roots,
+    fun s ↦ ?_
+  ⟩
   -- Untilting the reduction of a compatible sequence returns its zeroth term.
   show ((PreTilt.untilt (O := OC) (p := p)
     (mapMonoidHom p (Ideal.Quotient.mk (Ideal.span {(p : OC)})).toMonoidHom (roots s)) : OC) :
@@ -131,34 +145,41 @@ lemma exists_tilt_lift_of_character (a : Multiplicative ℚ →* ℂ_[p])
   rw [untilt_mapMonoidHom_idealQuotientMk]
   simp [roots]
 
-/-- The map s ↦ ε^s: a chosen homomorphism from ℚ to the multiplicative monoid of O^♭ with
-(ε^s)^♯ a primitive root of unity of order the denominator of s. -/
+/--
+The map s ↦ ε^s: a chosen homomorphism from ℚ to the multiplicative monoid of O^♭ with
+(ε^s)^♯ a primitive root of unity of order the denominator of s.
+-/
 def epsPow : Multiplicative ℚ →* OFlat :=
   -- `ℂ` and `PadicAlgCl p` are uncountable algebraically closed fields of characteristic zero and
   -- of the same cardinality, so they are isomorphic
   (exists_tilt_lift_of_character
-    { toFun s :=
-        algebraMap (PadicAlgCl p) ℂ_[p] <|
-          (IsAlgClosed.ringEquiv_of_equiv_of_charZero (mk_complex ▸ cantor ℵ₀)
-              (Quotient.exact (mk_complex_eq_mk_padicAlgCl (p := p)))).some
-            (exp (2 * Real.pi * I * s.toAdd))
+    {
+      toFun s :=
+        algebraMap (PadicAlgCl p) ℂ_[p] <| (IsAlgClosed.ringEquiv_of_equiv_of_charZero
+            (mk_complex ▸ cantor ℵ₀) (Quotient.exact (mk_complex_eq_mk_padicAlgCl (p := p)))).some
+          (exp (2 * Real.pi * I * s.toAdd))
       map_one' := by simp
-      map_mul' := by simp [mul_add, exp_add] }
+      map_mul' := by simp [mul_add, exp_add]
+    }
     (by simp)).choose
 
-lemma isPrimitiveRoot_untilt_epsPow (s : Multiplicative ℚ) :
-    IsPrimitiveRoot (epsPow s).untilt s.toAdd.den := by
+lemma isPrimitiveRoot_untilt_epsPow (s : Multiplicative ℚ)
+    : IsPrimitiveRoot (epsPow s).untilt s.toAdd.den := by
   -- the untilt is the image of `exp (2 π i s)` under injective ring maps
   rw [← coe_submonoidClass_iff, epsPow, (exists_tilt_lift_of_character _ _).choose_spec s]
   · simp [map_of_injective, RingHom.injective, EquivLike.injective, isPrimitiveRoot_exp_rat]
   · simp
 
-/-- The element ε^{1/p} of O^♭, for the compatible system ε = (1, ζ_p, ζ_{p²}, …) of
-`New.Period.epsPow`. -/
+/--
+The element ε^{1/p} of O^♭, for the compatible system ε = (1, ζ_p, ζ_{p²}, …) of
+`New.Period.epsPow`.
+-/
 def epsRoot : OFlat := epsPow (Multiplicative.ofAdd p⁻¹)
 
-/-- The element ε = (1, ζ_p, ζ_{p²}, …) of O^♭, defined as the p-th power of the chosen element
-ε^{1/p}. -/
+/--
+The element ε = (1, ζ_p, ζ_{p²}, …) of O^♭, defined as the p-th power of the chosen element
+ε^{1/p}.
+-/
 def epsTilt : OFlat := epsRoot ^ p
 
 @[simp]
@@ -176,17 +197,21 @@ def mu : Ainf := WittVector.teichmuller p epsTilt - 1
 /-- The element ξ of A_inf equal to the sum of [ε^{1/p}]^i for 0 ≤ i < p, so that ξτ = μ. -/
 def xi : Ainf := ∑ i ∈ Finset.range p, WittVector.teichmuller p epsRoot ^ i
 
-/-- In `A_inf`, ξ·τ = μ, where μ = [ε] − 1, τ = [ε^{1/p}] − 1 and ξ = Σ_{0≤i<p} [ε^{1/p}]^i, the
-brackets denoting Teichmüller lifts. -/
+/--
+In `A_inf`, ξ·τ = μ, where μ = [ε] − 1, τ = [ε^{1/p}] − 1 and ξ = Σ_{0≤i<p} [ε^{1/p}]^i, the
+brackets denoting Teichmüller lifts.
+-/
 lemma xi_mul_tau : xi * tau = mu := by rw [xi, tau, geom_sum_mul, mu, epsTilt, map_pow]
 
-/-- Let `g` be a monic polynomial of degree `d` over `O_C / p`, and let `w`, `b` be in `O^♭`. Then
+/--
+Let `g` be a monic polynomial of degree `d` over `O_C / p`, and let `w`, `b` be in `O^♭`. Then
 some `a` in `O^♭` is near `w`, in that `g (w.coeff n)` divides `(w - a).coeff n ^ d`, and either
-the `n`-th coordinate of `a` is a root of `g`, or `d = 0` and `a = b`. -/
-lemma OFlat.exists_coeff_root_near (n : ℕ) (w : OFlat) {d : ℕ} (b : OFlat) {g : (ModP OC p)[X]}
-    (hg : IsMonicOfDegree g d) :
-    ∃ a : OFlat, ((d = 0 ∧ a = b) ∨ g.IsRoot (a.coeff n)) ∧
-      g.eval (w.coeff n) ∣ (w - a).coeff n ^ d := by
+the `n`-th coordinate of `a` is a root of `g`, or `d = 0` and `a = b`.
+-/
+lemma OFlat.exists_coeff_root_near
+    (n : ℕ) (w : OFlat) {d : ℕ} (b : OFlat) {g : (ModP OC p)[X]} (hg : IsMonicOfDegree g d)
+    : ∃ a : OFlat,
+      ((d = 0 ∧ a = b) ∨ g.IsRoot (a.coeff n)) ∧ g.eval (w.coeff n) ∣ (w - a).coeff n ^ d := by
   induction d generalizing b g with
   | zero =>
     -- a monic polynomial of degree `0` is `1`; take `a = b`
@@ -201,10 +226,9 @@ lemma OFlat.exists_coeff_root_near (n : ℕ) (w : OFlat) {d : ℕ} (b : OFlat) {
     obtain ⟨b, rfl⟩ : ∃ b : OFlat, b.coeff n = r := coeff_surjective (h_aic.exists_pow_eq p) n r
     obtain ⟨q, rfl⟩ : X - C (b.coeff n) ∣ g := dvd_iff_isRoot.mpr hr
     -- By induction `q` has a root `a` near `w` (or `d = 0` and `a = b`).
-    obtain ⟨a, ha, h_dvd⟩ :=
-      ih b ((isMonicOfDegree_X_sub_one _).of_mul_left ⟨by omega, h_monic⟩)
-    have h_eval :
-        ((X - C (b.coeff n)) * q).eval (w.coeff n) ∣ (w - b).coeff n * (w - a).coeff n ^ d := by
+    obtain ⟨a, ha, h_dvd⟩ := ih b ((isMonicOfDegree_X_sub_one _).of_mul_left ⟨by omega, h_monic⟩)
+    have h_eval
+        : ((X - C (b.coeff n)) * q).eval (w.coeff n) ∣ (w - b).coeff n * (w - a).coeff n ^ d := by
       simpa [← map_sub] using mul_dvd_mul_left _ h_dvd
     -- Both `b` and `a` give roots of `(X - b) * q`.
     have h_root_a : ((X - C (b.coeff n)) * q).IsRoot (a.coeff n) := by
@@ -216,30 +240,37 @@ lemma OFlat.exists_coeff_root_near (n : ℕ) (w : OFlat) {d : ℕ} (b : OFlat) {
     · exact ⟨b, .inr (by simp), by grw [h_eval, h_near, pow_succ']⟩
     · exact ⟨a, .inr h_root_a, by grw [h_eval, h_near, pow_succ']⟩
 
-/-- The sequence `s` with `s 0 = 0` and `s (m + 1) = a m (s m)`, for a family of maps `a m` of
-`O^♭`. -/
+/--
+The sequence `s` with `s 0 = 0` and `s (m + 1) = a m (s m)`, for a family of maps `a m` of
+`O^♭`.
+-/
 private def OFlat.iterateSeq (a : ℕ → OFlat → OFlat) : ℕ → OFlat
   | 0 => 0
   | m + 1 => a m (OFlat.iterateSeq a m)
 
-private lemma OFlat.coeff_add_pow_pow (x : OFlat) (m n : ℕ) :
-    x.coeff (m + n) ^ p ^ n = x.coeff m := coeffMonoidHom_pow_p_pow' x m n
+private lemma OFlat.coeff_add_pow_pow (x : OFlat) (m n : ℕ) : x.coeff (m + n) ^ p ^ n = x.coeff m :=
+  coeffMonoidHom_pow_p_pow' x m n
 
-/-- For a polynomial `f` over `O^♭`, the `n`-th coordinate of `f (x)` depends only on the `n`-th
-coordinate of `x`. -/
-private lemma OFlat.coeff_eval_eq_of_coeff_eq {f : OFlat[X]} {x y : OFlat} {n : ℕ}
-    (h_coeff : x.coeff n = y.coeff n) : (f.eval x).coeff n = (f.eval y).coeff n := by
+/--
+For a polynomial `f` over `O^♭`, the `n`-th coordinate of `f (x)` depends only on the `n`-th
+coordinate of `x`.
+-/
+private lemma OFlat.coeff_eval_eq_of_coeff_eq
+    {f : OFlat[X]} {x y : OFlat} {n : ℕ} (h_coeff : x.coeff n = y.coeff n)
+    : (f.eval x).coeff n = (f.eval y).coeff n := by
   rw [← eval₂_hom, h_coeff, eval₂_hom]
 
-/-- The tilt O^♭ is absolutely integrally closed: every monic polynomial of positive degree over
-it has a root. The root is built coordinate by coordinate from roots modulo `p`. -/
+/--
+The tilt O^♭ is absolutely integrally closed: every monic polynomial of positive degree over
+it has a root. The root is built coordinate by coordinate from roots modulo `p`.
+-/
 lemma OFlat.isAbsIntegrallyClosed : IsAbsIntegrallyClosed OFlat := by
   refine ⟨fun f hf h_deg ↦ ?_⟩
   -- Choose `s (m + 1)` near `s m` such that `f (s (m + 1))` has `m`-th coordinate `0`. The root has
   -- as its `n`-th coordinate that of `s (n + d + 1)`, where `d` is the degree of `f`.
   set d : ℕ := f.natDegree
-  have key (n : ℕ) (w : OFlat) :
-      ∃ a : OFlat, (f.eval a).coeff n = 0 ∧ (f.eval w).coeff n ∣ (w - a).coeff n ^ d := by
+  have key (n : ℕ) (w : OFlat)
+      : ∃ a : OFlat, (f.eval a).coeff n = 0 ∧ (f.eval w).coeff n ∣ (w - a).coeff n ^ d := by
     simpa [hf.natDegree_map, d, h_deg.ne'] using
       exists_coeff_root_near n w 0 ⟨rfl, hf.map (coeff n)⟩
   choose a h_root h_near using key
@@ -265,26 +296,34 @@ lemma OFlat.isAbsIntegrallyClosed : IsAbsIntegrallyClosed OFlat := by
   refine ⟨root, ext fun n ↦ ?_⟩
   -- the `n`-th coordinate of the root is that of `s (n + d + 1)`, and the `n`-th coordinate of
   -- `f (s (n + d + 1))` is a power of the `(n + d)`-th one, which is `0`
-  calc (f.eval root).coeff n
+  calc
+    (f.eval root).coeff n
     _ = (f.eval (s (n + d + 1))).coeff n := coeff_eval_eq_of_coeff_eq rfl
     _ = (f.eval (s (n + d + 1))).coeff (n + d) ^ p ^ d := (coeff_add_pow_pow _ n d).symm
     _ = (0 : OFlat).coeff n := by simp [h_root_s, NeZero.ne p]
 
-variable {A R N S : Type*} [CommRing A] [MulSemiringAction FrobGal A] [SMul N A] [CommRing R]
-  [CharP R p] [CommRing S] {M : Type*} [Monoid M] (n : ℕ) (g : Gp p) (x : OFlat)
+variable
+  {A R N S : Type*}
+  [CommRing A] [MulSemiringAction FrobGal A] [SMul N A] [CommRing R] [CharP R p] [CommRing S]
+  {M : Type*} [Monoid M]
+  (n : ℕ) (g : Gp p) (x : OFlat)
 
 /-! ### Frobenius, the Galois action and the ℤ_p-algebra structures -/
 
-/-- For a ring A with an action of ℕ × G_p, the ring endomorphism given by the generator of ℕ
-paired with the identity of G_p, the Frobenius φ. -/
+/--
+For a ring A with an action of ℕ × G_p, the ring endomorphism given by the generator of ℕ
+paired with the identity of G_p, the Frobenius φ.
+-/
 def frobEnd : A →+* A := toRingHom FrobGal A (Multiplicative.ofAdd 1, 1)
 
 /-- `W(R)` is a `ℤ_p = W(𝔽_p)`-algebra for every ring `R` of characteristic `p`. -/
 instance : Algebra ℤ_[p] (WittVector p R) :=
   ((WittVector.map (castHom dvd_rfl R)).comp (equiv p).symm).toAlgebra
 
-/-- For an `A`-algebra `S`, the Witt vectors `W(S)` are a `W(A)`-algebra through `W` of the
-structure map. -/
+/--
+For an `A`-algebra `S`, the Witt vectors `W(S)` are a `W(A)`-algebra through `W` of the
+structure map.
+-/
 instance (priority := low) [Algebra A S] : Algebra (WittVector p A) (WittVector p S) :=
   (WittVector.map (algebraMap ..)).toAlgebra
 
@@ -293,13 +332,15 @@ instance actOFlat : MulSemiringAction FrobGal OFlat := by
   -- `(n, g)` acts by the map induced by `g` on the tilt, followed by `x ↦ x ^ p ^ n`
   apply actionOfHoms _ fun m ↦ (iterateFrobenius _ p m.1.toAdd).comp (tiltMap (toRingHom _ _ m.2))
   · simp [show toRingHom (Gp p) OC 1 = RingHom.id OC by aesop, tiltMap_id, RingHom.ext_iff]
-  · have hab (a b : Gp p) :
-        toRingHom (Gp p) OC (a * b) = (toRingHom (Gp p) OC a).comp (toRingHom (Gp p) OC b) := by
+  · have hab (a b : Gp p)
+        : toRingHom (Gp p) OC (a * b) = (toRingHom (Gp p) OC a).comp (toRingHom (Gp p) OC b) := by
       aesop (add simp mul_smul)
     simp [iterateFrobenius_def, hab, tiltMap_comp, pow_add, pow_mul', RingHom.ext_iff]
 
-/-- An action of `FrobGal` on `A` induces a `MulSemiringAction` of `Gp p` on `A`. It is obtained by
-composing with the right inclusion of `Gp p` into `FrobGal`. -/
+/--
+An action of `FrobGal` on `A` induces a `MulSemiringAction` of `Gp p` on `A`. It is obtained by
+composing with the right inclusion of `Gp p` into `FrobGal`.
+-/
 instance (priority := 100) FrobGal.galAct : MulSemiringAction (Gp p) A :=
   compHom (M := FrobGal) _ (.inr ..)
 
@@ -307,8 +348,10 @@ instance (priority := 100) FrobGal.galAct : MulSemiringAction (Gp p) A :=
 lemma FrobGal.smulCommClass_gal [SMulCommClass FrobGal N A] : SMulCommClass (Gp p) N A :=
   SMul.comp.smulCommClass _
 
-/-- The pair (n, g) of `FrobGal` acts on `A` as g followed by the n-th iterate of the Frobenius
-φ. -/
+/--
+The pair (n, g) of `FrobGal` acts on `A` as g followed by the n-th iterate of the Frobenius
+φ.
+-/
 @[local simp]
 lemma FrobGal.smul_def (x : A) : (Multiplicative.ofAdd n, g) • x = frobEnd^[n] (g • x) := by
   -- `φ` is the action of `(ofAdd 1, 1)` and `g` that of `(1, g)`; the pair `(ofAdd n, g)` is
@@ -316,16 +359,17 @@ lemma FrobGal.smul_def (x : A) : (Multiplicative.ofAdd n, g) • x = frobEnd^[n]
   have h_frob : ⇑(frobEnd : A →+* A) = fun y : A ↦ ((Multiplicative.ofAdd 1, 1) : FrobGal) • y :=
     rfl
   have h_gal : g • x = ((1, g) : FrobGal) • x := rfl
-  have h_pair : ((Multiplicative.ofAdd n, g) : FrobGal) =
-      (Multiplicative.ofAdd 1, 1) ^ n * (1, g) := by simp [← ofAdd_nsmul]
+  have h_pair
+      : ((Multiplicative.ofAdd n, g) : FrobGal) = (Multiplicative.ofAdd 1, 1) ^ n * (1, g) := by
+    simp [← ofAdd_nsmul]
   rw [h_frob, h_gal, smul_iterate_apply, smul_smul, h_pair]
 
 /-- The action of `g` in `G_p` commutes with the Frobenius φ. -/
 @[simp]
 lemma smul_frobEnd (x : A) : g • frobEnd x = frobEnd (g • x) := by
   -- `g` acts as `(1, g)` and `φ` as `(ofAdd 1, 1)`, and these two elements of `FrobGal` commute
-  change ((1, g) : FrobGal) • ((Multiplicative.ofAdd 1, 1) : FrobGal) • x =
-    ((Multiplicative.ofAdd 1, 1) : FrobGal) • ((1, g) : FrobGal) • x
+  change ((1, g) : FrobGal) • ((Multiplicative.ofAdd 1, 1) : FrobGal) • x
+    = ((Multiplicative.ofAdd 1, 1) : FrobGal) • ((1, g) : FrobGal) • x
   simp only [smul_smul, Prod.mk_mul_mk, one_mul, mul_one]
 
 /-- For n ∈ ℕ and x in O^♭, the untilt (x^{1/p^n})^♯ in O_C of the p^n-th root of x. -/
@@ -336,24 +380,27 @@ lemma OFlat.mk_untiltRoot : ↑(untiltRoot n x) = x.coeff n := by simp [untiltRo
 
 open algebraMap
 
-/-- For a ring homomorphism f : R → S of rings of characteristic p, the induced map W(f) of Witt
-vectors commutes with the maps from ℤ_p. -/
-lemma wittVector_map_algebraMap [CharP S p] (f : R →+* S) (a : ℤ_[p]) :
-    WittVector.map (p := p) f a = algebraMap ℤ_[p] (WittVector p S) a := by
+/--
+For a ring homomorphism f : R → S of rings of characteristic p, the induced map W(f) of Witt
+vectors commutes with the maps from ℤ_p.
+-/
+lemma wittVector_map_algebraMap [CharP S p] (f : R →+* S) (a : ℤ_[p])
+    : WittVector.map (p := p) f a = algebraMap ℤ_[p] (WittVector p S) a := by
   -- Both sides are `W` of a ring map `𝔽_p → S` applied to `a` in `W(𝔽_p) = ℤ_p`, and any two ring
   -- maps out of `𝔽_p` agree.
   have h_comp : f.comp (castHom dvd_rfl R) = castHom dvd_rfl S := (f.comp _).ext_zmod _
-  change WittVector.map f (WittVector.map (castHom dvd_rfl R) ((equiv p).symm a)) =
-    WittVector.map (castHom dvd_rfl S) ((equiv p).symm a)
+  change WittVector.map f (WittVector.map (castHom dvd_rfl R) ((equiv p).symm a))
+    = WittVector.map (castHom dvd_rfl S) ((equiv p).symm a)
   ext i
   simp [← h_comp]
 
 instance [MulSemiringAction M R] : SMulCommClass M ℤ_[p] (WittVector p R) :=
   ⟨fun _ ↦ map_smul (AlgHom.mk _ (wittVector_map_algebraMap _))⟩
 
-instance [MulSemiringAction M Ainf] [MulSemiringAction M S] [Algebra ℤ_[p] S] [Algebra Ainf S]
-    [IsScalarTower ℤ_[p] Ainf S] [SMulCommClass M ℤ_[p] Ainf] [SMulDistribClass M Ainf S] :
-    SMulCommClass M ℤ_[p] S where
+instance
+    [MulSemiringAction M Ainf] [MulSemiringAction M S] [Algebra ℤ_[p] S] [Algebra Ainf S]
+    [IsScalarTower ℤ_[p] Ainf S] [SMulCommClass M ℤ_[p] Ainf] [SMulDistribClass M Ainf S]
+    : SMulCommClass M ℤ_[p] S where
   smul_comm := by simp [← algebraMap_smul Ainf, smul_distrib_smul]
 
 instance [CharP S p] [Algebra R S] : IsScalarTower ℤ_[p] (WittVector p R) (WittVector p S) :=
@@ -370,13 +417,15 @@ instance [SMul S A] [SMulDistribClass FrobGal S A] : SMulDistribClass (Gp p) S A
   ⟨fun g ↦ smul_distrib_smul ((1, g) : FrobGal)⟩
 
 @[simp]
-lemma frobEnd_algebraMap [Algebra S A] [SMulDistribClass FrobGal S A] (x : S) :
-    frobEnd (x : A) = frobEnd x := smul_algebraMap_eq_algebraMap_smul ..
+lemma frobEnd_algebraMap [Algebra S A] [SMulDistribClass FrobGal S A] (x : S)
+    : frobEnd (x : A) = frobEnd x :=
+  smul_algebraMap_eq_algebraMap_smul ..
 
 instance : MulSemiringAction G CFlat := IsFractionRing.mulSemiringAction _ OFlat _
 
 deriving instance Algebra ℤ_[p], Algebra Ainf, IsScalarTower ℤ_[p] Ainf, MulSemiringAction G,
-  SMulCommClass G ℤ_[p] for @WittCFlat p _
+    SMulCommClass G ℤ_[p]
+  for @WittCFlat p _
 
 instance : SMulDistribClass G Ainf WittCFlat :=
   smulDistribClass_of_tower fun _ : Ainf ↦ ext fun _ ↦ smul_algebraMap_eq_algebraMap_smul ..
@@ -400,8 +449,10 @@ open WittVector IsLocalRing MulSemiringAction Variety ZMod Set
 
 variable {p : ℕ} [ThePrime p]
 
-/-- The ℤ_p-algebra homomorphism A_inf = W(O^♭) → W(k), for k the residue field of O^♭, that
-applies the residue map O^♭ → k to each Witt coordinate. -/
+/--
+The ℤ_p-algebra homomorphism A_inf = W(O^♭) → W(k), for k the residue field of O^♭, that
+applies the residue map O^♭ → k to each Witt coordinate.
+-/
 noncomputable def toWittResidue : Ainf →ₐ[ℤ_[p]] WittVector p (ResidueField OFlat) :=
   ⟨map (residue OFlat), wittVector_map_algebraMap (residue OFlat)⟩
 
@@ -409,30 +460,39 @@ variable {k : Type*} [CommRing k] [CharP k p] [PerfectRing k p] {a c : WittVecto
 
 /-! ### Witt vectors over a perfect ring: lifting from the reduction modulo `p` -/
 
-/-- For k perfect of characteristic p, the prime p divides a Witt vector `a` in W(k) if and only
-if its zeroth coordinate vanishes. -/
+/--
+For k perfect of characteristic p, the prime p divides a Witt vector `a` in W(k) if and only
+if its zeroth coordinate vanishes.
+-/
 lemma Witt.p_dvd_iff : ↑p ∣ a ↔ constantCoeff a = 0 := by
   simp [← Ideal.mem_span_singleton, ← ker_constantCoeff]
 
 omit [PerfectRing k p] in
-/-- A Witt vector `a` in W(k), for `k` of characteristic `p`, is a unit if and only if its zeroth
-coordinate is a unit in k. -/
+/--
+A Witt vector `a` in W(k), for `k` of characteristic `p`, is a unit if and only if its zeroth
+coordinate is a unit in k.
+-/
 lemma Ainf.isUnit_iff_isUnit_constantCoeff : IsUnit a ↔ IsUnit (constantCoeff a) :=
   ⟨fun h ↦ h.map constantCoeff, fun h ↦ ⟨mkUnit h.unit_spec.symm, rfl⟩⟩
 
-/-- Let `F`, `G` be ring endomorphisms of a perfect ring `k` of characteristic `p` and `s₀` the
+/--
+Let `F`, `G` be ring endomorphisms of a perfect ring `k` of characteristic `p` and `s₀` the
 reduction of `s ∈ W(k)` modulo `p`. If `x ↦ F x - s₀ * G x` is onto `k`, then
-`b ↦ W(F) b - s * W(G) b` is onto `W(k)`. -/
-lemma Witt.exists_map_sub_mul_map_eq (F G : k →+* k) (s : WittVector p k)
-    (h_surj : Function.Surjective fun x : k ↦ F x - constantCoeff s * G x) :
-    ∃ b : WittVector p k, map F b - s * map G b = a := by
+`b ↦ W(F) b - s * W(G) b` is onto `W(k)`.
+-/
+lemma Witt.exists_map_sub_mul_map_eq
+    (F G : k →+* k) (s : WittVector p k)
+    (h_surj : Function.Surjective fun x : k ↦ F x - constantCoeff s * G x)
+    : ∃ b : WittVector p k, map F b - s * map G b = a := by
   -- Successive approximation modulo powers of `p` for the additive map
   -- `Φ b = map F b - s * map G b`, which commutes with multiplication by `p`: by
   -- `mem_range_of_approx` it is enough to write each `x` as `Φ b + p * y`.
   let Φ : WittVector p k →+ WittVector p k :=
     (map F).toAddMonoidHom - (AddMonoidHom.mulLeft s).comp (map G).toAddMonoidHom
   refine mem_range_of_approx (π := (p : WittVector p k)) (π' := (p : WittVector p k)) Φ
-    (map_natCast_smul Φ _ _ p) id (fun x ↦ ?_) a
+    (map_natCast_smul Φ _ _ p) id
+    (fun x ↦ ?_)
+    a
   -- modulo `p` the equation is solved by `h_surj`; lift the solution by Teichmüller
   obtain ⟨t, ht⟩ := h_surj (constantCoeff x)
   obtain ⟨y, hy⟩ : ↑p ∣ x - Φ (teichmuller p t) := by
@@ -441,38 +501,48 @@ lemma Witt.exists_map_sub_mul_map_eq (F G : k →+* k) (s : WittVector p k)
 
 open Ideal Period.Witt Function RingHom PadicComplex Pi OFlat NeZero Fact SModEq IsUltrametricDist
 
-/-- Artin–Schreier–Witt equations: let k be a non-zero perfect, absolutely integrally closed ring of
+/--
+Artin–Schreier–Witt equations: let k be a non-zero perfect, absolutely integrally closed ring of
 characteristic p, and let φ be the Frobenius of W(k). Then for all a, s in W(k) the equation
-φ(y) − sy = a has a solution y in W(k). -/
-lemma Witt.artin_schreier_witt [Nontrivial k] [h : IsAbsIntegrallyClosed k] (s a : WittVector p k) :
-    ∃ y : WittVector p k, WittVector.frobenius y - s * y = a := by
+φ(y) − sy = a has a solution y in W(k).
+-/
+lemma Witt.artin_schreier_witt [Nontrivial k] [h : IsAbsIntegrallyClosed k] (s a : WittVector p k)
+    : ∃ y : WittVector p k, WittVector.frobenius y - s * y = a := by
   -- Modulo `p` the left side is `x ↦ x ^ p - s₀ * x`, with `s₀` the reduction of `s`; this map is
   -- onto since `k` is absolutely integrally closed.
   rw [frobenius_eq_map_frobenius]
   exact exists_map_sub_mul_map_eq _ 1 s (h.exists_pow_sub_mul_eq p _)
 
-/-- In W(k), the power p ^ m divides `a - c` if and only if `a` and `c` have the same first
-`m` Witt coordinates. -/
-lemma Witt.pow_dvd_sub_iff_coeff_eq {m : ℕ} :
-    (p : WittVector p k) ^ m ∣ a - c ↔ ∀ i < m, a.coeff i = c.coeff i := by
+/--
+In W(k), the power p ^ m divides `a - c` if and only if `a` and `c` have the same first
+`m` Witt coordinates.
+-/
+lemma Witt.pow_dvd_sub_iff_coeff_eq {m : ℕ}
+    : (p : WittVector p k) ^ m ∣ a - c ↔ ∀ i < m, a.coeff i = c.coeff i := by
   rw [← mem_span_singleton, mem_span_p_pow_iff_le_coeff_eq_zero,
     le_coeff_eq_iff_le_sub_coeff_eq_zero]
 
-/-- In W(k), `a` lies in the ideal (p, c) if and only if the zeroth coordinate of `c` divides that
-of `a`. -/
+/--
+In W(k), `a` lies in the ideal (p, c) if and only if the zeroth coordinate of `c` divides that
+of `a`.
+-/
 lemma Witt.mem_span_pair_iff : a ∈ span {↑p, c} ↔ constantCoeff c ∣ constantCoeff a := by
   simp [span_insert, ← ker_constantCoeff, sup_comm, map_span, mem_span_singleton,
     ← comap_map_of_surjective', constantCoeff_surjective]
 
-/-- Let I be an ideal of W(k), k perfect of characteristic p, such that px ∈ I implies x ∈ I. If
-c ∈ I and its zeroth Witt coordinate divides that of every element of I, then c generates I. -/
-lemma Witt.dvd_of_mem_of_constantCoeff_dvd {I : Ideal (WittVector p k)} (hc : c ∈ I)
-    (h_sat : ∀ x : WittVector p k, (p : WittVector p k) * x ∈ I → x ∈ I)
-    (h_mod_p : ∀ a ∈ I, constantCoeff c ∣ constantCoeff a) :
-    ∀ a ∈ I, c ∣ a := by
+/--
+Let I be an ideal of W(k), k perfect of characteristic p, such that px ∈ I implies x ∈ I. If
+c ∈ I and its zeroth Witt coordinate divides that of every element of I, then c generates I.
+-/
+lemma Witt.dvd_of_mem_of_constantCoeff_dvd
+    {I : Ideal (WittVector p k)}
+    (hc : c ∈ I) (h_sat : ∀ x : WittVector p k, (p : WittVector p k) * x ∈ I → x ∈ I)
+    (h_mod_p : ∀ a ∈ I, constantCoeff c ∣ constantCoeff a)
+    : ∀ a ∈ I, c ∣ a := by
   -- Successive approximation: each `x ∈ I` is `c * b + p * y` with `y` again in `I`.
-  have step (x : I) :
-      ∃ (b : WittVector p k) (y : I), (x : WittVector p k) = c * b + p * (y : WittVector p k) := by
+  have step (x : I)
+      : ∃ (b : WittVector p k) (y : I),
+        (x : WittVector p k) = c * b + p * (y : WittVector p k) := by
     obtain ⟨x, hx⟩ := x
     -- modulo `p` the element `c` divides `x`
     obtain ⟨y, b, hx_eq⟩ : ∃ y b : WittVector p k, y * p + b * c = x :=
@@ -482,16 +552,19 @@ lemma Witt.dvd_of_mem_of_constantCoeff_dvd {I : Ideal (WittVector p k)} (hc : c 
     have hy : y ∈ I := h_sat y (by simpa [h_py] using I.sub_mem hx (I.mul_mem_left b hc))
     exact ⟨b, ⟨y, hy⟩, by linear_combination -hx_eq⟩
   intro a ha
-  obtain ⟨b, hb⟩ := mem_range_of_approx (AddMonoidHom.mulLeft c)
-    (mul_smul_comm (p : WittVector p k) c) I.subtype step ⟨a, ha⟩
+  obtain ⟨b, hb⟩ :=
+    mem_range_of_approx (AddMonoidHom.mulLeft c) (mul_smul_comm (p : WittVector p k) c) I.subtype
+      step ⟨a, ha⟩
   exact ⟨b, hb.symm⟩
 
 variable (g : Gp p) (m : FrobGal) (t : OFlat) (a : Ainf)
 
 /-! ### The actions of Frobenius and Galois, units, and generators of the kernel of `θ` -/
 
-/-- On `A_inf = W(O^♭)` the Frobenius `φ` of the action of `ℕ × G_p` is the Frobenius of Witt
-vectors, since `φ` acts on `O^♭` as `x ↦ x ^ p`. -/
+/--
+On `A_inf = W(O^♭)` the Frobenius `φ` of the action of `ℕ × G_p` is the Frobenius of Witt
+vectors, since `φ` acts on `O^♭` as `x ↦ x ^ p`.
+-/
 lemma frobEnd_eq_frobenius : frobEnd a = WittVector.frobenius a := by
   ext n
   -- `φ` acts on the Witt coordinates
@@ -506,15 +579,15 @@ lemma frobEnd_teichmuller : frobEnd (teichmuller p t) = teichmuller p t ^ p := b
   rw [show frobEnd (teichmuller p t) = teichmuller p (frobEnd t) from smul_teichmuller _ t,
     OFlat.frobEnd_apply, map_pow]
 
-lemma iterate_frobEnd_teichmuller (j : ℕ) (x : OFlat) :
-    frobEnd^[j] (teichmuller p x) = teichmuller p (x ^ p ^ j) := by
+lemma iterate_frobEnd_teichmuller (j : ℕ) (x : OFlat)
+    : frobEnd^[j] (teichmuller p x) = teichmuller p (x ^ p ^ j) := by
   induction j with
   | zero => simp
   | succ j ih => simp [iterate_succ_apply', ih, ← map_pow, ← pow_mul, ← pow_succ]
 
 /-- The untilt of `φ ^ n g t` is `(g t^♯) ^ p ^ n`. -/
-lemma untilt_ofAdd_smul (n : ℕ) (g : Gp p) (t : OFlat) :
-    ((Multiplicative.ofAdd n, g) • t).untilt = (g • t.untilt) ^ p ^ n := by
+lemma untilt_ofAdd_smul (n : ℕ) (g : Gp p) (t : OFlat)
+    : ((Multiplicative.ofAdd n, g) • t).untilt = (g • t.untilt) ^ p ^ n := by
   -- `(n, g)` acts on `O^♭` by the map that `g` induces on the tilt, then by `x ↦ x ^ p ^ n`
   show (tiltMap (toRingHom (Gp p) OC g) t ^ p ^ n).untilt = _
   rw [map_pow, untilt_tiltMap, toRingHom_apply]
@@ -531,8 +604,8 @@ lemma theta_smul : theta (g • a) = g • theta a := by
 lemma constantCoeff_frobEnd : constantCoeff (frobEnd a) = constantCoeff a ^ p := by
   rw [frobEnd_eq_frobenius, constantCoeff_apply, constantCoeff_apply, coeff_frobenius_charP]
 
-lemma constantCoeff_iterate_frobEnd (n : ℕ) :
-    constantCoeff (frobEnd^[n] a) = constantCoeff a ^ p ^ n := by
+lemma constantCoeff_iterate_frobEnd (n : ℕ)
+    : constantCoeff (frobEnd^[n] a) = constantCoeff a ^ p ^ n := by
   induction n with
   | zero => simp
   | succ n ih => rw [iterate_succ_apply', constantCoeff_frobEnd, ih, ← pow_mul, ← pow_succ]
@@ -541,8 +614,10 @@ variable {c a δ y : Ainf}
 
 open Ainf Multiplicative
 
-/-- Let `a ∈ A_inf` divide each of its conjugates `g' • a` under the Galois group `G_p`. Then
-for every `g ∈ G_p` the conjugate `g • a` is associated to `a`. -/
+/--
+Let `a ∈ A_inf` divide each of its conjugates `g' • a` under the Galois group `G_p`. Then
+for every `g ∈ G_p` the conjugate `g • a` is associated to `a`.
+-/
 lemma associated_smul_of_dvd (h : ∀ g : Gp p, a ∣ g • a) : Associated (g • a) a := by
   -- apply `g` to `a ∣ g⁻¹ • a`
   have h_inv : g • a ∣ g • (g⁻¹ • a) := map_dvd (toRingHom (Gp p) Ainf g) (h g⁻¹)
@@ -554,17 +629,19 @@ instance : FaithfulSMul ℤ_[p] (WittVector p k) := by
   simpa [faithfulSMul_iff_algebraMap_injective, algebraMap_toAlgebra] using
     map_injective _ (castHom_injective k)
 
-/-- Let c ∈ A_inf with θ(c) = 0, and let c₀ ∈ O^♭ be its reduction modulo p. If c₀^♯ divides p
-in the integers of C_p, then c generates the kernel of θ. -/
-lemma theta_eq_zero_iff_dvd_of_untilt_dvd {c a : Ainf} (hc : theta c = 0)
-    (hc_dvd : (constantCoeff c).untilt ∣ (p : OC)) :
-    theta a = 0 ↔ c ∣ a := by
+/--
+Let c ∈ A_inf with θ(c) = 0, and let c₀ ∈ O^♭ be its reduction modulo p. If c₀^♯ divides p
+in the integers of C_p, then c generates the kernel of θ.
+-/
+lemma theta_eq_zero_iff_dvd_of_untilt_dvd
+    {c a : Ainf} (hc : theta c = 0) (hc_dvd : (constantCoeff c).untilt ∣ (p : OC))
+    : theta a = 0 ↔ c ∣ a := by
   refine ⟨fun ha ↦ ?_, fun ⟨b, hb⟩ ↦ by simp [hb, hc]⟩
   -- Apply `dvd_of_mem_of_constantCoeff_dvd` to the ideal `ker θ`, saturated for `p` as `p ≠ 0` in
   -- the domain `OC`.
   have h_sat : ∀ x : Ainf, (p : Ainf) * x ∈ ker theta → x ∈ ker theta := by simp [ne p]
-  refine dvd_of_mem_of_constantCoeff_dvd (I := ker theta) (mem_ker.mpr hc) h_sat
-    (fun x hx ↦ ?_) a ha
+  refine
+    dvd_of_mem_of_constantCoeff_dvd (I := ker theta) (mem_ker.mpr hc) h_sat (fun x hx ↦ ?_) a ha
   -- modulo `p`, `θ x` is the untilt of the reduction of `x`, and `θ x = 0`
   have h_dvd : ↑p ∣ (constantCoeff x).untilt := by
     simp [← Quotient.eq_zero_iff_dvd, ← mk_fontaineTheta, mem_ker.mp hx]
@@ -576,20 +653,25 @@ instance : FaithfulSMul Ainf WittCFlat := by
   simpa [faithfulSMul_iff_algebraMap_injective, algebraMap_toAlgebra] using
     map_injective _ (IsFractionRing.injective OFlat CFlat)
 
-/-- If `p` does not divide `a` in `A_inf`, then `a` becomes a unit in the Witt vectors `W(C^♭)` of
-the fraction field `C^♭` of `O^♭`. -/
-lemma isUnit_algebraMap_wittCFlat_of_not_p_dvd (h : ¬↑p ∣ a) :
-    IsUnit (algebraMap Ainf WittCFlat a) := by
+/--
+If `p` does not divide `a` in `A_inf`, then `a` becomes a unit in the Witt vectors `W(C^♭)` of
+the fraction field `C^♭` of `O^♭`.
+-/
+lemma isUnit_algebraMap_wittCFlat_of_not_p_dvd (h : ¬ ↑p ∣ a)
+    : IsUnit (algebraMap Ainf WittCFlat a) := by
   -- The constant coefficient `a₀` of `a` is not zero, so it is a unit of the field `C^♭`; and a
   -- Witt vector over a perfect field is a unit when its constant coefficient is.
   have h_ne : constantCoeff a ≠ 0 := mt p_dvd_iff.mpr h
   simp_all [WittCFlat, algebraMap_toAlgebra, isUnit_iff_isUnit_constantCoeff]
 
-/-- A Witt vector over a domain of characteristic `p` whose coordinates are fixed by `x ↦ x ^ p` is
-a `p`-adic integer. -/
-lemma exists_algebraMap_eq_of_frobenius_eq {k : Type*} [CommRing k] [IsDomain k] [CharP k p]
-    (a : WittVector p k) (h_frobenius : WittVector.frobenius a = a) :
-    ∃ c : ℤ_[p], algebraMap ℤ_[p] (WittVector p k) c = a := by
+/--
+A Witt vector over a domain of characteristic `p` whose coordinates are fixed by `x ↦ x ^ p` is
+a `p`-adic integer.
+-/
+lemma exists_algebraMap_eq_of_frobenius_eq
+    {k : Type*} [CommRing k] [IsDomain k] [CharP k p]
+    (a : WittVector p k) (h_frobenius : WittVector.frobenius a = a)
+    : ∃ c : ℤ_[p], algebraMap ℤ_[p] (WittVector p k) c = a := by
   -- Every coordinate is a root of `X ^ p - X`, which splits over `ZMod p`; as `k` is a domain, the
   -- coordinate comes from `ZMod p`.
   have h_coeff_mem (n : ℕ) : ∃ z : ZMod p, castHom dvd_rfl k z = a.coeff n := by
@@ -637,8 +719,7 @@ lemma theta_mu : theta mu = 0 := by simpa using theta_iterate_frobEnd_mu 0
 /-- `θ (φ ^ j ξ) = p` for all `j ≥ 1`. -/
 lemma theta_iterate_frobEnd_xi (j : ℕ) : theta (frobEnd^[j + 1] xi) = p := by
   -- `φ ^ (j + 1) ξ = ∑_{i < p} [ε ^ p ^ j] ^ i`, and `θ [ε ^ p ^ j] = 1`, so the sum goes to `p`
-  have h_iter :
-      frobEnd^[j + 1] xi = ∑ i ∈ Finset.range p, teichmuller p (epsTilt ^ p ^ j) ^ i := by
+  have h_iter : frobEnd^[j + 1] xi = ∑ i ∈ Finset.range p, teichmuller p (epsTilt ^ p ^ j) ^ i := by
     rw [xi, ← RingHom.coe_pow, map_sum]
     refine Finset.sum_congr rfl fun i _ ↦ ?_
     -- `φ ^ (j + 1) [ε^{1/p}] = [(ε^{1/p}) ^ p ^ (j + 1)] = [ε ^ p ^ j]`
@@ -653,12 +734,12 @@ lemma theta_xi : theta xi = 0 := by
 /-- `τ` reduces to zero in the Witt vectors of the residue field of `O^♭`. -/
 lemma toWittResidue_tau : toWittResidue tau = 0 := by
   -- `τ` is not a unit: otherwise `μ = φ τ` and `θ μ` are units, but `θ μ = 0`.
-  have h_tau : ¬IsUnit tau := by
+  have h_tau : ¬ IsUnit tau := by
     intro h_unit
     have h_mu : IsUnit mu := by simpa using h_unit.map frobEnd
     exact (h_mu.map theta).ne_zero theta_mu
   -- so the constant coefficient `ε^{1/p} - 1` of `τ` is not a unit, and `ε^{1/p}` has residue `1`
-  have h_coeff : ¬IsUnit (constantCoeff tau) := mt isUnit_iff_isUnit_constantCoeff.mpr h_tau
+  have h_coeff : ¬ IsUnit (constantCoeff tau) := mt isUnit_iff_isUnit_constantCoeff.mpr h_tau
   rw [tau, map_sub, map_one, constantCoeff_apply, teichmuller_coeff_zero] at h_coeff
   have h_res : residue OFlat epsRoot = 1 := by
     have h_zero : residue OFlat (epsRoot - 1) = 0 := by
@@ -688,12 +769,15 @@ lemma associated_p_xi_sub_teichmuller : Associated ↑p (xi - teichmuller p (con
   have h_one : toWittResidue u = 1 := (left_eq_mul₀ (p_nonzero p _)).mp h_red
   -- so `u` has a unit as reduction, and is a unit
   have h_unit : IsUnit (toWittResidue u) := by simp [h_one]
-  have h_u : IsUnit u := isUnit_iff_isUnit_constantCoeff.mpr
-    ((isUnit_map_iff (residue OFlat) (constantCoeff u)).mp (h_unit.map constantCoeff))
+  have h_u : IsUnit u :=
+    isUnit_iff_isUnit_constantCoeff.mpr ((isUnit_map_iff (residue OFlat) (constantCoeff u)).mp
+      (h_unit.map constantCoeff))
   exact ⟨h_u.unit, hu.symm⟩
 
-/-- The untilt of the constant coefficient of `ξ` divides `p`. This follows by applying `θ` to
-`associated_p_xi_sub_teichmuller` and using `θ ξ = 0`. -/
+/--
+The untilt of the constant coefficient of `ξ` divides `p`. This follows by applying `θ` to
+`associated_p_xi_sub_teichmuller` and using `θ ξ = 0`.
+-/
 lemma untilt_constantCoeff_xi_dvd_p : xi.constantCoeff.untilt ∣ p := by
   have h_dvd : theta (xi - teichmuller p (constantCoeff xi)) ∣ theta p :=
     (associated_p_xi_sub_teichmuller.map theta).dvd'
@@ -703,10 +787,12 @@ lemma untilt_constantCoeff_xi_dvd_p : xi.constantCoeff.untilt ∣ p := by
 
 variable {t g}
 
-/-- If `g⁻¹` acts on the integers of `ℚ̄_p` as `x ↦ x ^ p ^ n` modulo the maximal ideal, then
-`φ ^ n g` acts trivially on the Witt vectors of the residue field of `O^♭`. -/
-lemma toWittResidue_smul_of_isFrob {n : ℕ} (h_isFrob : IsFrob (intQpBar p) (p ^ n) g⁻¹) (a : Ainf) :
-    toWittResidue ((ofAdd n, g) • a) = toWittResidue a := by
+/--
+If `g⁻¹` acts on the integers of `ℚ̄_p` as `x ↦ x ^ p ^ n` modulo the maximal ideal, then
+`φ ^ n g` acts trivially on the Witt vectors of the residue field of `O^♭`.
+-/
+lemma toWittResidue_smul_of_isFrob {n : ℕ} (h_isFrob : IsFrob (intQpBar p) (p ^ n) g⁻¹) (a : Ainf)
+    : toWittResidue ((ofAdd n, g) • a) = toWittResidue a := by
   -- `g⁻¹ • y ≡ y ^ p ^ n` modulo the maximal ideal: true on the integers of `ℚ̄_p`, and a closed
   -- condition on `ℂ_p` (balls are open and closed)
   have h_frob (y : ℂ_[p]) : dist y 0 ≤ 1 → dist (g⁻¹ • y - y ^ p ^ n) 0 < 1 := by
@@ -721,7 +807,7 @@ lemma toWittResidue_smul_of_isFrob {n : ℕ} (h_isFrob : IsFrob (intQpBar p) (p 
         simpa using (Selmer.valuation_intQpBar_le_iff y 1).mpr (by simpa using h_le)
       have h_norm : ‖g⁻¹ • y - y ^ p ^ n‖ < 1 := by simpa using h_cong y h_y_le
       -- the embedding of `ℚ̄_p` in `ℂ_p` commutes with `g⁻¹`, powers and differences
-      simpa [↓smul_coe_Cp, coe_eq, ← map_pow, ← map_sub] using h_norm
+      simpa [↓ smul_coe_Cp, coe_eq, ← map_pow, ← map_sub] using h_norm
   refine WittVector.ext fun i ↦ ?_
   let x : OFlat := a.coeff i
   -- the `i`-th coordinates are the residues of `(φ ^ n g) • x` and `x`; suppose that their
@@ -736,13 +822,15 @@ lemma toWittResidue_smul_of_isFrob {n : ℕ} (h_isFrob : IsFrob (intQpBar p) (p 
   -- so its image under `θ` has norm at least `1`, against `h_frob` at the point `y₀ = g • x^♯`
   let y₀ : ℂ_[p] := ((g • x.untilt : OC) : ℂ_[p])
   have h_norm_ge : 1 ≤ dist (g⁻¹ • y₀ - y₀ ^ p ^ n) 0 := by
-    simpa [y₀, norm_sub_rev, untilt_frobGal_smul, valRingCp.dvd_iff_norm_le,
-      isUnit_iff_dvd_one] using hx.map theta
+    simpa [y₀, norm_sub_rev, untilt_frobGal_smul, valRingCp.dvd_iff_norm_le, isUnit_iff_dvd_one]
+      using hx.map theta
   exact (h_frob y₀ (by simp [y₀, ← mem_valRingCp])).not_ge h_norm_ge
 
-/-- `p` does not divide `τ`: otherwise the reduction `ε^{1/p} - 1` of `τ` modulo `p` is zero, so
-`ε^{1/p} = 1` and `θ τ = 0`. -/
-lemma not_p_dvd_tau : ¬↑p ∣ tau := by
+/--
+`p` does not divide `τ`: otherwise the reduction `ε^{1/p} - 1` of `τ` modulo `p` is zero, so
+`ε^{1/p} = 1` and `θ τ = 0`.
+-/
+lemma not_p_dvd_tau : ¬ ↑p ∣ tau := by
   intro h_dvd
   rw [tau, p_dvd_iff, map_sub, map_one, sub_eq_zero] at h_dvd
   have h_eps : epsRoot = 1 := by simpa using h_dvd
@@ -753,39 +841,48 @@ lemma constantCoeff_mu_ne_zero : constantCoeff mu ≠ 0 := by
   simp [← frobEnd_tau, constantCoeff_frobEnd, ← p_dvd_iff, not_p_dvd_tau, ne p,
     -constantCoeff_apply]
 
-/-- Fontaine's description of the kernel of `θ : A_inf → O_C`: for `a ∈ A_inf`, `θ a = 0` if and
-only if `ξ` divides `a`. -/
+/--
+Fontaine's description of the kernel of `θ : A_inf → O_C`: for `a ∈ A_inf`, `θ a = 0` if and
+only if `ξ` divides `a`.
+-/
 lemma theta_eq_zero_iff_xi_dvd : theta a = 0 ↔ xi ∣ a :=
   theta_eq_zero_iff_dvd_of_untilt_dvd theta_xi untilt_constantCoeff_xi_dvd_p
 
-/-- `p` does not divide `ξ`: otherwise it divides `ξ τ = μ`, whose reduction modulo `p` is not
-zero. -/
-@[simp] lemma not_p_dvd_xi : ¬↑p ∣ xi := by
+/--
+`p` does not divide `ξ`: otherwise it divides `ξ τ = μ`, whose reduction modulo `p` is not
+zero.
+-/
+@[simp]
+lemma not_p_dvd_xi : ¬ ↑p ∣ xi := by
   intro h
   exact constantCoeff_mu_ne_zero (p_dvd_iff.mp (by simpa [← xi_mul_tau] using h.mul_right tau))
 
 /-- In `O^♭` every non-zero element divides a power of any given non-unit. -/
-lemma OFlat.exists_dvd_pow {u : OFlat} (hu : ¬IsUnit u) (ht : t ≠ 0) : ∃ n : ℕ, t ∣ u ^ n := by
+lemma OFlat.exists_dvd_pow {u : OFlat} (hu : ¬ IsUnit u) (ht : t ≠ 0) : ∃ n : ℕ, t ∣ u ^ n := by
   -- Units, zero and divisibility in `OFlat` can be read on the untilts in `OC`.
   simp_all [OFlat, ← zero_dvd_iff, ← untilt_dvd_iff, OC.exists_dvd_pow, ← theta_teichmuller,
     isUnit_iff_dvd_one]
 
 /-! ### Adic separation of `O^♭` and divisibility by `μ` and `τ` -/
 
-/-- If `r` is nilpotent, then `shiftDiff R r` is bijective on sequences in `R`: it is `1` minus the
-nilpotent operator `r • shift`. -/
-lemma existsUnique_shiftDiff_eq_of_pow_eq_zero {R : Type} [CommRing R] {r : R} {N : ℕ}
-    (hr : r ^ N = 0) (b : ℕ → R) :
-    ∃! a : ℕ → R, shiftDiff R r a = b := by
+/--
+If `r` is nilpotent, then `shiftDiff R r` is bijective on sequences in `R`: it is `1` minus the
+nilpotent operator `r • shift`.
+-/
+lemma existsUnique_shiftDiff_eq_of_pow_eq_zero
+    {R : Type} [CommRing R] {r : R} {N : ℕ} (hr : r ^ N = 0) (b : ℕ → R)
+    : ∃! a : ℕ → R, shiftDiff R r a = b := by
   have h_nil : IsNilpotent (r • LinearMap.funLeft R R Nat.succ : Module.End R (ℕ → R)) :=
     ⟨N, by simp [smul_pow, hr]⟩
   -- `shiftDiff R r` is the unit `1 - r • shift` of `Module.End R (ℕ → R)`
   exact ((Module.End.isUnit_iff _).mp h_nil.isUnit_one_sub).existsUnique b
 
-/-- If `t ∈ O^♭` is not a unit, then each coordinate `PreTilt.coeff k t` of `t` in `O_C / p` is
-nilpotent. -/
-lemma OFlat.exists_pow_coeff_eq_zero (h : ¬IsUnit t) (k : ℕ) :
-    ∃ N : ℕ, PreTilt.coeff k t ^ N = 0 := by
+/--
+If `t ∈ O^♭` is not a unit, then each coordinate `PreTilt.coeff k t` of `t` in `O_C / p` is
+nilpotent.
+-/
+lemma OFlat.exists_pow_coeff_eq_zero (h : ¬ IsUnit t) (k : ℕ)
+    : ∃ N : ℕ, PreTilt.coeff k t ^ N = 0 := by
   -- With `μ₀` the constant coefficient of `μ = ξ * τ`, some `t ^ N` is divisible by `μ₀ ^ p ^ k`,
   -- whose `k`-th coordinate is the zeroth one of `μ₀`, that is `θ μ` modulo `p`; and `θ ξ = 0`.
   obtain ⟨N, hN⟩ : ∃ N : ℕ, constantCoeff mu ^ p ^ k ∣ t ^ N :=
@@ -794,12 +891,12 @@ lemma OFlat.exists_pow_coeff_eq_zero (h : ¬IsUnit t) (k : ℕ) :
   -- `theta_xi` in the unfolded form that the simplifier meets
   have h_xi : fontaineTheta OC p xi = 0 := theta_xi
   refine ⟨N, ?_⟩
-  simpa [OFlat, ← iterate_frobenius, PreTilt.coeff_iterate_frobenius', h_xi,
-    ← mk_fontaineTheta] using map_dvd (PreTilt.coeff k) hN
+  simpa [OFlat, ← iterate_frobenius, PreTilt.coeff_iterate_frobenius', h_xi, ← mk_fontaineTheta]
+    using map_dvd (PreTilt.coeff k) hN
 
 /-- If `t ∈ O^♭` is not a unit, then `O^♭` is `t`-adically separated. -/
-lemma OFlat.isHausdorff_span_singleton_of_not_isUnit (h : ¬IsUnit t) :
-    IsHausdorff (span {t}) OFlat := by
+lemma OFlat.isHausdorff_span_singleton_of_not_isUnit (h : ¬ IsUnit t)
+    : IsHausdorff (span {t}) OFlat := by
   -- An element `x` divisible by all powers of `t` has all coordinates zero, since each coordinate
   -- of `t` is nilpotent.
   choose N hN using exists_pow_coeff_eq_zero h
@@ -809,16 +906,19 @@ lemma OFlat.isHausdorff_span_singleton_of_not_isUnit (h : ¬IsUnit t) :
   rw [map_pow, hN k, zero_dvd_iff, sub_zero] at h_coeff_dvd
   exact h_coeff_dvd.trans (map_zero (PreTilt.coeff k)).symm
 
-/-- If `t ∈ O^♭` is not a unit, then the map `(x_j) ↦ (x_j - t x_{j+1})` on sequences in `O^♭` is
-surjective. -/
-lemma OFlat.shiftDiff_surjective_of_not_isUnit (h : ¬IsUnit t) :
-    Surjective (shiftDiff OFlat t) := by
+/--
+If `t ∈ O^♭` is not a unit, then the map `(x_j) ↦ (x_j - t x_{j+1})` on sequences in `O^♭` is
+surjective.
+-/
+lemma OFlat.shiftDiff_surjective_of_not_isUnit (h : ¬ IsUnit t)
+    : Surjective (shiftDiff OFlat t) := by
   -- Solve the equation in each coordinate, where `t` is nilpotent; by uniqueness the solutions
   -- are compatible under Frobenius, so they form a sequence in `O^♭`.
   intro b
   choose N hN using exists_pow_coeff_eq_zero h
-  have h_exists (k : ℕ) : ∃! u : ℕ → ModP OC p,
-      shiftDiff (ModP OC p) (PreTilt.coeff k t) u = fun n ↦ PreTilt.coeff k (b n) :=
+  have h_exists (k : ℕ)
+      : ∃! u : ℕ → ModP OC p,
+        shiftDiff (ModP OC p) (PreTilt.coeff k t) u = fun n ↦ PreTilt.coeff k (b n) :=
     existsUnique_shiftDiff_eq_of_pow_eq_zero (hN k) _
   choose u hu h_unique using h_exists
   have h_frob (k : ℕ) : u (k + 1) ^ p = u k := by
@@ -829,16 +929,20 @@ lemma OFlat.shiftDiff_surjective_of_not_isUnit (h : ¬IsUnit t) :
   let y : ℕ → OFlat := fun n ↦ ⟨fun k ↦ u k n, fun k ↦ congrFun (h_frob k) n⟩
   exact ⟨y, funext fun n ↦ Perfection.ext fun k ↦ congrFun (hu k) n⟩
 
-lemma OFlat.isHausdorff_and_shiftDiff_surjective (h : ¬IsUnit t) :
-    IsHausdorff (span {t}) OFlat ∧ Surjective (shiftDiff OFlat t) :=
+lemma OFlat.isHausdorff_and_shiftDiff_surjective (h : ¬ IsUnit t)
+    : IsHausdorff (span {t}) OFlat ∧ Surjective (shiftDiff OFlat t) :=
   ⟨OFlat.isHausdorff_span_singleton_of_not_isUnit h, OFlat.shiftDiff_surjective_of_not_isUnit h⟩
 
-/-- Let `a ∈ A_inf` be killed by `θ ∘ φ ^ j` for every `j`, write `x₀` for the constant coefficient
+/--
+Let `a ∈ A_inf` be killed by `θ ∘ φ ^ j` for every `j`, write `x₀` for the constant coefficient
 in `O^♭` of `x ∈ A_inf`, and let `μ₀ = a₀ * c` with `c ∈ O^♭`. Then `c ^ p ^ n` divides `μ₀` for
-every `n`. -/
-private lemma pow_pow_dvd_constantCoeff_mu_of_eq_mul (n : ℕ) (a : Ainf)
-    (ha : ∀ j : ℕ, theta (frobEnd^[j] a) = 0) (c : OFlat)
-    (h_eq : constantCoeff mu = constantCoeff a * c) : c ^ p ^ n ∣ constantCoeff mu := by
+every `n`.
+-/
+private lemma pow_pow_dvd_constantCoeff_mu_of_eq_mul
+    (n : ℕ)
+    (a : Ainf) (ha : ∀ j : ℕ, theta (frobEnd^[j] a) = 0)
+    (c : OFlat) (h_eq : constantCoeff mu = constantCoeff a * c)
+    : c ^ p ^ n ∣ constantCoeff mu := by
   -- Induction on `n`: `a = ξ * b`, and `φ b` satisfies the hypotheses with `c ^ p` in place of `c`.
   induction n generalizing a c with
   | zero => simp [h_eq]
@@ -859,14 +963,13 @@ private lemma pow_pow_dvd_constantCoeff_mu_of_eq_mul (n : ℕ) (a : Ainf)
     simpa [← pow_mul, ← pow_succ'] using ih (frobEnd b) hb (c ^ p) h_eq'
 
 /-- If a ∈ A_inf satisfies θ(φ^j a) = 0 for all j ≥ 0, then μ divides a in A_inf. -/
-lemma mu_dvd_of_theta_frobEnd {a : Ainf} (h_theta : ∀ j : ℕ, theta (frobEnd^[j] a) = 0) :
-    mu ∣ a := by
+lemma mu_dvd_of_theta_frobEnd {a : Ainf} (h_theta : ∀ j : ℕ, theta (frobEnd^[j] a) = 0)
+    : mu ∣ a := by
   -- Let `I` be the ideal of all elements killed by every `θ ∘ φ ^ j`, and write `x₀` for the
   -- constant coefficient of `x`. By `dvd_of_mem_of_constantCoeff_dvd` it is enough to show
   -- `μ₀ ∣ x₀` for `x ∈ I`.
   let I : Ideal Ainf := ⨅ j : ℕ, ker (theta.comp (frobEnd ^ j))
-  have h_mu : mu ∈ I := by
-    simp [I, theta_iterate_frobEnd_mu]
+  have h_mu : mu ∈ I := by simp [I, theta_iterate_frobEnd_mu]
   -- `I` is saturated for `p`, since `φ p = p` and `p ≠ 0` in `O_C` (`NeZero.ne p`).
   have h_sat : ∀ x : Ainf, (p : Ainf) * x ∈ I → x ∈ I := by simp [I, NeZero.ne p, iterate_fixed]
   have ha : a ∈ I := by simpa [I] using h_theta
@@ -876,20 +979,21 @@ lemma mu_dvd_of_theta_frobEnd {a : Ainf} (h_theta : ∀ j : ℕ, theta (frobEnd^
   by_contra h_not_dvd
   obtain ⟨c, h_eq⟩ : constantCoeff x ∣ constantCoeff mu :=
     (ValuationRing.dvd_total (constantCoeff mu) (constantCoeff x)).resolve_left h_not_dvd
-  have hc : ¬IsUnit c := fun hc ↦ h_not_dvd (by rw [h_eq, hc.mul_right_dvd])
+  have hc : ¬ IsUnit c := fun hc ↦ h_not_dvd (by rw [h_eq, hc.mul_right_dvd])
   have hx_theta : ∀ j : ℕ, theta (frobEnd^[j] x) = 0 := by simpa [I] using hx
   have h_dvd (n : ℕ) : c ^ n ∣ constantCoeff mu :=
     (pow_dvd_pow c (n.lt_pow_self (Fact.out : p.Prime).one_lt).le).trans
       (pow_pow_dvd_constantCoeff_mu_of_eq_mul n x hx_theta c h_eq)
   have h_smod (n : ℕ) : constantCoeff mu ≡ 0 [SMOD (span {c} ^ n • ⊤ : Ideal OFlat)] :=
     smodEq_span_pow_iff_dvd.mpr (by simpa using h_dvd n)
-  exact constantCoeff_mu_ne_zero
-    ((OFlat.isHausdorff_span_singleton_of_not_isUnit hc).haus' _ h_smod)
+  exact constantCoeff_mu_ne_zero ((OFlat.isHausdorff_span_singleton_of_not_isUnit hc).haus' _
+    h_smod)
 
-/-- If a in A_inf satisfies θ(φ^j a) = 0 for all j ≥ 1, then τ = [ε^{1/p}] − 1 divides a in
-A_inf. -/
-lemma tau_dvd_of_theta_frobEnd (h_theta : ∀ j : ℕ, theta (frobEnd^[j + 1] a) = 0) :
-    tau ∣ a := by
+/--
+If a in A_inf satisfies θ(φ^j a) = 0 for all j ≥ 1, then τ = [ε^{1/p}] − 1 divides a in
+A_inf.
+-/
+lemma tau_dvd_of_theta_frobEnd (h_theta : ∀ j : ℕ, theta (frobEnd^[j + 1] a) = 0) : tau ∣ a := by
   -- `φ a` is killed by every `θ ∘ φ ^ j`, so `φ τ = μ` divides `φ a`; then apply the bijection `φ`.
   have h_phi : frobEnd tau ∣ frobEnd a := by simpa using mu_dvd_of_theta_frobEnd h_theta
   exact (map_dvd_iff (MulEquiv.ofBijective (frobEnd : Ainf →+* Ainf) frobEnd_bijective)).mp h_phi
@@ -899,33 +1003,41 @@ lemma tau_dvd_of_theta_frobEnd (h_theta : ∀ j : ℕ, theta (frobEnd^[j + 1] a)
 /-- `p` is a prime element of `A_inf`, because `A_inf / p = O^♭` is a domain. -/
 lemma Ainf.prime_p : Prime (p : Ainf) := by
   -- `p ∣ x` means that the constant coefficient of `x` in the domain `O^♭` is zero
-  refine ⟨p_nonzero p OFlat, fun h_unit ↦ ?_,
-    fun x y h_dvd ↦ by simpa [p_dvd_iff, -constantCoeff_apply] using h_dvd⟩
+  refine ⟨
+    p_nonzero p OFlat,
+    fun h_unit ↦ ?_,
+    fun x y h_dvd ↦ by simpa [p_dvd_iff, -constantCoeff_apply] using h_dvd
+  ⟩
   -- `p` does not divide `1`, whose constant coefficient is not zero
   simpa [p_dvd_iff] using isUnit_iff_dvd_one.mp h_unit
 
 /-- If `p` does not divide `δ`, every non-unit of `A_inf` lies in the radical of `(p, δ)`. -/
-lemma Ainf.mem_radical_of_not_isUnit (h : ¬IsUnit a) (hδ : ¬↑p ∣ δ) :
-    a ∈ radical (span {↑p, δ}) := by
+lemma Ainf.mem_radical_of_not_isUnit (h : ¬ IsUnit a) (hδ : ¬ ↑p ∣ δ)
+    : a ∈ radical (span {↑p, δ}) := by
   -- The constant coefficient `a₀` of `a` is a non-unit of `O^♭` and that of `δ` is not zero, so
   -- `δ₀ ∣ a₀ ^ n` for some `n`, which says `a ^ n ∈ (p, δ)`.
-  have h_a0 : ¬IsUnit (constantCoeff a) := mt isUnit_iff_isUnit_constantCoeff.mpr h
+  have h_a0 : ¬ IsUnit (constantCoeff a) := mt isUnit_iff_isUnit_constantCoeff.mpr h
   have h_δ0 : constantCoeff δ ≠ 0 := mt p_dvd_iff.mpr hδ
   obtain ⟨n, hn⟩ : ∃ n : ℕ, constantCoeff δ ∣ constantCoeff a ^ n := OFlat.exists_dvd_pow h_a0 h_δ0
   exact ⟨n, by rwa [mem_span_pair_iff, map_pow]⟩
 
-/-- For every `n : ℕ` and `x ∈ A_inf` the equation `φ c - ξ ^ n * c = x` has a solution `c ∈ A_inf`,
-by the Artin–Schreier–Witt equations over the absolutely integrally closed ring `O^♭`. -/
-lemma Ainf.exists_frobEnd_sub_xi_pow_mul_eq (n : ℕ) (x : Ainf) :
-    ∃ c : Ainf, frobEnd c - xi ^ n * c = x := by
+/--
+For every `n : ℕ` and `x ∈ A_inf` the equation `φ c - ξ ^ n * c = x` has a solution `c ∈ A_inf`,
+by the Artin–Schreier–Witt equations over the absolutely integrally closed ring `O^♭`.
+-/
+lemma Ainf.exists_frobEnd_sub_xi_pow_mul_eq (n : ℕ) (x : Ainf)
+    : ∃ c : Ainf, frobEnd c - xi ^ n * c = x := by
   have h_aic : IsAbsIntegrallyClosed OFlat := OFlat.isAbsIntegrallyClosed
   simpa only [frobEnd_eq_frobenius] using artin_schreier_witt (xi ^ n) x
 
-/-- Let a, c be non-units of A_inf and δ, y ∈ A_inf with δ not divisible by p. If for every m
-there is x with y − δx ∈ (a, c)^m, then δ divides y. -/
-lemma dvd_of_forall_exists_sub_mem_span_pow (ha : ¬IsUnit a) (hc : ¬IsUnit c) (hδ : ¬↑p ∣ δ)
-    (h_approx : ∀ m : ℕ, ∃ x : Ainf, y - δ * x ∈ span {a, c} ^ m) :
-    δ ∣ y := by
+/--
+Let a, c be non-units of A_inf and δ, y ∈ A_inf with δ not divisible by p. If for every m
+there is x with y − δx ∈ (a, c)^m, then δ divides y.
+-/
+lemma dvd_of_forall_exists_sub_mem_span_pow
+    (ha : ¬ IsUnit a) (hc : ¬ IsUnit c) (hδ : ¬ ↑p ∣ δ)
+    (h_approx : ∀ m : ℕ, ∃ x : Ainf, y - δ * x ∈ span {a, c} ^ m)
+    : δ ∣ y := by
   -- Apply `dvd_of_mem_of_constantCoeff_dvd` to the ideal `I = ⋂ m, (p ^ m, δ)`, which contains `δ`.
   refine dvd_of_mem_of_constantCoeff_dvd (I := ⨅ m : ℕ, span {↑(p ^ m), δ}) (by aesop) ?_ ?_ y
     (mem_iInf.mpr fun m ↦ ?_)
@@ -948,8 +1060,9 @@ lemma dvd_of_forall_exists_sub_mem_span_pow (ha : ¬IsUnit a) (hc : ¬IsUnit c) 
       mem_radical_iff.mpr ⟨1, subset_span (by simp)⟩
     have h_rad : radical (span {↑p, δ}) ≤ radical (span {↑(p ^ m), δ}) :=
       radical_le_radical_iff.mpr (span_le.mpr (pair_subset hp_mem_rad hδ_mem_rad))
-    have h_ac : span {a, c} ≤ radical (span {↑(p ^ m), δ}) := span_le.mpr <| pair_subset
-      (h_rad (mem_radical_of_not_isUnit ha hδ)) (h_rad (mem_radical_of_not_isUnit hc hδ))
+    have h_ac : span {a, c} ≤ radical (span {↑(p ^ m), δ}) :=
+      span_le.mpr <| pair_subset (h_rad (mem_radical_of_not_isUnit ha hδ))
+        (h_rad (mem_radical_of_not_isUnit hc hδ))
     obtain ⟨N, hN⟩ : ∃ N : ℕ, span {a, c} ^ N ≤ span {↑(p ^ m), δ} :=
       exists_pow_le_of_le_radical_of_fg h_ac (Submodule.fg_span (by simp))
     obtain ⟨x, hx⟩ := h_approx N
@@ -957,7 +1070,7 @@ lemma dvd_of_forall_exists_sub_mem_span_pow (ha : ¬IsUnit a) (hc : ¬IsUnit c) 
     exact (Submodule.sub_mem_iff_left _ h_δx).mp (hN hx)
 
 /-- For a non-unit `a`, the map `(x j) ↦ (x j - a * x (j + 1))` on sequences in `A_inf` is onto. -/
-lemma Ainf.shiftDiff_surjective (h : ¬IsUnit a) : Surjective (shiftDiff Ainf a) := by
+lemma Ainf.shiftDiff_surjective (h : ¬ IsUnit a) : Surjective (shiftDiff Ainf a) := by
   -- View sequences in `Ainf` as Witt vectors over `ℕ → OFlat` and apply
   -- `Witt.exists_map_sub_mul_map_eq` with the identity and the shift: modulo `p` the equation is
   -- the one solved in `OFlat.shiftDiff_surjective_of_not_isUnit`.
@@ -968,24 +1081,32 @@ lemma Ainf.shiftDiff_surjective (h : ¬IsUnit a) : Surjective (shiftDiff Ainf a)
     OFlat.shiftDiff_surjective_of_not_isUnit (mt isUnit_iff_isUnit_constantCoeff.mpr h)
   -- the Witt vector over `ℕ → O^♭` whose `i`-th coordinate is `n ↦ (b n).coeff i`
   let B : WittVector p (ℕ → OFlat) := WittVector.mk p fun i n ↦ (b n).coeff i
-  obtain ⟨y, hy⟩ := exists_map_sub_mul_map_eq (a := B) 1 shift
-    (algebraMap Ainf (WittVector p (ℕ → OFlat)) a) h_mod_p
+  obtain ⟨y, hy⟩ :=
+    exists_map_sub_mul_map_eq (a := B) 1 shift (algebraMap Ainf (WittVector p (ℕ → OFlat)) a)
+      h_mod_p
   -- the components of the solution `y` form the required sequence
   refine ⟨fun n ↦ y.map (evalRingHom _ n), funext fun n ↦ ?_⟩
   -- the `n`-th component of `hy` is the `n`-th equation `y n - a * y (n + 1) = b n`; the two sides
   -- agree only after unfolding `WittVector.map` coordinatewise, hence `using!`
   simpa [B] using! congrArg (WittVector.map (evalRingHom _ n)) hy
 
-/-- `ξ` is a prime element of `A_inf`: it generates the kernel of `θ`, whose target `O_C` is a
-domain. -/
+/--
+`ξ` is a prime element of `A_inf`: it generates the kernel of `θ`, whose target `O_C` is a
+domain.
+-/
 lemma Ainf.prime_xi : Prime xi := by
-  refine ⟨fun h_zero ↦ not_p_dvd_xi (by simp [h_zero]),
-    fun h_unit ↦ (h_unit.map theta).ne_zero theta_xi, fun x y h_dvd ↦ ?_⟩
+  refine ⟨
+    fun h_zero ↦ not_p_dvd_xi (by simp [h_zero]),
+    fun h_unit ↦ (h_unit.map theta).ne_zero theta_xi,
+    fun x y h_dvd ↦ ?_
+  ⟩
   · rw [← theta_eq_zero_iff_xi_dvd, map_mul, mul_eq_zero] at h_dvd
     rwa [← theta_eq_zero_iff_xi_dvd, ← theta_eq_zero_iff_xi_dvd]
 
-/-- Each `g ∈ G_p` commutes with `φ` and `θ`, so `τ` divides every conjugate `g' • τ` by
-`tau_dvd_of_theta_frobEnd`; hence `g • τ` is associated to `τ`. -/
+/--
+Each `g ∈ G_p` commutes with `φ` and `θ`, so `τ` divides every conjugate `g' • τ` by
+`tau_dvd_of_theta_frobEnd`; hence `g • τ` is associated to `τ`.
+-/
 lemma associated_smul_tau : Associated (g • tau) tau := by
   refine associated_smul_of_dvd g fun g' ↦ tau_dvd_of_theta_frobEnd fun j ↦ ?_
   rw [← Commute.iterate_right (smul_frobEnd g'), theta_smul, iterate_succ_apply, frobEnd_tau,
@@ -1001,29 +1122,33 @@ lemma smul_xi_mem_span : m • xi ∈ span {↑p, xi} := by
   rw [mem_span_pair_iff, h_act, constantCoeff_iterate_frobEnd]
   exact dvd_pow (map_dvd constantCoeff h_xi_dvd) (pow_ne_zero _ (Fact.out : p.Prime).ne_zero)
 
-/-- If a and c are non-units of A_inf, then A_inf is complete and separated for the adic
-topology of the ideal (a, c). -/
-lemma Ainf.isAdicComplete_span_pair (ha : ¬IsUnit a) (hc : ¬IsUnit c) :
-    IsAdicComplete (span {a, c}) Ainf := by
+/--
+If a and c are non-units of A_inf, then A_inf is complete and separated for the adic
+topology of the ideal (a, c).
+-/
+lemma Ainf.isAdicComplete_span_pair (ha : ¬ IsUnit a) (hc : ¬ IsUnit c)
+    : IsAdicComplete (span {a, c}) Ainf := by
   -- Limits exist because `shiftDiff` is onto for both generators.
-  refine { isPrecomplete_of_shiftDiff_surjective
-    (shiftDiff_surjective ha) (shiftDiff_surjective hc) with haus' := fun x hx ↦ ?_ }
+  refine {
+    isPrecomplete_of_shiftDiff_surjective (shiftDiff_surjective ha) (shiftDiff_surjective hc) with
+    haus' := fun x hx ↦ ?_
+  }
   -- Separation: write a nonzero `x` in all powers of `(a, c)` as `p ^ n * y` with `p ∤ y`.
   by_contra hx₀
   obtain ⟨n, y, hy, rfl⟩ : ∃ (n : ℕ) (y : Ainf), y.coeff 0 ≠ 0 ∧ x = ↑p ^ n * y :=
     exists_eq_pow_p_mul x hx₀
-  have hy_p : ¬↑p ∣ y := by rwa [p_dvd_iff]
-  have hδ : ¬↑p ∣ xi * y := prime_p.not_dvd_mul not_p_dvd_xi hy_p
+  have hy_p : ¬ ↑p ∣ y := by rwa [p_dvd_iff]
+  have hδ : ¬ ↑p ∣ xi * y := prime_p.not_dvd_mul not_p_dvd_xi hy_p
   -- `0` approximates `x` to every order, so any `δ` with `p ∤ δ` divides `x`; take `δ = ξ * y`
   have h_mem (m : ℕ) : ↑p ^ n * y - xi * y * 0 ∈ span {a, c} ^ m := by simpa [zero] using hx m
-  have h_dvd : xi * y ∣ ↑p ^ n * y := dvd_of_forall_exists_sub_mem_span_pow ha hc hδ fun m ↦
-    ⟨0, h_mem m⟩
+  have h_dvd : xi * y ∣ ↑p ^ n * y :=
+    dvd_of_forall_exists_sub_mem_span_pow ha hc hδ fun m ↦ ⟨0, h_mem m⟩
   -- cancelling `y` gives `ξ ∣ p ^ n`, that is `θ (p ^ n) = 0`, which is false
   have h_xi : xi ∣ ↑p ^ n := (mul_dvd_mul_iff_right (right_ne_zero_of_mul hx₀)).mp h_dvd
   have h_theta : theta (↑p ^ n) = 0 := theta_eq_zero_iff_xi_dvd.mpr h_xi
   exact pow_ne_zero n (NeZero.ne (p : OC)) (by simpa using h_theta)
 
-lemma Ainf.isAdicComplete_span_singleton (h : ¬IsUnit a) : IsAdicComplete (span {a}) Ainf := by
+lemma Ainf.isAdicComplete_span_singleton (h : ¬ IsUnit a) : IsAdicComplete (span {a}) Ainf := by
   simpa using isAdicComplete_span_pair h h
 
 /-- `A_inf` is complete and separated for the `(p, ξ)`-adic topology. -/

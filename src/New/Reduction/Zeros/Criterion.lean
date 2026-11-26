@@ -28,18 +28,24 @@ Chebyshev's conjecture, arXiv 2411.07436, 2024; Montgomery–Vaughan, Multiplica
 
 open Complex Filter Nat Real Set MeasureTheory Topology
 
-/-- **One-sided criterion.** Let `q₀` be a positive multiple of `8`, let `d₀ ≡ 7` mod `8` be prime
+/--
+**One-sided criterion.** Let `q₀` be a positive multiple of `8`, let `d₀ ≡ 7` mod `8` be prime
 to `q₀`, and let `β > 1/2`. Suppose that for each prime `d ≡ d₀` mod `q₀` the remainder
 `primeRemainder d q₀ x = ∑_{n ≤ x} λ(n) (1/n - 1/x) - log x / φ(q₀) - c` is at most `A * x ^ (β - 1)`
 for some `A` and all large `x`. Here `λ(n) = Λ(n) (1 - (n/d))` for `n ≡ 1` mod `q₀` and `0` otherwise,
 and `c` is the constant for which the remainder tends to `0`. Then `L(ρ, ψ) ≠ 0` for every
-character `ψ` modulo `q₀` and every `ρ ≠ 1` with `re ρ > β`. -/
-theorem New.LFunction_ne_zero_of_primeRemainder_le {q₀ : ℕ} [NeZero q₀] (hq₀ : 8 ∣ q₀) {d₀ : ℕ}
-    (hd₀_mod : d₀ % 8 = 7) (hd₀_cop : d₀.Coprime q₀) {β : ℝ} (hβ : 1 / 2 < β)
-    (h_bound : ∀ d : Primes, (d : ℕ) ≡ d₀ [MOD q₀] →
-      ∃ A : ℝ, ∀ᶠ x : ℝ in atTop, primeRemainder d q₀ x ≤ A * x ^ (β - 1))
-    (ψ : DirichletCharacter ℂ q₀) {ρ : ℂ} (hρ_ne : ρ ≠ 1) (hρ_re : β < ρ.re) :
-    ψ.LFunction ρ ≠ 0 := by
+character `ψ` modulo `q₀` and every `ρ ≠ 1` with `re ρ > β`.
+-/
+theorem New.LFunction_ne_zero_of_primeRemainder_le
+    {q₀ : ℕ} [NeZero q₀]
+    (hq₀ : 8 ∣ q₀)
+    {d₀ : ℕ} (hd₀_mod : d₀ % 8 = 7) (hd₀_cop : d₀.Coprime q₀)
+    {β : ℝ} (hβ : 1 / 2 < β)
+    (h_bound : ∀ d : Primes,
+      (d : ℕ) ≡ d₀ [MOD q₀] → ∃ A : ℝ, ∀ᶠ x : ℝ in atTop, primeRemainder d q₀ x ≤ A * x ^ (β - 1))
+    (ψ : DirichletCharacter ℂ q₀)
+    {ρ : ℂ} (hρ_ne : ρ ≠ 1) (hρ_re : β < ρ.re)
+    : ψ.LFunction ρ ≠ 0 := by
   -- Choose `d` with no twisted zero in `β ≤ re s`, `|im s| ≤ |im ρ|`. There the residue `r s` of
   -- the transform of the remainder (`IsPolar`) is `n(s) / (φ(q₀) s (1 - s))`, with `n(s)` the sum
   -- of the orders at `s` of the `entireL χ` (`L(s, χ)`, times `s - 1` for principal `χ`), `χ` mod
@@ -49,17 +55,21 @@ theorem New.LFunction_ne_zero_of_primeRemainder_le {q₀ : ℕ} [NeZero q₀] (h
   have h_class (d : Primes) (hd : ((d : ℕ) : ZMod q₀) = d₀) : (d : ℕ) % 8 = 7 ∧ q₀.Coprime d := by
     have h_mod_eight : (d : ℕ) % 8 = d₀ % 8 := (h_mod d hd).of_dvd hq₀
     exact ⟨h_mod_eight.trans hd₀_mod, Coprime.symm ((h_mod d hd).gcd_eq.trans hd₀_cop)⟩
-  obtain ⟨d, hd, h_twist⟩ : ∃ d : Primes, ((d : ℕ) : ZMod q₀) = d₀ ∧
-      ∀ (χ : DirichletCharacter ℂ q₀) (s : ℂ),
-        β ≤ re s → |im s| ≤ |ρ.im| → entireL (quadTwist χ d) s ≠ 0 :=
+  obtain ⟨d, hd, h_twist⟩
+      : ∃ d : Primes,
+        ((d : ℕ) : ZMod q₀) = d₀
+          ∧ ∀ (χ : DirichletCharacter ℂ q₀) (s : ℂ),
+            β ≤ re s → |im s| ≤ |ρ.im| → entireL (quadTwist χ d) s ≠ 0 :=
     exists_entireL_quadTwist_ne_zero |ρ.im| hβ ((ZMod.isUnit_iff_coprime d₀ q₀).2 hd₀_cop) h_class
   obtain ⟨hd_mod, hd_cop⟩ := h_class d hd
   let n (s : ℂ) : ℕ := ∑ χ : DirichletCharacter ℂ q₀, analyticOrderNatAt (entireL χ) s
-  obtain ⟨r, h_polar, hr⟩ : ∃ r : ℂ → ℂ, IsPolar (fun v : ℝ ↦ primeRemainder d q₀ v.exp) r ∧
-      ∀ s : ℂ, β < s.re → |s.im| ≤ |ρ.im| → r s = n s / φ q₀ / (s * (1 - s)) := by
+  obtain ⟨r, h_polar, hr⟩
+      : ∃ r : ℂ → ℂ,
+        IsPolar (fun v : ℝ ↦ primeRemainder d q₀ v.exp) r
+          ∧ ∀ s : ℂ, β < s.re → |s.im| ≤ |ρ.im| → r s = n s / φ q₀ / (s * (1 - s)) := by
     refine ⟨_, isPolar_primeRemainder hd_mod hd_cop, fun s h_re h_im ↦ ?_⟩
-    have h_twist_order (χ : DirichletCharacter ℂ q₀) :
-        analyticOrderNatAt (entireL (quadTwist χ d)) s = 0 :=
+    have h_twist_order (χ : DirichletCharacter ℂ q₀)
+        : analyticOrderNatAt (entireL (quadTwist χ d)) s = 0 :=
       (analyticOrderNatAt_entireL_eq_zero_iff (quadTwist χ d) s).2 (h_twist χ s h_re.le h_im)
     simp [n, h_twist_order]
   -- `x (1 - x) ≥ 0` for `0 ≤ x ≤ 1`, and there is no zero at `x ≥ 1`.
@@ -69,8 +79,9 @@ theorem New.LFunction_ne_zero_of_primeRemainder_le {q₀ : ℕ} [NeZero q₀] (h
     obtain hx_le | hx_ge : x ≤ 1 ∨ 1 ≤ x := le_total x 1
     · have h_denom : 0 ≤ x * (1 - x) := mul_nonneg (by linarith) (sub_nonneg.2 hx_le)
       positivity
-    · have hn : n x = 0 := Finset.sum_eq_zero fun χ _ ↦
-        (analyticOrderNatAt_entireL_eq_zero_iff χ x).2 (entireL_ne_zero χ hx_ge)
+    · have hn : n x = 0 :=
+        Finset.sum_eq_zero fun χ _ ↦
+          (analyticOrderNatAt_entireL_eq_zero_iff χ x).2 (entireL_ne_zero χ hx_ge)
       simp [hn]
   obtain ⟨A, hA⟩ := h_bound d (h_mod d hd)
   have h_exp : ∀ᶠ v : ℝ in atTop, primeRemainder d q₀ v.exp ≤ A * Real.exp ((β - 1) * v) := by
@@ -81,8 +92,9 @@ theorem New.LFunction_ne_zero_of_primeRemainder_le {q₀ : ℕ} [NeZero q₀] (h
   rw [hr ρ hρ_re le_rfl] at h_landau
   have h_count : n ρ = 0 := by
     simpa [hρ_ne_zero, sub_ne_zero.2 hρ_ne.symm, NeZero.ne] using h_landau
-  have h_entire : entireL ψ ρ ≠ 0 := (analyticOrderNatAt_entireL_eq_zero_iff ψ ρ).1
-    (Finset.sum_eq_zero_iff.1 h_count ψ (Finset.mem_univ ψ))
+  have h_entire : entireL ψ ρ ≠ 0 :=
+    (analyticOrderNatAt_entireL_eq_zero_iff ψ ρ).1
+      (Finset.sum_eq_zero_iff.1 h_count ψ (Finset.mem_univ ψ))
   -- Away from `s = 1`, `entireL ψ` is `L(s, ψ)` or `(s - 1) L(s, ψ)`.
   rw [entireL] at h_entire
   split_ifs at h_entire with hψ

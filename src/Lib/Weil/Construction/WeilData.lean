@@ -52,24 +52,30 @@ open MulEquiv NumberField Valued
 
 variable (E : Type*) [Field E] [CMType E]
 
-/-- A splitting character: a unitary Hecke character `υ` of `E` with `υ x̄ = (υ x)⁻¹` that equals
+/--
+A splitting character: a unitary Hecke character `υ` of `E` with `υ x̄ = (υ x)⁻¹` that equals
 `∏ x_τ / |x_τ|` (over the infinite places) when the finite part of the idele `x` is a unit of
-`Ô`, that is, when the finite parts of `x` and of `x⁻¹` both lie in `Ô`. -/
+`Ô`, that is, when the finite parts of `x` and of `x⁻¹` both lie in `Ô`.
+-/
 class SplittingChar where
   /-- The unitary Hecke character υ of E. -/
   υ : HeckeChar E
-  /-- If the finite part of the idele x is a unit of Ô, then υ(x) = ∏ x_τ / |x_τ| over the infinite
-  places τ, where x_τ = `(x : 𝔸 E).fst τ` is the component of x at τ. -/
-  υ_unit (x : (𝔸 E)ˣ) :
-      x.map (MonoidHom.snd (InfinitePlace E → ℂ) (𝔸f E)) ∈ (Ô E).units →
-        υ.1 x = ∏ w : InfinitePlace E, (x : 𝔸 E).fst w / ‖(x : 𝔸 E).fst w‖
+  /--
+  If the finite part of the idele x is a unit of Ô, then υ(x) = ∏ x_τ / |x_τ| over the infinite
+  places τ, where x_τ = `(x : 𝔸 E).fst τ` is the component of x at τ.
+  -/
+  υ_unit (x : (𝔸 E)ˣ)
+    : x.map (MonoidHom.snd (InfinitePlace E → ℂ) (𝔸f E)) ∈ (Ô E).units
+      → υ.1 x = ∏ w : InfinitePlace E, (x : 𝔸 E).fst w / ‖(x : 𝔸 E).fst w‖
   /-- Complex conjugation inverts υ: υ(x̄) = υ(x)⁻¹. -/
   υ_star (x : (𝔸 E)ˣ) : υ.1 (star x) = (υ.1 x)⁻¹
 
-/-- Weil data on E, which contains a primitive 5040th root of unity (`New.HasPrimitiveRoot5040`;
+/--
+Weil data on E, which contains a primitive 5040th root of unity (`New.HasPrimitiveRoot5040`;
 then E/E⁺ is unramified at the finite places): ȷ = −ȷ̄ in E with Im τȷ > 0 and (1 − ȷ⁻¹)/2 integral,
 a finite idele α making Ô self-dual for the pairing (z, u) ↦ ψ_f(ȷαᾱzu) of finite adeles z, u, and a
-splitting character υ equal to −1 at uniformisers of places w = w̄. -/
+splitting character υ equal to −1 at uniformisers of places w = w̄.
+-/
 class WeilData extends HasPrimitiveRoot5040 E, SplittingChar E where
   /-- The element ȷ of E. -/
   j : E
@@ -80,9 +86,9 @@ class WeilData extends HasPrimitiveRoot5040 E, SplittingChar E where
   /-- The finite idele α of E. -/
   α : (𝔸f E)ˣ
   /-- At every finite place w, the order of ȷαᾱ is minus the order of the different of E. -/
-  self_dual (w : IsDedekindDomain.HeightOneSpectrum (𝓞 E)) :
-      v ((algebraMap E (𝔸f E) j * α.1 * star α.1) w) =
-        .exp (multiplicity w.asIdeal (differentIdeal ℤ (𝓞 E)))
+  self_dual (w : IsDedekindDomain.HeightOneSpectrum (𝓞 E))
+    : v ((algebraMap E (𝔸f E) j * α.1 * star α.1) w)
+      = .exp (multiplicity w.asIdeal (differentIdeal ℤ (𝓞 E)))
   /-- c₀ = (1 − ȷ⁻¹) / 2 is an algebraic integer. -/
   isIntegral_traceOne : IsIntegral ℤ ((1 - j⁻¹) / 2)
   /-- At a finite place w fixed by conjugation, υ is −1 on the chosen uniformiser. -/
@@ -94,19 +100,24 @@ attribute [simp] star_j
 
 export SplittingChar (υ υ_unit υ_star)
 
-/-- The idele whose component at each infinite place τ is (2π Im τȷ)^(-1/2) and whose finite
-part is α. -/
+/--
+The idele whose component at each infinite place τ is (2π Im τȷ)^(-1/2) and whose finite
+part is α.
+-/
 @[simps! -isSimp val_fst val_snd]
 noncomputable def scaleIdele [WeilData E] : (𝔸 E)ˣ :=
-  prodUnits.symm
-    (piUnits.symm fun w ↦
-        Units.mk0 ↑(√(2 * Real.pi * (Φ w j).im))⁻¹ (mod_cast by positivity [im_pos w]),
-      α)
+  prodUnits.symm (
+    piUnits.symm fun w ↦
+      Units.mk0 ↑(√(2 * Real.pi * (Φ w j).im))⁻¹ (mod_cast by positivity [im_pos w]),
+    α
+  )
 
 variable {E} [WeilData E]
 
-/-- The element c₀ = (1 − ȷ⁻¹)/2 of E, ȷ from the Weil data; it is an algebraic integer with
-c₀ + c̄₀ = 1. -/
+/--
+The element c₀ = (1 − ȷ⁻¹)/2 of E, ȷ from the Weil data; it is an algebraic integer with
+c₀ + c̄₀ = 1.
+-/
 def traceOne : E := (1 - j⁻¹) / 2
 
 /-- The element ȷ of the Weil data is nonzero, since Im τȷ > 0 at every infinite place τ. -/
@@ -132,30 +143,34 @@ section AdelicHeisenberg
 
 open Matrix NumberField Real WeilData
 
-variable {E : Type*} [Field E] [CMType E] [WeilData E]
-  {n : Type*} [Fintype n] [DecidableEq n] (s : n → ℤˣ)
+variable
+  {E : Type*} [Field E] [CMType E] [WeilData E] {n : Type*} [Fintype n] [DecidableEq n] (s : n → ℤˣ)
 
 open scoped Classical in
-/-- The vacuum on adelic vectors: exp(−π ∑_{i,τ} Im(τȷ)|x_{i,τ}|²) times ψ_f(½c₀ȷ x_f*x_f) if
-the finite part x_f lies in αÔ^n, and 0 otherwise. -/
+/--
+The vacuum on adelic vectors: exp(−π ∑_{i,τ} Im(τȷ)|x_{i,τ}|²) times ψ_f(½c₀ȷ x_f*x_f) if
+the finite part x_f lies in αÔ^n, and 0 otherwise.
+-/
 def vacuumFn (x : n → 𝔸 E) : ℂ :=
-  Real.exp (-∑ i : n, ∑ w : InfinitePlace E, π * (Φ w j).im * ‖(x i).1 w‖ ^ 2) *
-    if ∀ i : n, α⁻¹.1 * (x i).2 ∈ Ô E then
-      (ψf E ((traceOne * j / 2 : E) * ∑ i : n, star (x i).2 * (x i).2)).1
-    else
-      0
+  Real.exp (- ∑ i : n, ∑ w : InfinitePlace E, π * (Φ w j).im * ‖(x i).1 w‖ ^ 2)
+    * if ∀ i : n, α⁻¹.1 * (x i).2 ∈ Ô E then
+        (ψf E ((traceOne * j / 2 : E) * ∑ i : n, star (x i).2 * (x i).2)).1
+      else
+        0
 
 omit [DecidableEq n] in
 open scoped Classical in
-/-- The phase of the vacuum is ψ_f(−¼ x_f*x_f): c₀ȷ/2 = (ȷ − 1)/4, and ψ_f does not see the skew
-part ȷ x_f*x_f/4. -/
-lemma vacuumFn_eq_exp_mul_ite (x : n → 𝔸 E) :
-    vacuumFn x =
-      Real.exp (-∑ i : n, ∑ w : InfinitePlace E, π * (Φ w j).im * ‖(x i).1 w‖ ^ 2) *
-        if ∀ i : n, α⁻¹.1 * (x i).2 ∈ Ô E then
-          (ψf E ((-4⁻¹ : E) * ∑ i : n, star (x i).2 * (x i).2) : ℂ)
-        else
-          0 := by
+/--
+The phase of the vacuum is ψ_f(−¼ x_f*x_f): c₀ȷ/2 = (ȷ − 1)/4, and ψ_f does not see the skew
+part ȷ x_f*x_f/4.
+-/
+lemma vacuumFn_eq_exp_mul_ite (x : n → 𝔸 E)
+    : vacuumFn x
+      = Real.exp (- ∑ i : n, ∑ w : InfinitePlace E, π * (Φ w j).im * ‖(x i).1 w‖ ^ 2)
+        * if ∀ i : n, α⁻¹.1 * (x i).2 ∈ Ô E then
+            (ψf E ((-4⁻¹ : E) * ∑ i : n, star (x i).2 * (x i).2) : ℂ)
+          else
+            0 := by
   set r : 𝔸f E := ∑ i : n, star (x i).2 * (x i).2
   have h_trace : 2⁻¹ * ((traceOne * j / 2 : E) + star (traceOne * j / 2)) = -4⁻¹ := by
     have h_coeff : (traceOne * j / 2 : E) = (j - 1) / 4 := by
@@ -171,9 +186,11 @@ lemma vacuumFn_eq_exp_mul_ite (x : n → 𝔸 E) :
 
 variable (E)
 
-/-- The Heisenberg datum on adelic n-space with bicharacter β(x,y)=ψ(½ȷ h(y,x)), h being the
+/--
+The Heisenberg datum on adelic n-space with bicharacter β(x,y)=ψ(½ȷ h(y,x)), h being the
 hermitian form with matrix `New.stdForm E s`; `toAdele` is the embedding of E in the adeles
-`𝔸 E`. -/
+`𝔸 E`.
+-/
 def adelicHeisenberg : Heisenberg (n → 𝔸 E) where
   β x y := stdAddChar E (toAdele (j / 2) * star y ⬝ᵥ stdForm E s *ᵥ x)
   add_left := by simp [mul_add, AddChar.map_add_eq_mul, mulVec_add]

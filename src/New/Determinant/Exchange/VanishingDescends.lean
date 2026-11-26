@@ -30,45 +30,57 @@ namespace New.Exchange
 open MeasureTheory Fintype Space Set
 open NumberField (InfinitePlace)
 
-variable {E : Type} [Field E] [CMType E] [WeilData E] {n n' r r' b : Type} [Fintype n]
-  [DecidableEq n] [Fintype n'] [DecidableEq n'] [Fintype r] [DecidableEq r] [Fintype r']
-  [DecidableEq r'] [Fintype b] [DecidableEq b] {s : n → ℤˣ} {s' : n' → ℤˣ} {t : r → ℤˣ}
-  {t' : r' → ℤˣ} {μ : InfinitePlace E → ℤ} {𝔠 : SplitTameChar E μ}
+variable
+  {E : Type} [Field E] [CMType E] [WeilData E]
+  {n n' r r' b : Type} [Fintype n] [DecidableEq n] [Fintype n'] [DecidableEq n'] [Fintype r]
+  [DecidableEq r] [Fintype r'] [DecidableEq r'] [Fintype b] [DecidableEq b]
+  {s : n → ℤˣ} {s' : n' → ℤˣ} {t : r → ℤˣ} {t' : r' → ℤˣ} {μ : InfinitePlace E → ℤ}
+  {𝔠 : SplitTameChar E μ}
 
 variable (𝔠) in
-/-- Let `W` and `V` be hermitian spaces over `E` with bases indexed by `n` and `r` and with signs
+/--
+Let `W` and `V` be hermitian spaces over `E` with bases indexed by `n` and `r` and with signs
 `s` and `t` at the infinite places. The theta integral of `(W, V)` for the split tame character `𝔠`,
 a function on the adelic unitary group `G E s` of `W`, vanishes on all Schwartz vectors `v` (all
 Fock moments finite) of the Fock space `PairFock E s t` of `Hom(W, V)` and all standard data
 `stdRowDatum σ 𝔠.semilocalChar y`. Here `y` is any integral `b × n` matrix over the product of the
 completions at the ramified places `𝔠.ramifiedPlaces`, and `σ` orders the rows of `y` and of an
-`r × n` matrix into a square matrix. -/
+`r × n` matrix into a square matrix.
+-/
 def ThetaLargeVanishes (W : Space E n s) (V : Space E r t) (σ : b ⊕ r ≃ n) : Prop :=
-  ∀ v : PairFock E s t, IsSchwartzVector v →
-    ∀ y : Matrix b n (LocProd 𝔠.ramifiedPlaces), IsIntMatrix SemilocalField.O y →
-      ∀ g : G E s, thetaLarge W V 𝔠 v (stdRowDatum σ 𝔠.semilocalChar y) g = 0
+  ∀ v : PairFock E s t,
+    IsSchwartzVector v
+      → ∀ y : Matrix b n (LocProd 𝔠.ramifiedPlaces),
+        IsIntMatrix SemilocalField.O y
+          → ∀ g : G E s, thetaLarge W V 𝔠 v (stdRowDatum σ 𝔠.semilocalChar y) g = 0
 
 omit [Fintype b] [DecidableEq b] in
-/-- Let `W`, `W₁` be hermitian spaces with the same signs `s`, and `V`, `V₁` with the same signs
+/--
+Let `W`, `W₁` be hermitian spaces with the same signs `s`, and `V`, `V₁` with the same signs
 `t`. If, for the split tame character `𝔠`, the theta integral of `(W, V)` at every point of the
 unitary group of `W` vanishes on all Schwartz vectors and all standard data, so does that of
-`(W₁, V₁)`. -/
-lemma ThetaLargeVanishes.congr_spaces {W : Space E n s} {V : Space E r t} {σ : b ⊕ r ≃ n}
-    (h_zero : ThetaLargeVanishes 𝔠 W V σ) (W₁ : Space E n s) (V₁ : Space E r t) :
-    ThetaLargeVanishes 𝔠 W₁ V₁ σ := by
+`(W₁, V₁)`.
+-/
+lemma ThetaLargeVanishes.congr_spaces
+    {W : Space E n s} {V : Space E r t} {σ : b ⊕ r ≃ n} (h_zero : ThetaLargeVanishes 𝔠 W V σ)
+    (W₁ : Space E n s) (V₁ : Space E r t)
+    : ThetaLargeVanishes 𝔠 W₁ V₁ σ := by
   obtain ⟨γ, h_transport⟩ := exists_thetaLarge_thetaSmall_eq_circle_mul W W₁ V V₁ V V₁
   -- The integral of `(W₁, V₁)` at `g` is `u` times that of `(W, V)` at `γ * g`.
   obtain ⟨u, h_eq_mul⟩ := (h_transport 𝔠).left
   intro v hv y hy g
   rw [h_eq_mul, h_zero v hv y hy, mul_zero]
 
-/-- Adding a hyperbolic plane, with signs `hyperbolicSigns Unit` (one `+1` and one `-1`), to signs
-`ε` adds one negative sign. -/
-lemma negCount_sumElim_hyperbolicSigns_unit {m : Type} [Fintype m] (ε : m → ℤˣ) :
-    negCount (Sum.elim (hyperbolicSigns Unit) ε) = negCount ε + 1 := by
+/--
+Adding a hyperbolic plane, with signs `hyperbolicSigns Unit` (one `+1` and one `-1`), to signs
+`ε` adds one negative sign.
+-/
+lemma negCount_sumElim_hyperbolicSigns_unit {m : Type} [Fintype m] (ε : m → ℤˣ)
+    : negCount (Sum.elim (hyperbolicSigns Unit) ε) = negCount ε + 1 := by
   simp +arith [negCount_sumElim, negCount_one_and_neg_one]
 
-/-- Descent along one hyperbolic plane `H`. Let `A` and `X` be adapted splittings (orthonormal at
+/--
+Descent along one hyperbolic plane `H`. Let `A` and `X` be adapted splittings (orthonormal at
 the infinite and integral at the finite places) `W' = W ⊕ H` and `V' = V ⊕ H` of hermitian spaces.
 Let `W` be of even rank and `-k ≤ rk V - rk W / 2`, with `k ≤ μ w` at every infinite place `w`,
 where `μ` is the weight of the split tame character `𝔠`.
@@ -79,19 +91,22 @@ every point `g` of the unitary group of `W` that of `(W, V)` vanishes on all Sch
 all data `stdRowDatum σ 𝔠.semilocalChar y`. Here `y'` and `y` are arbitrary integral matrices at
 the ramified places of `𝔠`, with rows indexed by `b` and columns by the bases of `W'` and `W`; the
 orderings `σ` and `σ'` of these rows and those indexed by the basis of `V`, respectively `V'`, into
-a square matrix are arbitrary. -/
-theorem ThetaLargeVanishes.of_add_plane {k : ℕ} {W : Space E n s} {W' : Space E n' s'}
-    {V : Space E r t} {V' : Space E r' t'} (A : W'.Splitting W Unit) (X : V'.Splitting V Unit)
-    [IsBaseAdapted A] [IsBaseAdapted X] (σ : b ⊕ r ≃ n) {σ' : b ⊕ r' ≃ n'} (hn_even : 2 ∣ card n)
-    (hk_le : ∀ w : InfinitePlace E, k ≤ μ w) (h_range : -(k : ℤ) ≤ card r - card n / 2)
-    (h_zero : ThetaLargeVanishes 𝔠 W' V' σ') : ThetaLargeVanishes 𝔠 W V σ := by
+a square matrix are arbitrary.
+-/
+theorem ThetaLargeVanishes.of_add_plane
+    {k : ℕ} {W : Space E n s} {W' : Space E n' s'} {V : Space E r t} {V' : Space E r' t'}
+    (A : W'.Splitting W Unit) (X : V'.Splitting V Unit) [IsBaseAdapted A] [IsBaseAdapted X]
+    (σ : b ⊕ r ≃ n)
+    {σ' : b ⊕ r' ≃ n'}
+    (hn_even : 2 ∣ card n) (hk_le : ∀ w : InfinitePlace E, k ≤ μ w)
+    (h_range : -(k : ℤ) ≤ card r - card n / 2) (h_zero : ThetaLargeVanishes 𝔠 W' V' σ')
+    : ThetaLargeVanishes 𝔠 W V σ := by
   intro v hv y hy g
   -- Tate's integral of a suitable vector `v'` of `(W', V')` is a product of simple factors and the
   -- theta integral of `(W, V)` at `v`. Its value at `e + 1`, for `e = rk V - rk W / 2`, where these
   -- factors are non-zero, is a constant term of the theta integral of `(W', V')`, hence zero.
   let I : ℂ := thetaLarge W V 𝔠 v (stdRowDatum σ 𝔠.semilocalChar y) g
-  obtain ⟨B, hB_pos, hB_analytic, h_image⟩ :=
-    exists_thetaLarge_cone_eq_mul A X μ σ hn_even
+  obtain ⟨B, hB_pos, hB_analytic, h_image⟩ := exists_thetaLarge_cone_eq_mul A X μ σ hn_even
   -- For `x > 0` the theta integral of `(W, V)` at the cone integral of `v'` is `B x * I`.
   obtain ⟨v', hv', h_cone⟩ := h_image v hv
   -- `Λ` continues the L-function `x ↦ 𝔠.character.L 𝔠.ramifiedPlaces x` analytically to `x > -k`.
@@ -101,12 +116,16 @@ theorem ThetaLargeVanishes.of_add_plane {k : ℕ} {W : Space E n s} {W' : Space 
   let P (x : ℝ) : ℝ :=
     ideleAbs (WeilData.scaleIdele E) ^ x * ∏ w : 𝔠.ramifiedPlaces, (w.val.q : ℝ) ^ (x - 1 / 2)
   let e : ℤ := card r - card n / 2
-  obtain ⟨𝒵, h𝒵_analytic, h_constantTerm_eq, h_tate_eq⟩ :
-      ∃ 𝒵 : ℝ → ℂ, AnalyticOnNhd ℝ 𝒵 univ ∧ planeConstantTerm 𝔠 V' A σ' v' y 1 g = 𝒵 (e + 1) ∧
-        ∀ (β : Bool) (x : ℝ), 1 ≤ x → 𝒵 (cond β x (1 - x)) =
-          ε β * P x * 𝔠.character.L 𝔠.ramifiedPlaces x *
-            thetaLarge W V 𝔠 (∫ p, coneIntegrand A X μ β x v' p ∂Measure.haar.prod Measure.haar)
-              (stdRowDatum σ 𝔠.semilocalChar y) g :=
+  obtain ⟨𝒵, h𝒵_analytic, h_constantTerm_eq, h_tate_eq⟩
+      : ∃ 𝒵 : ℝ → ℂ,
+        AnalyticOnNhd ℝ 𝒵 univ ∧ planeConstantTerm 𝔠 V' A σ' v' y 1 g = 𝒵 (e + 1)
+          ∧ ∀ (β : Bool) (x : ℝ),
+            1 ≤ x
+              → 𝒵 (cond β x (1 - x))
+                = ε β * P x * 𝔠.character.L 𝔠.ramifiedPlaces x
+                  * thetaLarge W V 𝔠
+                    (∫ p, coneIntegrand A X μ β x v' p ∂Measure.haar.prod Measure.haar)
+                    (stdRowDatum σ 𝔠.semilocalChar y) g :=
     h_zeta_char v' hv' y hy 1 g (Or.inl rfl)
   -- For `x ≥ 1`, hence for `x > -k`, Tate's integral of `v'` is `ε P(x) Λ(x) B(x) I`.
   let R (x : ℝ) : ℂ := ε true * P x * Λ x * (B x * I)
@@ -132,13 +151,16 @@ theorem ThetaLargeVanishes.of_add_plane {k : ℕ} {W : Space E n s} {W' : Space 
   have h_R_zero : R (e + 1 : ℤ) = 0 :=
     (h_product (mem_Ioi.2 (mod_cast h_lower))).symm.trans h_tate_zero
   have hε_ne : ε true ≠ 0 := norm_pos_iff.1 ((ha_pos true).trans_eq (hε_norm true).symm)
-  have hP_pos : 0 < P (e + 1 : ℤ) := mul_pos (Real.rpow_pos_of_pos ideleAbs_pos _)
-    (Finset.prod_pos fun w _ ↦ Real.rpow_pos_of_pos (by simp [FinPlace.q_bounds]) _)
+  have hP_pos : 0 < P (e + 1 : ℤ) :=
+    mul_pos (Real.rpow_pos_of_pos ideleAbs_pos _)
+      (Finset.prod_pos fun w _ ↦ Real.rpow_pos_of_pos (by simp [FinPlace.q_bounds]) _)
   show I = 0
   simpa only [R, mul_eq_zero, Complex.ofReal_eq_zero, hε_ne, hP_pos.ne', hΛ_ne _ h_lower,
-    (hB_pos _).ne', false_or] using h_R_zero
+      (hB_pos _).ne', false_or]
+    using h_R_zero
 
-/-- Descent along any positive number `j` of hyperbolic planes `H`. Let the hermitian space `W'`
+/--
+Descent along any positive number `j` of hyperbolic planes `H`. Let the hermitian space `W'`
 have the rank and number of negative signs of `W ⊕ H ^ j`, and let `V'` have the number of negative
 signs of `V ⊕ H ^ j`; its rank is then that of `V ⊕ H ^ j` too, by `σ` and `σ'`. Let `W` be of even
 rank and `-k ≤ rk V - rk W / 2`, where `k ≤ μ w` at every infinite place `w` and `μ` is the weight
@@ -149,14 +171,16 @@ Schwartz vectors and all data `stdRowDatum σ' 𝔠.semilocalChar y'`, then at e
 unitary group of `W` that of `(W, V)` vanishes on all Schwartz vectors and all data
 `stdRowDatum σ 𝔠.semilocalChar y`. Integrality at the ramified places of `𝔠` is the only condition
 on the matrices `y'` and `y`; their rows are indexed by `b`, and `σ`, `σ'` order these rows and
-those indexed by the basis of `V`, respectively `V'`, into a square matrix. -/
-theorem ThetaLargeVanishes.of_add_planes {k : ℕ} {W' : Space E n' s'} {V' : Space E r' t'}
-    {σ' : b ⊕ r' ≃ n'} (h_zero : ThetaLargeVanishes 𝔠 W' V' σ')
-    (hk_le : ∀ w : InfinitePlace E, k ≤ μ w) {j : ℕ} (hj : 1 ≤ j) (W : Space E n s)
-    (V : Space E r t) (σ : b ⊕ r ≃ n) (hn_even : 2 ∣ card n)
+those indexed by the basis of `V`, respectively `V'`, into a square matrix.
+-/
+theorem ThetaLargeVanishes.of_add_planes
+    {k : ℕ} {W' : Space E n' s'} {V' : Space E r' t'} {σ' : b ⊕ r' ≃ n'}
+    (h_zero : ThetaLargeVanishes 𝔠 W' V' σ') (hk_le : ∀ w : InfinitePlace E, k ≤ μ w)
+    {j : ℕ} (hj : 1 ≤ j)
+    (W : Space E n s) (V : Space E r t) (σ : b ⊕ r ≃ n) (hn_even : 2 ∣ card n)
     (h_range : -(k : ℤ) ≤ card r - card n / 2) (h_rank : card n' = card n + 2 * j)
-    (h_negCount_W : negCount s' = j + negCount s) (h_negCount_V : negCount t' = j + negCount t) :
-    ThetaLargeVanishes 𝔠 W V σ := by
+    (h_negCount_W : negCount s' = j + negCount s) (h_negCount_V : negCount t' = j + negCount t)
+    : ThetaLargeVanishes 𝔠 W V σ := by
   induction j, hj using Nat.le_induction generalizing n r with
   | base =>
     have h_card_W : card b + card r = card n := card_sum.symm.trans (card_congr σ)
@@ -178,8 +202,8 @@ theorem ThetaLargeVanishes.of_add_planes {k : ℕ} {W' : Space E n' s'} {V' : Sp
     have h_neg_V : negCount (Sum.elim (hyperbolicSigns Unit) t) = negCount t + 1 :=
       negCount_sumElim_hyperbolicSigns_unit t
     have h_above : ThetaLargeVanishes 𝔠 (hyperbolicSum Unit W) (hyperbolicSum Unit V) τ :=
-      ih (hyperbolicSum Unit W) (hyperbolicSum Unit V) τ (by omega) (by omega) (by omega)
-        (by omega) (by omega)
+      ih (hyperbolicSum Unit W) (hyperbolicSum Unit V) τ (by omega) (by omega) (by omega) (by omega)
+        (by omega)
     exact h_above.of_add_plane (removePlanes Unit W) (removePlanes Unit V) σ hn_even hk_le h_range
 
 end New.Exchange

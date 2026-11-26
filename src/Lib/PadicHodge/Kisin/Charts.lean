@@ -59,42 +59,53 @@ variable {p : ℕ} [ThePrime p] (f : ℕ+)
 
 /-! ### The ring of constants -/
 
-/-- The subring of the x with x^{p^f} = x in O^♭ = `OFlat`, the tilt of the integers of ℂ_p; it is
-a field with p^f elements. -/
+/--
+The subring of the x with x^{p^f} = x in O^♭ = `OFlat`, the tilt of the integers of ℂ_p; it is
+a field with p^f elements.
+-/
 def flatFq : Subring OFlat := (iterateFrobenius OFlat p f).eqLocus (RingHom.id OFlat)
 
-/-- The subring `flatFq f` of the x in `OFlat` (O^♭, the tilt of the integers of ℂ_p) with
-x^{p^f} = x has p^f elements. -/
+/--
+The subring `flatFq f` of the x in `OFlat` (O^♭, the tilt of the integers of ℂ_p) with
+x^{p^f} = x has p^f elements.
+-/
 @[simp]
-lemma card_flatFq : Nat.card (flatFq f) = p ^ f.val := open Polynomial in by
-  -- The elements of `flatFq f` are the roots of the separable polynomial `X ^ p ^ f - X`, which
-  -- splits over `OFlat`: its roots in the algebraically closed fraction field `CFlat` are integral
-  -- over `OFlat`, hence lie in `OFlat` (`OFlat.isAbsIntegrallyClosed`).
-  let P : Polynomial OFlat := Polynomial.X ^ p ^ f.val - Polynomial.X
-  have h_monic : P.IsMonicOfDegree (p ^ f.val) :=
-    (isMonicOfDegree_X_pow OFlat (p ^ f.val)).sub (by simp [elim])
-  have h_nodup : P.roots.Nodup := nodup_roots (galois_poly_separable p _ (by simp))
-  have h_inj : Function.Injective (algebraMap OFlat CFlat) := IsFractionRing.injective OFlat CFlat
-  have h_integral (x : CFlat) (hx : x ∈ (P.map (algebraMap OFlat CFlat)).roots) :
-      IsIntegral OFlat x :=
-    ⟨P, h_monic.monic, (mem_roots_map_of_injective h_inj h_monic.ne_zero).mp hx⟩
-  have h_splits : P.Splits := (IsAlgClosed.splits _).of_splits_map_of_injective h_inj
-    fun x hx ↦ OFlat.isAbsIntegrallyClosed.mem_range_of_isIntegralElem (h_integral x hx)
-  have h_mem (x : OFlat) : x ∈ P.roots ↔ x ∈ flatFq f := by
-    aesop (add simp [h_monic.ne_zero, sub_eq_zero, P])
-  calc Nat.card (flatFq f) = P.roots.card := Nat.subtype_card ⟨P.roots, h_nodup⟩ h_mem
-    _ = P.natDegree := h_splits.natDegree_eq_card_roots.symm
-    _ = p ^ f.val := h_monic.natDegree_eq
+lemma card_flatFq : Nat.card (flatFq f) = p ^ f.val :=
+  open Polynomial in
+  by
+    -- The elements of `flatFq f` are the roots of the separable polynomial `X ^ p ^ f - X`, which
+    -- splits over `OFlat`: its roots in the algebraically closed fraction field `CFlat` are integral
+    -- over `OFlat`, hence lie in `OFlat` (`OFlat.isAbsIntegrallyClosed`).
+    let P : Polynomial OFlat := Polynomial.X ^ p ^ f.val - Polynomial.X
+    have h_monic : P.IsMonicOfDegree (p ^ f.val) :=
+      (isMonicOfDegree_X_pow OFlat (p ^ f.val)).sub (by simp [elim])
+    have h_nodup : P.roots.Nodup := nodup_roots (galois_poly_separable p _ (by simp))
+    have h_inj : Function.Injective (algebraMap OFlat CFlat) := IsFractionRing.injective OFlat CFlat
+    have h_integral (x : CFlat) (hx : x ∈ (P.map (algebraMap OFlat CFlat)).roots)
+        : IsIntegral OFlat x :=
+      ⟨P, h_monic.monic, (mem_roots_map_of_injective h_inj h_monic.ne_zero).mp hx⟩
+    have h_splits : P.Splits :=
+      (IsAlgClosed.splits _).of_splits_map_of_injective h_inj fun x hx ↦
+        OFlat.isAbsIntegrallyClosed.mem_range_of_isIntegralElem (h_integral x hx)
+    have h_mem (x : OFlat) : x ∈ P.roots ↔ x ∈ flatFq f := by
+      aesop (add simp [h_monic.ne_zero, sub_eq_zero, P])
+    calc
+      Nat.card (flatFq f)
+        = P.roots.card := Nat.subtype_card ⟨P.roots, h_nodup⟩ h_mem
+      _ = P.natDegree := h_splits.natDegree_eq_card_roots.symm
+      _ = p ^ f.val := h_monic.natDegree_eq
 
 instance : Finite (flatFq f) := Nat.finite_of_card_ne_zero (by simp [NeZero.ne])
 
 instance : Field (flatFq f) := (Finite.isField_of_domain _).toField
 
-/-- The ring Λ = W(k) of p-typical Witt vectors over the field k of elements x of O^♭ with
-x^{p^f} = x. -/
+/--
+The ring Λ = W(k) of p-typical Witt vectors over the field k of elements x of O^♭ with
+x^{p^f} = x.
+-/
 @[reducible]
 def WittFq : Type := WittVector p (flatFq f)
-  deriving CommRing
+deriving CommRing
 
 instance : Algebra (WittFq f) Ainf := inferInstance
 
@@ -102,20 +113,26 @@ deriving instance Algebra (WittFq f) for @WittCFlat p _
 
 /-! ### Charts and their existence -/
 
-/-- A chart is a Λ-algebra map Λ[[X]] → A_inf, with Λ = W(F_{p^f}) = `WittFq f`. It sends X to a
+/--
+A chart is a Λ-algebra map Λ[[X]] → A_inf, with Λ = W(F_{p^f}) = `WittFq f`. It sends X to a
 non-unit Teichmüller lift z = [ϖ^♭], where ϖ^♭ is the field `varpiFlat`, and it sends a series
-X^e A + p, with A a unit, to ξ times a unit. -/
+X^e A + p, with A a unit, to ξ times a unit.
+-/
 structure Chart where
-  /-- The positive integer `f`: the constants are `Λ = WittFq f`, the Witt vectors of the field
-  with `p ^ f` elements. -/
+  /--
+  The positive integer `f`: the constants are `Λ = WittFq f`, the Witt vectors of the field
+  with `p ^ f` elements.
+  -/
   f : ℕ+
-  /-- The map of `Λ`-algebras `Λ⟦X⟧ → A_inf`, `Λ = WittFq f`; the image of `X` is called
-  `z`. -/
+  /--
+  The map of `Λ`-algebras `Λ⟦X⟧ → A_inf`, `Λ = WittFq f`; the image of `X` is called
+  `z`.
+  -/
   seriesMap : (WittFq f)⟦X⟧ →ₐ[WittFq f] Ainf
   /-- The unit power series `A` that multiplies `X ^ e` in `X ^ e * A + p`. -/
   unitSeries : (WittFq f)⟦X⟧ˣ
   /-- `z` is not a unit of `A_inf`. -/
-  not_isUnit_z : ¬IsUnit (seriesMap X)
+  not_isUnit_z : ¬ IsUnit (seriesMap X)
   /-- The element `ϖ^♭` of `O^♭` whose Teichmüller lift is `z`. -/
   varpiFlat : OFlat
   /-- The exponent `e` of `X` in `X ^ e * A + p`. -/
@@ -127,11 +144,16 @@ structure Chart where
 
 variable (c : Chart) {Γ : Type} [Group Γ]
 
-/-- Power series over `Λ` can be evaluated at an element `z` of an ideal `I` of a `Λ`-algebra `R`
-that is `I`-adically complete: some map of `Λ`-algebras `Λ⟦X⟧ → R` sends `X` to `z`. -/
-lemma exists_algHom_X_eq (Λ : Type*) {R : Type*} [CommRing Λ] [CommRing R] [Algebra Λ R]
-    {I : Ideal R} [h : IsAdicComplete I R] {z : R} (hz : z ∈ I) :
-    ∃ e : Λ⟦X⟧ →ₐ[Λ] R, e X = z := by
+/--
+Power series over `Λ` can be evaluated at an element `z` of an ideal `I` of a `Λ`-algebra `R`
+that is `I`-adically complete: some map of `Λ`-algebras `Λ⟦X⟧ → R` sends `X` to `z`.
+-/
+lemma exists_algHom_X_eq
+    (Λ : Type*)
+    {R : Type*} [CommRing Λ] [CommRing R] [Algebra Λ R]
+    {I : Ideal R} [h : IsAdicComplete I R]
+    {z : R} (hz : z ∈ I)
+    : ∃ e : Λ⟦X⟧ →ₐ[Λ] R, e X = z := by
   -- With the `I`-adic topology on `R` and the discrete one on `Λ`, the element `z` is
   -- topologically nilpotent in a complete separated ring, so power series can be evaluated at it.
   let withIdeal_R : WithIdeal R := ⟨I⟩
@@ -141,33 +163,33 @@ lemma exists_algHom_X_eq (Λ : Type*) {R : Type*} [CommRing Λ] [CommRing R] [Al
   have h_smul : ContinuousSMul Λ R := DiscreteTopology.instContinuousSMul Λ R
   exact ⟨aeval (isTopologicallyNilpotent_of_mem hz), by simp [coe_aeval]⟩
 
-/-- Existence of charts. A chart consists of `f`, a `Λ`-algebra map `ev : Λ⟦X⟧ → Ainf` with
+/--
+Existence of charts. A chart consists of `f`, a `Λ`-algebra map `ev : Λ⟦X⟧ → Ainf` with
 `Λ = WittFq f`, an exponent `e`, a unit series `A` and `ϖ^♭ ∈ O^♭` (the field `varpiFlat`), such
 that `ev X = [ϖ^♭]` is a non-unit and `ev (X ^ e * A + p)` is a generator ξ of `ker θ` times a unit.
 Let `x : OC` (an integer of `ℂ_p`) have `x ^ e * v = -p` for a unit `v`. Then (a) some such `ev` has
 `θ (ev X) = x`, and (b) every unit series `A` with `θ (ev A) = v` belongs to a chart `c` with
 `c.f = f`, map `ev`, exponent `e`, unit `A` and `(ϖ^♭)^♯ = x` (`♯` the untilt); map and unit are
-compared by `≍`, as their types depend on `c.f`. -/
-lemma exists_chart_of_pow_mul_eq_neg (f : ℕ+) {x : OC} {e : ℕ} (v : OCˣ) (h : x ^ e * v = -p) :
-    ∃ ev : (WittFq f)⟦X⟧ →ₐ[WittFq f] Ainf,
+compared by `≍`, as their types depend on `c.f`.
+-/
+lemma exists_chart_of_pow_mul_eq_neg (f : ℕ+) {x : OC} {e : ℕ} (v : OCˣ) (h : x ^ e * v = -p)
+    : ∃ ev : (WittFq f)⟦X⟧ →ₐ[WittFq f] Ainf,
       -- (a) `θ` takes the value of `X` to `x`
-      theta (ev X) = x ∧
-      -- (b) each unit series that `θ` takes to `v` completes these data to a chart
-      ∀ A : (WittFq f)⟦X⟧ˣ, theta (ev A.val) = v → ∃ c : Chart,
-        c.f = f ∧
-        c.seriesMap ≍ ev ∧
-        c.varpiFlat.untilt = x ∧
-        c.e = e ∧
-        c.unitSeries ≍ A := by
+      theta (ev X) = x
+        -- (b) each unit series that `θ` takes to `v` completes these data to a chart
+        ∧ ∀ A : (WittFq f)⟦X⟧ˣ,
+          theta (ev A.val) = v
+            → ∃ c : Chart,
+              c.f = f ∧ c.seriesMap ≍ ev ∧ c.varpiFlat.untilt = x ∧ c.e = e ∧ c.unitSeries ≍ A := by
   -- Write `x = u^♯` and evaluate power series at `z = [u]`; the generator of `ker θ` is the
   -- value of `E₀ = X ^ e * A + p`.
   obtain ⟨u, hu⟩ : ∃ u : OFlat, u.untilt = x := Variety.untilt_surjective_of_isAbsIntegrallyClosed x
   -- `[u]` is not a unit, or else `x ^ e * v = -p` would be one.
-  have h_nonunit : ¬IsUnit (teichmuller p u : Ainf) := by
+  have h_nonunit : ¬ IsUnit (teichmuller p u : Ainf) := by
     intro h_unit
     have hx_unit : IsUnit x := by simpa [hu] using h_unit.map theta
     have hp_unit : IsUnit (p : OC) := by simpa [h] using (hx_unit.pow e).mul v.isUnit
-    have hp_nonunit : ¬IsUnit (p : OC) := out
+    have hp_nonunit : ¬ IsUnit (p : OC) := out
     exact hp_nonunit hp_unit
   have h_complete : IsAdicComplete (span {teichmuller p u}) Ainf :=
     isAdicComplete_span_singleton h_nonunit
@@ -180,8 +202,9 @@ lemma exists_chart_of_pow_mul_eq_neg (f : ℕ+) {x : OC} {e : ℕ} (v : OCˣ) (h
   have h_dvd : (WittVector.constantCoeff (ev E₀)).untilt ∣ p := by
     have h_u : WittVector.constantCoeff (teichmuller p u) = u := by simp
     -- Without `-constantCoeff_apply`, simp turns `constantCoeff` into `coeff 0` and stops there.
-    have h_coeff : (WittVector.constantCoeff (ev E₀)).untilt =
-        x ^ e * (WittVector.constantCoeff (ev A.val)).untilt := by
+    have h_coeff
+        : (WittVector.constantCoeff (ev E₀)).untilt
+          = x ^ e * (WittVector.constantCoeff (ev A.val)).untilt := by
       simp [E₀, hev, h_u, hu, -constantCoeff_apply, p_dvd_iff.mp]
     -- `IsUnit.map` through `untilt`, `constantCoeff` and `ev` needs a discharger depth of 4.
     have hA_unit : IsUnit (WittVector.constantCoeff (ev A.val)).untilt := by
@@ -192,41 +215,54 @@ lemma exists_chart_of_pow_mul_eq_neg (f : ℕ+) {x : OC} {e : ℕ} (v : OCˣ) (h
   have h_assoc : Associated (ev E₀) xi :=
     associated_of_dvd_dvd ((theta_eq_zero_iff_dvd_of_untilt_dvd h_ker h_dvd).mp (by simp))
       (theta_eq_zero_iff_xi_dvd.mp h_ker)
-  let chart : Chart :=
-    { f := f, seriesMap := ev, unitSeries := A, not_isUnit_z := by rwa [hev]
-      varpiFlat := u, e := e, associated_xi := h_assoc, seriesMap_X := hev }
+  let chart : Chart := {
+    f := f
+    seriesMap := ev
+    unitSeries := A
+    not_isUnit_z := by rwa [hev]
+    varpiFlat := u
+    e := e
+    associated_xi := h_assoc
+    seriesMap_X := hev
+  }
   exact ⟨chart, rfl, .rfl, hu, rfl, .rfl⟩
 
-/-- The ring `WittFq f` of Witt vectors of the field with `p ^ f` elements is a finite
-`ℤ_p`-module. -/
+/--
+The ring `WittFq f` of Witt vectors of the field with `p ^ f` elements is a finite
+`ℤ_p`-module.
+-/
 instance {f : ℕ+} : Module.Finite ℤ_[p] (WittFq f) := by
   -- The finitely many Teichmüller lifts generate `WittFq f` modulo `p`, hence generate it.
   let T : (flatFq f →₀ ℤ_[p]) →ₗ[ℤ_[p]] WittFq f :=
     Finsupp.lift (WittFq f) ℤ_[p] (flatFq f) (teichmuller p)
   have h_haus : IsHausdorff (maximalIdeal ℤ_[p]) (WittFq f) := by
     simp [(isAdicComplete_over_base _).toIsHausdorff, PadicInt.maximalIdeal_eq_span_p]
-  have mod_p :
-      Function.Surjective ((maximalIdeal ℤ_[p] • ⊤ : Submodule ℤ_[p] (WittFq f)).mkQ ∘ₗ T) := by
+  have mod_p
+      : Function.Surjective ((maximalIdeal ℤ_[p] • ⊤ : Submodule ℤ_[p] (WittFq f)).mkQ ∘ₗ T) := by
     rintro ⟨a⟩
     refine ⟨Finsupp.single (a.coeff 0) 1, SModEq.sub_mem.mpr ?_⟩
     simp [T, p_dvd_iff, map_sub, PadicInt.maximalIdeal_eq_span_p, map_span, mem_span_singleton]
   exact .of_surjective T (surjective_of_mkQ_comp_surjective mod_p)
 
-/-- Frobenius and the Galois group, acting through the monoid `FrobGal`, map the constants
-`WittFq f` of `Ainf` to constants. -/
-lemma WittFq.exists_smul_algebraMap_eq {f : ℕ+} (m : FrobGal) (c : WittFq f) :
-    ∃ b : WittFq f, m • algebraMap (WittFq f) Ainf c = algebraMap (WittFq f) Ainf b := by
+/--
+Frobenius and the Galois group, acting through the monoid `FrobGal`, map the constants
+`WittFq f` of `Ainf` to constants.
+-/
+lemma WittFq.exists_smul_algebraMap_eq {f : ℕ+} (m : FrobGal) (c : WittFq f)
+    : ∃ b : WittFq f, m • algebraMap (WittFq f) Ainf c = algebraMap (WittFq f) Ainf b := by
   -- `m` acts on `Ainf` coordinate by coordinate, through a ring endomorphism of `OFlat`, which
   -- keeps the relation `t ^ p ^ f = t` that defines `flatFq f`.
   have h_mem (n : ℕ) : m • (c.coeff n : OFlat) ∈ flatFq f :=
     (smul_pow' m (c.coeff n : OFlat) (p ^ (f : ℕ))).symm.trans (congrArg _ (c.coeff n).prop)
   exact ⟨WittVector.mk p fun n ↦ ⟨m • (c.coeff n : OFlat), h_mem n⟩, rfl⟩
 
-/-- Reduction of the coordinates from `flatFq f` to the residue field of `OFlat` is injective on
-Witt vectors. -/
-lemma wittFq_map_residue_injective {f : ℕ+} :
-    (WittVector.map ((residue OFlat).comp (flatFq f).subtype) :
-      WittFq f → WittVector p (ResidueField OFlat)).Injective :=
+/--
+Reduction of the coordinates from `flatFq f` to the residue field of `OFlat` is injective on
+Witt vectors.
+-/
+lemma wittFq_map_residue_injective {f : ℕ+}
+    : (WittVector.map ((residue OFlat).comp (flatFq f).subtype)
+      : WittFq f → WittVector p (ResidueField OFlat)).Injective :=
   map_injective _ (RingHom.injective _)
 
 /-- The element g of G_p fixes the image of Λ = W(F_{p^f}) in A_inf pointwise. -/
@@ -237,8 +273,10 @@ namespace Chart
 
 /-! ### The ring of a chart: a complete local Noetherian ring -/
 
-/-- For a chart, the Λ-subalgebra S of A_inf that is the image of the chart's map Λ[[X]] →
-A_inf. -/
+/--
+For a chart, the Λ-subalgebra S of A_inf that is the image of the chart's map Λ[[X]] →
+A_inf.
+-/
 def S : Subalgebra (WittFq c.f) Ainf := c.seriesMap.range
 
 /-- For a chart, the image z of the variable X, as an element of S. -/
@@ -247,25 +285,29 @@ def z : c.S := ⟨c.seriesMap X, X, rfl⟩
 /-- For a chart, the ideal (p, z) of S, which is its maximal ideal. -/
 abbrev maxIdeal : Ideal c.S := span {↑p, c.z}
 
-/-- The element g of G_p fixes the image of Λ in A_inf pointwise and fixes θ(z), z the
+/--
+The element g of G_p fixes the image of Λ in A_inf pointwise and fixes θ(z), z the
 coordinate of the chart c. The two parts are `New.Lift.Chart.FixesThetaZ.fixesLambda` and
-`New.Lift.Chart.FixesThetaZ.smul_theta_z`. -/
+`New.Lift.Chart.FixesThetaZ.smul_theta_z`.
+-/
 abbrev FixesThetaZ (g : Gp p) : Prop := FixesLambda c.f g ∧ g • theta c.z = theta c.z
 
 lemma FixesThetaZ.fixesLambda {c : Chart} {g : Gp p} (h : c.FixesThetaZ g) : FixesLambda c.f g :=
   h.left
 
-lemma FixesThetaZ.smul_theta_z {c : Chart} {g : Gp p} (h : c.FixesThetaZ g) :
-    g • theta c.z = theta c.z :=
+lemma FixesThetaZ.smul_theta_z {c : Chart} {g : Gp p} (h : c.FixesThetaZ g)
+    : g • theta c.z = theta c.z :=
   h.right
 
-lemma fixesThetaZ_iff {g : Gp p} :
-    c.FixesThetaZ g ↔ FixesLambda c.f g ∧ g • theta c.z = theta c.z :=
+lemma fixesThetaZ_iff {g : Gp p}
+    : c.FixesThetaZ g ↔ FixesLambda c.f g ∧ g • theta c.z = theta c.z :=
   Iff.rfl
 
-/-- The chart `c` is a chart of a group homomorphism `j : Γ →* G_p`: every g in G_p that fixes Λ
+/--
+The chart `c` is a chart of a group homomorphism `j : Γ →* G_p`: every g in G_p that fixes Λ
 pointwise and fixes θ(z) lies in the image of j. So the field fixed by all g that fix Λ pointwise
-and fix θ(z) contains the field fixed by the image of j. -/
+and fix θ(z) contains the field fixed by the image of j.
+-/
 def IsChartOf (j : Γ →* Gp p) : Prop := ∀ g : Gp p, c.FixesThetaZ g → g ∈ j.range
 
 lemma z_eq_teichmuller : c.z = teichmuller p c.varpiFlat := c.seriesMap_X
@@ -277,14 +319,16 @@ instance : NeZero c.e := by
   -- Without `-constantCoeff_apply`, simp turns `constantCoeff` into `coeff 0` and stops there.
   simp [h_e_zero, p_dvd_iff.mp, -constantCoeff_apply, isUnit_iff_isUnit_constantCoeff, IsUnit.map]
 
-/-- For a chart there is `b` in A_inf with `z ∣ ξ - p * b`; so ξ lies in the ideal of A_inf
-generated by p and z. -/
+/--
+For a chart there is `b` in A_inf with `z ∣ ξ - p * b`; so ξ lies in the ideal of A_inf
+generated by p and z.
+-/
 lemma exists_z_dvd_xi_sub_p_mul : ∃ b : Ainf, c.z.val ∣ xi - p * b := by
   -- `xi` is `(z ^ e * A + p) * b` for a unit `b`, and `e ≠ 0`.
   obtain ⟨b, hb⟩ := c.associated_xi
   exact ⟨b, by simp [← hb, add_mul, z, IsUnit.map, NeZero.ne]⟩
 
-lemma not_p_dvd_z : ¬↑p ∣ c.z.val := by
+lemma not_p_dvd_z : ¬ ↑p ∣ c.z.val := by
   -- Otherwise `p` would divide `ξ - p * b`, hence `ξ`.
   intro h_dvd
   obtain ⟨b, hb⟩ := c.exists_z_dvd_xi_sub_p_mul
@@ -300,22 +344,25 @@ lemma seriesMap_injective : Function.Injective c.seriesMap := by
   have hG : c.seriesMap F.divXPowOrder = 0 := by
     simpa [z_ne, hF] using congrArg c.seriesMap F.X_pow_order_mul_divXPowOrder
   have red_z : toWittResidue (c.seriesMap X) = 0 := by
-    have h_nonunit : ¬IsUnit (c.seriesMap X) := c.not_isUnit_z
+    have h_nonunit : ¬ IsUnit (c.seriesMap X) := c.not_isUnit_z
     ext (_ | n)
     · -- The first coordinate is the residue of `ϖ^♭`, which is not a unit.
       simp_all [seriesMap_X, toWittResidue, (residue_eq_zero_iff _).mpr,
         isUnit_iff_isUnit_constantCoeff]
     · -- The higher coordinates of a Teichmüller lift are zero.
       simp [seriesMap_X, toWittResidue]
-  have red_const : toWittResidue
-      (algebraMap (WittFq c.f) Ainf (PowerSeries.constantCoeff F.divXPowOrder)) = 0 := by
+  have red_const
+      : toWittResidue (algebraMap (WittFq c.f) Ainf (PowerSeries.constantCoeff F.divXPowOrder))
+        = 0 := by
     simpa [hG, red_z, C_eq_algebraMap] using
       (congrArg (toWittResidue ∘ c.seriesMap) F.divXPowOrder.eq_X_mul_shift_add_const).symm
-  exact constantCoeff_divXPowOrder_eq_zero_iff.mp
-    (wittFq_map_residue_injective (red_const.trans (map_zero _).symm))
+  exact constantCoeff_divXPowOrder_eq_zero_iff.mp (wittFq_map_residue_injective (red_const.trans
+    (map_zero _).symm))
 
-/-- For a chart, the Λ-algebra isomorphism from Λ[[X]] onto S given by the chart's map, which is
-injective. -/
+/--
+For a chart, the Λ-algebra isomorphism from Λ[[X]] onto S given by the chart's map, which is
+injective.
+-/
 def seriesEquiv : (WittFq c.f)⟦X⟧ ≃ₐ[WittFq c.f] c.S :=
   AlgEquiv.ofInjective c.seriesMap c.seriesMap_injective
 
@@ -337,28 +384,31 @@ lemma seriesEquiv_symm_z : c.seriesEquiv.symm c.z = X := c.seriesEquiv.left_inv 
 
 lemma seriesEquiv_X : c.seriesEquiv X = c.z := rfl
 
-lemma seriesEquiv_symm_sub (s t : c.S) :
-    c.seriesEquiv.symm (s - t) = c.seriesEquiv.symm s - c.seriesEquiv.symm t :=
+lemma seriesEquiv_symm_sub (s t : c.S)
+    : c.seriesEquiv.symm (s - t) = c.seriesEquiv.symm s - c.seriesEquiv.symm t :=
   c.seriesEquiv.symm.toRingEquiv.map_sub s t
 
 lemma z_pow_mem_span : c.z ^ c.e ∈ span {c.E, ↑p} := by
   simp [span_insert (_ * _), mem_sup_left, mem_span_singleton]
 
 /-- Every `s` in `S` is a constant of `Λ` plus `z` times some `t` in `S`. -/
-lemma exists_eq_const_add_z_mul (s : c.S) :
-    ∃ (a : WittFq c.f) (t : c.S), s = algebraMap (WittFq c.f) c.S a + c.z * t := by
+lemma exists_eq_const_add_z_mul (s : c.S)
+    : ∃ (a : WittFq c.f) (t : c.S), s = algebraMap (WittFq c.f) c.S a + c.z * t := by
   -- In power series: a series is its constant term plus `X` times its shift.
   obtain ⟨F, rfl⟩ : ∃ F : (WittFq c.f)⟦X⟧, c.seriesEquiv F = s := c.seriesEquiv.surjective s
-  refine ⟨PowerSeries.constantCoeff F,
-    c.seriesEquiv (PowerSeries.mk fun n ↦ PowerSeries.coeff (n + 1) F), ?_⟩
+  refine ⟨
+    PowerSeries.constantCoeff F,
+    c.seriesEquiv (PowerSeries.mk fun n ↦ PowerSeries.coeff (n + 1) F),
+    ?_
+  ⟩
   conv_lhs => rw [F.eq_X_mul_shift_add_const]
   rw [map_add, map_mul, seriesEquiv_X, C_eq_algebraMap, AlgEquiv.commutes, add_comm]
 
 /-- The ideal `(p, z)` of the ring `S` of a chart is maximal. -/
 instance : c.maxIdeal.IsMaximal := by
   -- The maximal ideal of the power series ring is `(p, X)`; transport it along `c.seriesEquiv`.
-  have h_const :
-      span {(p : WittFq c.f)} = (maximalIdeal (WittFq c.f)⟦X⟧).map PowerSeries.constantCoeff := by
+  have h_const
+      : span {(p : WittFq c.f)} = (maximalIdeal (WittFq c.f)⟦X⟧).map PowerSeries.constantCoeff := by
     rw [map_maximalIdeal_of_surjective _ constantCoeff_surj, (irreducible p).maximalIdeal_eq]
   have h_max : maximalIdeal (WittFq c.f)⟦X⟧ = span {X, C (p : WittFq c.f)} := by
     simpa using eq_span_insert_X_of_X_mem_of_span_eq X_prime.not_isUnit h_const
@@ -377,8 +427,9 @@ instance : IsAdicComplete c.maxIdeal c.S := by
   have precomplete : IsPrecomplete (span {(p : (WittFq c.f)⟦X⟧), X}) (WittFq c.f)⟦X⟧ := by
     refine isPrecomplete_of_shiftDiff_surjective (fun b ↦ ?_) out
     -- For `p`, solve the equations coefficient by coefficient.
-    have h_solve (n : ℕ) : ∃ a : ℕ → WittFq c.f,
-        shiftDiff (WittFq c.f) (p : WittFq c.f) a = fun j ↦ PowerSeries.coeff n (b j) :=
+    have h_solve (n : ℕ)
+        : ∃ a : ℕ → WittFq c.f,
+          shiftDiff (WittFq c.f) (p : WittFq c.f) a = fun j ↦ PowerSeries.coeff n (b j) :=
       (out : (shiftDiff (WittFq c.f) (p : WittFq c.f)).Surjective) _
     choose a ha using h_solve
     refine ⟨fun j ↦ .mk fun n ↦ a n j, funext fun j ↦ PowerSeries.ext fun n ↦ ?_⟩
@@ -389,18 +440,22 @@ instance : IsAdicComplete c.maxIdeal c.S := by
   rw [← h_map]
   exact (IsPrecomplete.congr_ringEquiv _ c.seriesEquiv.toRingEquiv).mpr precomplete
 
-/-- The `m`-th power of the maximal ideal `(p, z)` of `S`, acting on `Ainf`, is the `m`-th power of
-the ideal `(p, z)` of `Ainf`, seen as an `S`-submodule. -/
-private lemma maxIdeal_pow_smul_top_eq_restrictScalars (m : ℕ) :
-    c.maxIdeal ^ m • (⊤ : Submodule c.S Ainf) =
-      ((span {(p : Ainf), c.seriesMap X} : Ideal Ainf) ^ m).restrictScalars c.S := by
+/--
+The `m`-th power of the maximal ideal `(p, z)` of `S`, acting on `Ainf`, is the `m`-th power of
+the ideal `(p, z)` of `Ainf`, seen as an `S`-submodule.
+-/
+private lemma maxIdeal_pow_smul_top_eq_restrictScalars (m : ℕ)
+    : c.maxIdeal ^ m • (⊤ : Submodule c.S Ainf)
+      = ((span {(p : Ainf), c.seriesMap X} : Ideal Ainf) ^ m).restrictScalars c.S := by
   rw [Ideal.smul_top_eq_map, Ideal.map_pow, map_span, image_pair]
   simp [z]
 
-/-- A high enough power of the maximal ideal `(p, z)` of `S`, extended to `Ainf`, lies in the `n`-th
-power of the ideal `(p, ξ)`. -/
-lemma exists_maxIdeal_pow_le (n : ℕ) :
-    ∃ N : ℕ, c.maxIdeal ^ N • ⊤ ≤ (span {↑p, xi} ^ n).restrictScalars c.S := by
+/--
+A high enough power of the maximal ideal `(p, z)` of `S`, extended to `Ainf`, lies in the `n`-th
+power of the ideal `(p, ξ)`.
+-/
+lemma exists_maxIdeal_pow_le (n : ℕ)
+    : ∃ N : ℕ, c.maxIdeal ^ N • ⊤ ≤ (span {↑p, xi} ^ n).restrictScalars c.S := by
   -- `p` and `z` lie in the radical of `(p, ξ)` (every non-unit does, as `p ∤ ξ`), so some power
   -- `(p, z) ^ k` lies in `(p, ξ)`.
   have hz_rad : c.seriesMap X ∈ radical (span {↑p, xi} : Ideal Ainf) :=
@@ -424,11 +479,13 @@ instance : IsHausdorff c.maxIdeal Ainf where
 
 /-! ### Coordinates of `Ainf` over the ring of a chart -/
 
-/-- For a chart, A_inf has a topological basis `d` over its ring S for the adic topology of the
+/--
+For a chart, A_inf has a topological basis `d` over its ring S for the adic topology of the
 maximal ideal `c.maxIdeal = (p, z)` of S, with an index `i` whose coordinate form
-`d.coord i : A_inf → S` is the identity on S. -/
-lemma exists_adicBasis_coord_eq_self :
-    ∃ d : AdicBasis c.maxIdeal Ainf, ∃ i : d.Index, ∀ s : c.S, d.coord i s = s := by
+`d.coord i : A_inf → S` is the identity on S.
+-/
+lemma exists_adicBasis_coord_eq_self
+    : ∃ d : AdicBasis c.maxIdeal Ainf, ∃ i : d.Index, ∀ s : c.S, d.coord i s = s := by
   -- `1` is independent modulo `maxIdeal`, since `z` is not a unit. By `exists_adicBasis` such a
   -- family extends to a topological basis once `p, z` is a regular sequence on `Ainf`.
   have indep : LinearIndepOn (c.S ⧸ c.maxIdeal) (c.maxIdeal • ⊤ : Submodule c.S Ainf).mkQ {1} := by
@@ -436,7 +493,8 @@ lemma exists_adicBasis_coord_eq_self :
     -- For the one vector `1` this says that `1 ∉ (p, z) Ainf`; otherwise `z` would be a unit.
     have h_one : (1 : Ainf) ∉ (c.maxIdeal • ⊤ : Submodule c.S Ainf) := by
       simpa [mem_span_pair_iff, ← isUnit_iff_dvd_one, map_span, image_pair,
-        isUnit_iff_isUnit_constantCoeff, z] using c.not_isUnit_z
+          isUnit_iff_isUnit_constantCoeff, z]
+        using c.not_isUnit_z
     rw [linearIndepOn_iff_notMem_span]
     intro i hi
     simpa [mem_singleton_iff.mp hi, Submodule.Quotient.mk_eq_zero] using h_one
@@ -454,16 +512,22 @@ lemma exists_adicBasis_coord_eq_self :
     simp [hi, c.S.smul_def]
   rw [← h_comb, d.dual i (Finsupp.single i s), Finsupp.single_eq_same]
 
-/-- For a chart, a chosen (p, z)-adic topological basis (b_i) of A_inf over its ring S, with its
-S-linear coordinates λ_i, such that one coordinate is the identity on S. -/
+/--
+For a chart, a chosen (p, z)-adic topological basis (b_i) of A_inf over its ring S, with its
+S-linear coordinates λ_i, such that one coordinate is the identity on S.
+-/
 def adicBasis : AdicBasis c.maxIdeal Ainf := c.exists_adicBasis_coord_eq_self.choose
 
-/-- For a chart, a chosen index of the topological basis `New.Lift.Chart.adicBasis` of A_inf over S
-whose coordinate function A_inf → S is the identity on S (`New.Lift.Chart.coord₀_coe`). -/
+/--
+For a chart, a chosen index of the topological basis `New.Lift.Chart.adicBasis` of A_inf over S
+whose coordinate function A_inf → S is the identity on S (`New.Lift.Chart.coord₀_coe`).
+-/
 def oneIndex : c.adicBasis.Index := c.exists_adicBasis_coord_eq_self.choose_spec.choose
 
-/-- The S-linear coordinate λ₀: A_inf → S of the chosen topological basis of A_inf over S that
-is the identity on S. -/
+/--
+The S-linear coordinate λ₀: A_inf → S of the chosen topological basis of A_inf over S that
+is the identity on S.
+-/
 abbrev coord₀ : Ainf →ₗ[c.S] c.S := c.adicBasis.coord c.oneIndex
 
 /-- The coordinate λ₀ is the identity on S. -/
@@ -484,33 +548,39 @@ lemma frobEnd_mem (s : c.S) : frobEnd s.val ∈ c.S := by
   -- Successive approximation along `φ z = z ^ p` by values of series in `X ^ p`: if
   -- `s = a + z * t` with a constant `a`, then `φ s = φ a + z ^ p * φ t` and `φ a` is a constant.
   let F : (WittFq c.f)⟦X⟧ →ₐ[WittFq c.f] Ainf := c.seriesMap.comp (expand p out)
-  have hFX_not_unit : ¬IsUnit (F X) := by simp [F, c.not_isUnit_z, NeZero.ne]
+  have hFX_not_unit : ¬ IsUnit (F X) := by simp [F, c.not_isUnit_z, NeZero.ne]
   have h_complete : IsAdicComplete (span {F X}) Ainf := isAdicComplete_span_singleton hFX_not_unit
-  have step (s : c.S) :
-      ∃ G : (WittFq c.f)⟦X⟧, ∃ t : c.S, frobEnd s.val = F G + F X • frobEnd t.val := by
+  have step (s : c.S)
+      : ∃ G : (WittFq c.f)⟦X⟧, ∃ t : c.S, frobEnd s.val = F G + F X • frobEnd t.val := by
     obtain ⟨a, t, hs⟩ := c.exists_eq_const_add_z_mul s
-    obtain ⟨b, hb⟩ :
-        ∃ b : WittFq c.f,
+    obtain ⟨b, hb⟩
+        : ∃ b : WittFq c.f,
           frobEnd (algebraMap (WittFq c.f) Ainf a) = algebraMap (WittFq c.f) Ainf b :=
       a.exists_smul_algebraMap_eq (Multiplicative.ofAdd 1, 1)
     -- `φ s = φ a + φ z * φ t`, with `φ a = b` a constant and `φ z = z ^ p = F X`.
     exact ⟨C b, t, by simpa [F, hs, C_eq_algebraMap, z, seriesMap_X] using hb⟩
-  obtain ⟨G, hG⟩ := mem_range_of_approx F.toAddMonoidHom (F.toSemilinearMap.map_smul' X)
-    (fun s : c.S ↦ frobEnd s.val) step s
+  obtain ⟨G, hG⟩ :=
+    mem_range_of_approx F.toAddMonoidHom (F.toSemilinearMap.map_smul' X)
+      (fun s : c.S ↦ frobEnd s.val)
+      step s
   exact ⟨expand p out G, hG⟩
 
 /-- For a chart, the ring endomorphism of S obtained by restricting the Frobenius φ of A_inf. -/
 def φ : c.S →+* c.S := (frobEnd.comp c.S.val.1).codRestrict c.S c.frobEnd_mem
 
-/-- For a chart and n ≥ 0, the element φ^n(E) of its ring S, where E = `c.E` is the image of
-X^e A + p and φ = `c.φ` is the Frobenius of S. -/
+/--
+For a chart and n ≥ 0, the element φ^n(E) of its ring S, where E = `c.E` is the image of
+X^e A + p and φ = `c.φ` is the Frobenius of S.
+-/
 def frobE (n : ℕ) : c.S := (c.φ ^ n) c.E
 
 /-- The Frobenius `c.φ` of S is the Frobenius of A_inf on values. -/
 lemma coe_phi_apply (r : c.S) : (c.φ r).val = frobEnd r.val := rfl
 
-/-- The n-th power of the Frobenius `c.φ` of S is the n-th iterate of the Frobenius of A_inf on
-values. -/
+/--
+The n-th power of the Frobenius `c.φ` of S is the n-th iterate of the Frobenius of A_inf on
+values.
+-/
 lemma coe_phi_pow (n : ℕ) : ∀ r : c.S, ((c.φ ^ n) r).val = frobEnd^[n] ↑r := by
   induction n with
   | zero => simp
@@ -531,29 +601,34 @@ lemma z_dvd_frobE_sub_p (n : ℕ) : c.z ∣ c.frobE n - p := by
   rw [phi_pow_z, RingHom.map_sub, map_natCast] at h_map
   exact (dvd_pow_self c.z (NeZero.ne (p ^ n))).trans h_map
 
-/-- If g in G_p fixes Λ = W(F_{p^f}) pointwise and d in A_inf divides gz − z, then d divides gs − s
-for every s in the ring S of the chart. -/
-lemma dvd_smul_sub_of_fixesLambda {g : Gp p} {d : Ainf} (hz : d ∣ g • c.z.val - c.z)
-    (hg : FixesLambda c.f g) (s : c.S) :
-    d ∣ g • s - s := by
+/--
+If g in G_p fixes Λ = W(F_{p^f}) pointwise and d in A_inf divides gz − z, then d divides gs − s
+for every s in the ring S of the chart.
+-/
+lemma dvd_smul_sub_of_fixesLambda
+    {g : Gp p} {d : Ainf} (hz : d ∣ g • c.z.val - c.z) (hg : FixesLambda c.f g) (s : c.S)
+    : d ∣ g • s - s := by
   -- Successive approximation along `z`: writing `s = a + z * t` with a constant `a`, one has
   -- `g • s - s = (g • z - z) * g • t + z * (g • t - t)`, and `Ainf` is `z`-adically complete.
   have h_complete : IsAdicComplete (span {c.seriesMap X}) Ainf :=
     isAdicComplete_span_singleton c.not_isUnit_z
-  have step (s : c.S) :
-      ∃ n : Ainf, ∃ t : c.S, g • s.val - s = d * n + c.seriesMap X • (g • t.val - t) := by
+  have step (s : c.S)
+      : ∃ n : Ainf, ∃ t : c.S, g • s.val - s = d * n + c.seriesMap X • (g • t.val - t) := by
     obtain ⟨a, t, hs⟩ := c.exists_eq_const_add_z_mul s
     obtain ⟨n, hn⟩ : d ∣ (g • c.z.val - c.z) * g • t.val := hz.mul_right (g • t.val)
     exact ⟨n, t, by simp [hs, ← hn, hg, sub_mul, z, mul_sub]⟩
   obtain ⟨n, hn⟩ : ∃ n : Ainf, d * n = g • s.val - s :=
     mem_range_of_approx (.mulLeft d) (mul_smul_comm (c.seriesMap X) d)
-      (fun s : c.S ↦ g • s.val - s) step s
+      (fun s : c.S ↦ g • s.val - s)
+      step s
   exact Dvd.intro n hn
 
-/-- If `g` in the Galois group `Gp p` fixes the constants `Λ` in `Ainf` pointwise and fixes `θ z`,
-then `g` fixes `θ s` for every `s` in the ring `S` of the chart. -/
-lemma smul_theta_of_fixesThetaZ {g : Gp p} (h : c.FixesThetaZ g) (s : c.S) :
-    g • theta s = theta s := by
+/--
+If `g` in the Galois group `Gp p` fixes the constants `Λ` in `Ainf` pointwise and fixes `θ z`,
+then `g` fixes `θ s` for every `s` in the ring `S` of the chart.
+-/
+lemma smul_theta_of_fixesThetaZ {g : Gp p} (h : c.FixesThetaZ g) (s : c.S)
+    : g • theta s = theta s := by
   -- `g` fixes `θ a` exactly when `g • a - a` lies in `ker θ = (ξ)`.
   have h_fix_iff (a : Ainf) : g • theta a = theta a ↔ xi ∣ g • a - a := by
     simp [← theta_eq_zero_iff_xi_dvd, sub_eq_zero]
@@ -562,18 +637,19 @@ lemma smul_theta_of_fixesThetaZ {g : Gp p} (h : c.FixesThetaZ g) (s : c.S) :
 
 open Polynomial hiding C X
 
-/-- Weierstrass division by φ^n E. Let S be the image in A_inf of the chart's map Λ⟦X⟧ → A_inf
+/--
+Weierstrass division by φ^n E. Let S be the image in A_inf of the chart's map Λ⟦X⟧ → A_inf
 (Λ = `WittFq c.f`), z = `c.z` the image of X, E ∈ S the image of X^e A + p, and φ the Frobenius of
 S. For s in S and N = p^n e, there is a unique polynomial r over Λ of degree < N (an element of
-`(WittFq c.f)[X]_N`) with φ^n E dividing s − r(z) in S. -/
-lemma weierstrass_division (n : ℕ) {N : ℕ} (hN : p ^ n * c.e = N) (s : c.S) :
-    ∃! r : (WittFq c.f)[X]_N, c.frobE n ∣ s - r.val.aeval c.z := by
+`(WittFq c.f)[X]_N`) with φ^n E dividing s − r(z) in S.
+-/
+lemma weierstrass_division (n : ℕ) {N : ℕ} (hN : p ^ n * c.e = N) (s : c.S)
+    : ∃! r : (WittFq c.f)[X]_N, c.frobE n ∣ s - r.val.aeval c.z := by
   -- Transport along `c.seriesEquiv` to power series over `WittFq c.f` and divide by the series `G`
   -- that corresponds to `φ^n E`.
   let G : (WittFq c.f)⟦X⟧ := c.seriesEquiv.symm (c.frobE n)
   have hp : (p : (ResidueField (WittFq c.f))⟦X⟧) = 0 := by
-    simpa using congrArg C
-      ((residue_eq_zero_iff (p : WittFq c.f)).mpr (irreducible p).not_isUnit)
+    simpa using congrArg C ((residue_eq_zero_iff (p : WittFq c.f)).mpr (irreducible p).not_isUnit)
   -- `φ^n E = z ^ N * φ^n A + p`, with `A` the unit series of the chart. Here and below the power
   -- `c.φ ^ n` is kept as a ring map (`-RingHom.coe_pow`), so that `phi_pow_z`, `IsUnit.map` apply.
   have h_frobE : c.frobE n = c.z ^ N * (c.φ ^ n) (c.seriesEquiv c.unitSeries) + p := by
@@ -582,11 +658,10 @@ lemma weierstrass_division (n : ℕ) {N : ℕ} (hN : p ^ n * c.e = N) (s : c.S) 
   obtain ⟨hG, rfl⟩ : G.map (residue _) ≠ 0 ∧ (G.map (residue _)).order.toNat = N := by
     simp [G, h_frobE, order_mul, hp, order_zero_of_isUnit, IsUnit.ne_zero, IsUnit.map,
       -RingHom.coe_pow]
-  have h_iff (r : (WittFq c.f)[X]) :
-      c.frobE n ∣ s - r.aeval c.z ↔ ∃ q : (WittFq c.f)⟦X⟧, c.seriesEquiv.symm s = G * q + r := by
-    simp [G, ← map_dvd_iff c.seriesEquiv.symm, seriesEquiv_symm_sub, -map_sub,
-      ← aeval_algHom_apply, dvd_def, sub_eq_iff_eq_add,
-      aeval_def X, eval₂_C_X_eq_coe]
+  have h_iff (r : (WittFq c.f)[X])
+      : c.frobE n ∣ s - r.aeval c.z ↔ ∃ q : (WittFq c.f)⟦X⟧, c.seriesEquiv.symm s = G * q + r := by
+    simp [G, ← map_dvd_iff c.seriesEquiv.symm, seriesEquiv_symm_sub, -map_sub, ← aeval_algHom_apply,
+      dvd_def, sub_eq_iff_eq_add, aeval_def X, eval₂_C_X_eq_coe]
   -- `WittFq c.f` is complete for its maximal ideal `(p)`, so Weierstrass division applies.
   have h_complete : IsAdicComplete (maximalIdeal (WittFq c.f)) (WittFq c.f) := by
     rw [(irreducible p).maximalIdeal_eq]
@@ -598,10 +673,12 @@ lemma weierstrass_division (n : ℕ) {N : ℕ} (hN : p ^ n * c.e = N) (s : c.S) 
   obtain ⟨-, hr_eq⟩ : q = q' ∧ r = r'.val := H.elim hG ⟨mem_degreeLT.mp r'.property, hq'⟩
   exact Subtype.ext hr_eq.symm
 
-/-- Every `s` in `S` is congruent modulo `φ^n E` to a combination of `1, z, …, z ^ (N - 1)` with
-coefficients in `Λ`, where `N = p ^ n * e`. -/
-lemma exists_dvd_sub_sum_z_pow (n : ℕ) {N : ℕ} (hN : p ^ n * c.e = N) (s : c.S) :
-    ∃ w : Fin N → WittFq c.f, c.frobE n ∣ s - ∑ i : Fin N, w i • c.z ^ i.val := by
+/--
+Every `s` in `S` is congruent modulo `φ^n E` to a combination of `1, z, …, z ^ (N - 1)` with
+coefficients in `Λ`, where `N = p ^ n * e`.
+-/
+lemma exists_dvd_sub_sum_z_pow (n : ℕ) {N : ℕ} (hN : p ^ n * c.e = N) (s : c.S)
+    : ∃ w : Fin N → WittFq c.f, c.frobE n ∣ s - ∑ i : Fin N, w i • c.z ^ i.val := by
   -- `w` lists the coefficients of the remainder of the Weierstrass division.
   simpa [(degreeLT.basis (WittFq c.f) N).equivFun.exists_congr_left] using
     (c.weierstrass_division n hN s).exists
@@ -631,8 +708,10 @@ open Period Ideal WittVector RingEquiv PreTilt Set NeZero OC Witt Algebra RingHo
 
 variable {p : ℕ} [ThePrime p] (c : Chart) (n : ℕ)
 
-/-- For n ≥ 0, the ring homomorphism θ ∘ φ^{−n} from A_inf to O_C, with φ the Frobenius of A_inf
-and θ Fontaine's map. -/
+/--
+For n ≥ 0, the ring homomorphism θ ∘ φ^{−n} from A_inf to O_C, with φ the Frobenius of A_inf
+and θ Fontaine's map.
+-/
 def thetaPhiInv : Ainf →+* OC :=
   theta.comp ((ofBijective frobEnd frobEnd_bijective)⁻¹ ^ n).toRingHom
 
@@ -641,11 +720,13 @@ def thetaPhiInv : Ainf →+* OC :=
 lemma thetaPhiInv_succ (a : Ainf) : thetaPhiInv (n + 1) (frobEnd a) = thetaPhiInv n a :=
   congrArg (thetaPhiInv n) (symm_apply_apply (ofBijective frobEnd frobEnd_bijective) a)
 
-/-- Modulo `p`, the value `θ (φ^{-n} a)` is the `n`-th component of the reduction of `a` modulo
+/--
+Modulo `p`, the value `θ (φ^{-n} a)` is the `n`-th component of the reduction of `a` modulo
 `p`, an element of the tilt. Here `ModP OC p` is `OC ⧸ (p)`, and the ascription to it is the
-quotient map `Ideal.Quotient.mk`. -/
-lemma mk_thetaPhiInv_eq_coeff (a : Ainf) :
-    (thetaPhiInv n a : ModP OC p) = PreTilt.coeff n a.constantCoeff := by
+quotient map `Ideal.Quotient.mk`.
+-/
+lemma mk_thetaPhiInv_eq_coeff (a : Ainf)
+    : (thetaPhiInv n a : ModP OC p) = PreTilt.coeff n a.constantCoeff := by
   induction n generalizing a with
   | zero => exact mk_fontaineTheta a
   | succ n ih =>
@@ -665,8 +746,10 @@ lemma thetaPhiInv_smul (g : Gp p) : ∀ a : Ainf, thetaPhiInv n (g • a) = g �
     obtain ⟨b, rfl⟩ : ∃ b : Ainf, frobEnd b = a := frobEnd_bijective.surjective a
     rw [smul_frobEnd, thetaPhiInv_succ, thetaPhiInv_succ, ih b]
 
-/-- An element a of `Ainf` is divisible by φ^n E if and only if it lies in the kernel of θ ∘
-φ^{-n}. -/
+/--
+An element a of `Ainf` is divisible by φ^n E if and only if it lies in the kernel of θ ∘
+φ^{-n}.
+-/
 lemma frobE_dvd_iff {c : Chart} {n : ℕ} {a : Ainf} : (c.frobE n).val ∣ a ↔ thetaPhiInv n a = 0 := by
   -- `φ^n` is a ring automorphism `σ` of `Ainf`: it carries `c.E`, associated to `xi`, to
   -- `c.frobE n`, and `thetaPhiInv n` is `θ ∘ σ⁻¹`.
@@ -679,10 +762,12 @@ lemma frobE_dvd_iff {c : Chart} {n : ℕ} {a : Ainf} : (c.frobE n).val ∣ a ↔
   rw [h_frobE, h_theta, theta_eq_zero_iff_xi_dvd, ← c.associated_E_xi.dvd_iff_dvd_left,
     ← map_dvd_iff σ (a := (c.E : Ainf)) (b := σ.symm a), RingEquiv.apply_symm_apply]
 
-/-- An element of A_inf that every θ ∘ φ^{−n} kills is zero: the ideal of such elements is
-saturated for p, and its elements vanish modulo p. -/
-lemma eq_zero_of_forall_thetaPhiInv_eq_zero {a : Ainf} (h : ∀ n : ℕ, thetaPhiInv n a = 0) :
-    a = 0 := by
+/--
+An element of A_inf that every θ ∘ φ^{−n} kills is zero: the ideal of such elements is
+saturated for p, and its elements vanish modulo p.
+-/
+lemma eq_zero_of_forall_thetaPhiInv_eq_zero {a : Ainf} (h : ∀ n : ℕ, thetaPhiInv n a = 0)
+    : a = 0 := by
   -- Modulo `p` the value `thetaPhiInv n b` is the `n`-th component of `b`.
   have h_const : ∀ b ∈ ⨅ n, ker (thetaPhiInv (p := p) n), b.constantCoeff = 0 := by
     refine fun b hb ↦ Perfection.ext fun n ↦ Eq.trans ?_ (map_zero _).symm
@@ -691,17 +776,19 @@ lemma eq_zero_of_forall_thetaPhiInv_eq_zero {a : Ainf} (h : ∀ n : ℕ, thetaPh
     exact map_zero _
   -- The ideal is saturated for `p`, and an element vanishing modulo `p` is divisible by it.
   have h_zero_dvd : ∀ b ∈ ⨅ n, ker (thetaPhiInv (p := p) n), (0 : Ainf) ∣ b :=
-    dvd_of_mem_of_constantCoeff_dvd (zero_mem _) (by simp [NeZero.ne])
-      fun b hb ↦ ⟨0, by simp [h_const b hb]⟩
+    dvd_of_mem_of_constantCoeff_dvd (zero_mem _) (by simp [NeZero.ne]) fun b hb ↦
+      ⟨0, by simp [h_const b hb]⟩
   exact zero_dvd_iff.mp (h_zero_dvd a (mem_iInf.mpr fun n ↦ mem_ker.mpr (h n)))
 
 namespace Chart
 
-/-- Let f: A_inf → S be S-linear, α in S, r in A_inf, and θ_n = θ∘φ^{−n}. If θ_n(α) divides θ_n(r)
-in O_C, then φ^n E divides f(r) − αx for some x in S. -/
-lemma exists_frobE_dvd_sub_of_dvd (f : Ainf →ₗ[c.S] c.S) (α : c.S) (r : Ainf)
-    (h : thetaPhiInv n α.val ∣ thetaPhiInv n r) :
-    ∃ x : c.S, c.frobE n ∣ f r - α * x := by
+/--
+Let f: A_inf → S be S-linear, α in S, r in A_inf, and θ_n = θ∘φ^{−n}. If θ_n(α) divides θ_n(r)
+in O_C, then φ^n E divides f(r) − αx for some x in S.
+-/
+lemma exists_frobE_dvd_sub_of_dvd
+    (f : Ainf →ₗ[c.S] c.S) (α : c.S) (r : Ainf) (h : thetaPhiInv n α.val ∣ thetaPhiInv n r)
+    : ∃ x : c.S, c.frobE n ∣ f r - α * x := by
   -- Lift the quotient to `a` in `Ainf`; then `r - α * a` lies in the kernel of `thetaPhiInv n`,
   -- which is generated by `c.frobE n ∈ S`. Apply `f` and take `x = f a`.
   obtain ⟨a, ha⟩ : ∃ a : Ainf, thetaPhiInv n r = thetaPhiInv n α.val * thetaPhiInv n a :=
@@ -711,15 +798,20 @@ lemma exists_frobE_dvd_sub_of_dvd (f : Ainf →ₗ[c.S] c.S) (α : c.S) (r : Ain
   have h_f : f r - α * f a = c.frobE n * f b := by simpa [map_smul] using congrArg f hb
   exact ⟨f a, f b, h_f⟩
 
-/-- For a chart and n ≥ 0, the Z_p-algebra homomorphism S → C_p given by restricting θ ∘ φ^{−n} to
-the ring S of the chart. -/
+/--
+For a chart and n ≥ 0, the Z_p-algebra homomorphism S → C_p given by restricting θ ∘ φ^{−n} to
+the ring S of the chart.
+-/
 abbrev thetaPhiInvS : c.S →ₐ[ℤ_[p]] ℂ_[p] := toPadicIntAlgHom ((thetaPhiInv n).comp c.S.val)
 
-/-- Let K be a Q_p-subalgebra of C_p and y in Q̄_p. If every g in G_p fixing all those
-θφ^{−n}(s), n ≥ 0, s in S, that lie in K also fixes y, then y lies in K. -/
-lemma mem_of_fixed_thetaPhiInvS {K : Subalgebra ℚ_[p] ℂ_[p]} {y : PadicAlgCl p}
-    (h : ∀ g : Gp p, (∀ n : ℕ, ∀ x ∈ (c.thetaPhiInvS n).range, x ∈ K → g • x = x) → g y = y) :
-    ↑y ∈ K := by
+/--
+Let K be a Q_p-subalgebra of C_p and y in Q̄_p. If every g in G_p fixing all those
+θφ^{−n}(s), n ≥ 0, s in S, that lie in K also fixes y, then y lies in K.
+-/
+lemma mem_of_fixed_thetaPhiInvS
+    {K : Subalgebra ℚ_[p] ℂ_[p]} {y : PadicAlgCl p}
+    (h : ∀ g : Gp p, (∀ n : ℕ, ∀ x ∈ (c.thetaPhiInvS n).range, x ∈ K → g • x = x) → g y = y)
+    : ↑y ∈ K := by
   -- By Galois theory it suffices that every `g` fixing the algebraic elements of `K` fixes `y`;
   -- such a `g` fixes each `x ∈ K` in the range of `c.thetaPhiInvS n`, because `x` is algebraic.
   let L : IntermediateField ℚ_[p] (PadicAlgCl p) :=
@@ -733,10 +825,11 @@ lemma mem_of_fixed_thetaPhiInvS {K : Subalgebra ℚ_[p] ℂ_[p]} {y : PadicAlgCl
   -- `WittFq c.f`.
   let poly : (Fin (p ^ n * c.e) → WittFq c.f) →ₗ[WittFq c.f] c.S :=
     Fintype.linearCombination _ fun i ↦ c.z ^ i.val
-  have h_rem (t : c.S) :
-      ∃ w : Fin (p ^ n * c.e) → WittFq c.f, c.thetaPhiInvS n (poly w) = c.thetaPhiInvS n t := by
-    obtain ⟨w, hw⟩ : ∃ w : Fin (p ^ n * c.e) → WittFq c.f,
-        c.frobE n ∣ t - ∑ i : Fin (p ^ n * c.e), w i • c.z ^ i.val :=
+  have h_rem (t : c.S)
+      : ∃ w : Fin (p ^ n * c.e) → WittFq c.f, c.thetaPhiInvS n (poly w) = c.thetaPhiInvS n t := by
+    obtain ⟨w, hw⟩
+        : ∃ w : Fin (p ^ n * c.e) → WittFq c.f,
+          c.frobE n ∣ t - ∑ i : Fin (p ^ n * c.e), w i • c.z ^ i.val :=
       c.exists_dvd_sub_sum_z_pow n rfl t
     have h_ker : thetaPhiInv n (t.val - (poly w).val) = 0 :=
       frobE_dvd_iff.mp (c.dvd_iff_coe_dvd.mp hw)
@@ -746,18 +839,20 @@ lemma mem_of_fixed_thetaPhiInvS {K : Subalgebra ℚ_[p] ℂ_[p]} {y : PadicAlgCl
     (Submodule.fg_range ((c.thetaPhiInvS n).toLinearMap ∘ₗ poly.restrictScalars ℤ_[p])).of_le
       (forall_mem_range.mpr h_rem)
   obtain ⟨x', rfl⟩ : x ∈ (algebraMap (PadicAlgCl p) ℂ_[p]).range :=
-    Variety.IsAbsIntegrallyClosed.mem_range_of_isIntegralElem
-      (IsIntegral.of_mem_of_fg _ h_fg _ hx).tower_top
+    Variety.IsAbsIntegrallyClosed.mem_range_of_isIntegralElem (IsIntegral.of_mem_of_fg _ h_fg _
+      hx).tower_top
   -- `g` fixes `x'`, which lies in the field of `K`.
   have h_fix : (g : Gp p) x' = x' := g.property ⟨x', hxK⟩
   exact (smul_coe_Cp (g := (g : Gp p)) x').trans (congrArg (algebraMap (PadicAlgCl p) ℂ_[p]) h_fix)
 
-/-- Let `c.S` be the image in A_inf of the chart's map Λ⟦X⟧ → A_inf, and let y ∈ O^♭ be fixed by
+/--
+Let `c.S` be the image in A_inf of the chart's map Λ⟦X⟧ → A_inf, and let y ∈ O^♭ be fixed by
 every g ∈ G_p that fixes S pointwise. Then for every N and all large n, the N-th component of y in
-O_C/p equals the n-th component of the 0-th Witt component (an element of O^♭) of some s ∈ S. -/
-lemma eventually_exists_coeff_eq_of_fixed {y : OFlat}
-    (h : ∀ g : Gp p, (∀ s : c.S, g • s.val = s) → g • y = y) (N : ℕ) :
-    ∀ᶠ n : ℕ in Filter.atTop, ∃ s : c.S, y.coeff N = PreTilt.coeff n s.val.constantCoeff := by
+O_C/p equals the n-th component of the 0-th Witt component (an element of O^♭) of some s ∈ S.
+-/
+lemma eventually_exists_coeff_eq_of_fixed
+    {y : OFlat} (h : ∀ g : Gp p, (∀ s : c.S, g • s.val = s) → g • y = y) (N : ℕ)
+    : ∀ᶠ n : ℕ in Filter.atTop, ∃ s : c.S, y.coeff N = PreTilt.coeff n s.val.constantCoeff := by
   -- By Ax's theorem `t = θ φ^{-N} [y]` is congruent modulo `p` to an algebraic `x` with the same
   -- invariance. Galois theory puts `x` in the `ℚ_[p]`-algebra generated by the `thetaPhiInvS n s`,
   -- so `a • x` is a value `thetaPhiInvS n s` for some `a ≠ 0` in `ℤ_[p]`. An `S`-linear retraction
@@ -771,8 +866,7 @@ lemma eventually_exists_coeff_eq_of_fixed {y : OFlat}
     SeminormedAddCommGroup.mem_closure_iff.mp (ax_mem_closure_fixedField _ t_fixed) ‖(p : ℂ_[p])‖
       (by simp [NeZero.ne])
   -- The ranges increase, because `thetaPhiInvS (n + 1) (φ s) = thetaPhiInvS n s`.
-  have h_succ (n : ℕ) (s : c.S) : c.thetaPhiInvS (n + 1) (c.φ s) = c.thetaPhiInvS n s := by
-    simp [φ]
+  have h_succ (n : ℕ) (s : c.S) : c.thetaPhiInvS (n + 1) (c.φ s) = c.thetaPhiInvS n s := by simp [φ]
   have mono : Monotone fun n ↦ (c.thetaPhiInvS n).range :=
     monotone_nat_of_le_succ fun n x ⟨s, hs⟩ ↦ ⟨c.φ s, (h_succ n s).trans hs⟩
   -- An element `g` that fixes all values `thetaPhiInvS n s` fixes `S`, since `g • s - s` is
@@ -786,8 +880,9 @@ lemma eventually_exists_coeff_eq_of_fixed {y : OFlat}
       hg n _ ⟨s_S, rfl⟩ (subset_adjoin (mem_iSup_of_mem n ⟨s_S, rfl⟩))
     simpa [s_S, Subtype.ext_iff, sub_eq_zero] using h_fix_val
   -- Clear denominators: `a • x` lies in the `ℤ_[p]`-algebra, the increasing union of the ranges.
-  obtain ⟨⟨a, ha⟩, ax_mem⟩ : ∃ a : ℤ_[p]⁰,
-      a • (x : ℂ_[p]) ∈ adjoin ℤ_[p] (SetLike.coe (⨆ n, (c.thetaPhiInvS n).range)) :=
+  obtain ⟨⟨a, ha⟩, ax_mem⟩
+      : ∃ a : ℤ_[p]⁰,
+        a • (x : ℂ_[p]) ∈ adjoin ℤ_[p] (SetLike.coe (⨆ n, (c.thetaPhiInvS n).range)) :=
     multiple_mem_adjoin_of_mem_localization_adjoin ℤ_[p]⁰ (hx := x_mem)
   obtain ⟨n₀, hn₀⟩ : ∃ n₀ : ℕ, a • (x : ℂ_[p]) ∈ ((c.thetaPhiInvS n₀).range : Set ℂ_[p]) :=
     mem_iUnion.mp ((Subalgebra.coe_iSup_of_directed mono.directed_le).le (adjoin_le le_rfl ax_mem))

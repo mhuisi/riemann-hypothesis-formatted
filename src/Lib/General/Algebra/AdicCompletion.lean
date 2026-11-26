@@ -60,10 +60,12 @@ class ThePrime (p : outParam ℕ) : Prop extends Fact p.Prime
 
 /-! ### Normed fields over `ℚ_[p]` -/
 
-/-- A normed field F that is a normed algebra over Q_p, not necessarily complete; the prime p is
-read off from F (an `outParam`). -/
-class PadicField (F : Type*) (p : outParam ℕ) [Fact p.Prime] [NormedField F] extends
-  NormedAlgebra ℚ_[p] F
+/--
+A normed field F that is a normed algebra over Q_p, not necessarily complete; the prime p is
+read off from F (an `outParam`).
+-/
+class PadicField (F : Type*) (p : outParam ℕ) [Fact p.Prime] [NormedField F]
+  extends NormedAlgebra ℚ_[p] F
 
 /-- For a prime ℓ, a choice of ring isomorphism ιℓ from ℂ to the algebraic closure of Q_ℓ. -/
 class PadicIso (ℓ : outParam ℕ) [Fact ℓ.Prime] where
@@ -79,20 +81,24 @@ class PadicPlace (p : outParam ℕ) [Fact p.Prime] where
 
 export PadicPlace (ιₚ)
 
-variable {R : Type*} (N : Type*) [CommRing R] [AddCommGroup N] [Module R N] {π x y : R}
-  {p n : ℕ} [Fact p.Prime] {F : Type*} [NormedField F] [PadicField F p] {S : Type*} [CommRing S]
+variable
+  {R : Type*} (N : Type*) [CommRing R] [AddCommGroup N] [Module R N]
+  {π x y : R} {p n : ℕ} [Fact p.Prime]
+  {F : Type*} [NormedField F] [PadicField F p]
+  {S : Type*} [CommRing S]
 
 noncomputable instance : PadicField ℂ_[p] p where
 
 noncomputable instance : PadicField (PadicAlgCl p) p where
 
-lemma norm_p_eq_inv : ‖(p : F)‖ = (↑p)⁻¹ := by
-  simpa using norm_algebraMap' F (p : ℚ_[p])
+lemma norm_p_eq_inv : ‖(p : F)‖ = (↑p)⁻¹ := by simpa using norm_algebraMap' F (p : ℚ_[p])
 
 lemma norm_p_lt_one : ‖(p : F)‖ < 1 := by simp [norm_p_eq_inv, ← norm_p]
 
-/-- The ring of integers of `ℂ_p`: the elements of norm at most one. It has the same elements as
-Mathlib's `PadicComplexInt p`; here membership is the inequality `‖x‖ ≤ 1` by definition. -/
+/--
+The ring of integers of `ℂ_p`: the elements of norm at most one. It has the same elements as
+Mathlib's `PadicComplexInt p`; here membership is the inequality `‖x‖ ≤ 1` by definition.
+-/
 noncomputable def valRingCp (p : ℕ) [Fact p.Prime] : Subring ℂ_[p] :=
   (NormedField.valuation (K := ℂ_[p])).integer
 
@@ -123,17 +129,21 @@ instance : Module.Flat (valRingCp p) ℂ_[p] :=
   IsLocalization.flat ℂ_[p] (nonZeroDivisors (valRingCp p))
 
 /-- A natural number prime to `p` has norm one in every normed field over `ℚ_[p]`. -/
-lemma _root_.Nat.Coprime.norm_natCast_eq_one (h_coprime : p.Coprime n) (F : Type*)
-    [NormedField F] [PadicField F p] : ‖(n : F)‖ = 1 := by
+lemma _root_.Nat.Coprime.norm_natCast_eq_one
+    (h_coprime : p.Coprime n) (F : Type*) [NormedField F] [PadicField F p]
+    : ‖(n : F)‖ = 1 := by
   simpa [norm_natCast_eq_one_iff.mpr h_coprime] using norm_algebraMap' F (n : ℚ_[p])
 
 /-! ### Divisibility by powers and adic completeness -/
 
-/-- Let T map a commutative ring R to a commutative ring S with T(πa) = ϖT(a) for all a. Let ϖ be a
-non-zero-divisor, and let ϖ ∣ T(a) imply π ∣ a for all a. Then ϖ^n ∣ T(x) implies π^n ∣ x. -/
-lemma pow_dvd_of_map {ϖ : S} {T : R → S} (hT : ∀ a : R, T (π * a) = ϖ * T a)
-    (hϖ : ϖ ∈ nonZeroDivisors S) (h_one : ∀ a : R, ϖ ∣ T a → π ∣ a) (h_pow : ϖ ^ n ∣ T x) :
-    π ^ n ∣ x := by
+/--
+Let T map a commutative ring R to a commutative ring S with T(πa) = ϖT(a) for all a. Let ϖ be a
+non-zero-divisor, and let ϖ ∣ T(a) imply π ∣ a for all a. Then ϖ^n ∣ T(x) implies π^n ∣ x.
+-/
+lemma pow_dvd_of_map
+    {ϖ : S} {T : R → S} (hT : ∀ a : R, T (π * a) = ϖ * T a) (hϖ : ϖ ∈ nonZeroDivisors S)
+    (h_one : ∀ a : R, ϖ ∣ T a → π ∣ a) (h_pow : ϖ ^ n ∣ T x)
+    : π ^ n ∣ x := by
   induction n generalizing x with
   | zero => simp
   | succ n ih =>
@@ -142,31 +152,37 @@ lemma pow_dvd_of_map {ϖ : S} {T : R → S} (hT : ∀ a : R, T (π * a) = ϖ * T
     rw [hT, pow_succ', dvd_cancel_left_mem_nonZeroDivisors hϖ] at h_pow
     simpa [pow_succ'] using mul_dvd_mul_left π (ih h_pow)
 
-/-- In a commutative ring, x and y are congruent modulo the submodule (π)^n of the ring if and only
-if π^n divides x − y. -/
-lemma smodEq_span_pow_iff_dvd :
-    x ≡ y [SMOD ((span {π} : Ideal R) ^ n • ⊤ : Ideal R)] ↔ π ^ n ∣ x - y := by
+/--
+In a commutative ring, x and y are congruent modulo the submodule (π)^n of the ring if and only
+if π^n divides x − y.
+-/
+lemma smodEq_span_pow_iff_dvd
+    : x ≡ y [SMOD ((span {π} : Ideal R) ^ n • ⊤ : Ideal R)] ↔ π ^ n ∣ x - y := by
   simp [SModEq.sub_mem, span_singleton_pow, mem_span_singleton]
 
-/-- In a ring that is separated for `(π)`, two elements congruent modulo every power of `π` are
-equal. -/
-lemma eq_of_forall_pow_dvd_sub (π : R) [IsHausdorff (span {π}) R]
-    (h_dvd : ∀ n : ℕ, π ^ n ∣ x - y) : x = y :=
+/--
+In a ring that is separated for `(π)`, two elements congruent modulo every power of `π` are
+equal.
+-/
+lemma eq_of_forall_pow_dvd_sub (π : R) [IsHausdorff (span {π}) R] (h_dvd : ∀ n : ℕ, π ^ n ∣ x - y)
+    : x = y :=
   IsHausdorff.eq_iff_smodEq.2 fun n ↦ smodEq_span_pow_iff_dvd.2 (h_dvd n)
 
 /-- In a ring that is complete for `(π)`, an element congruent to a unit modulo `π` is a unit. -/
-lemma isUnit_of_dvd_sub [IsAdicComplete (span {π}) R] (hy : IsUnit y) (h_dvd : π ∣ x - y) :
-    IsUnit x := by
+lemma isUnit_of_dvd_sub [IsAdicComplete (span {π}) R] (hy : IsUnit y) (h_dvd : π ∣ x - y)
+    : IsUnit x := by
   -- `x - y` lies in the Jacobson radical, so `(x - y) * y⁻¹ + 1 = x * y⁻¹` is a unit
   have h_jac : x - y ∈ jacobson ⊥ :=
     IsAdicComplete.le_jacobson_bot (span {π}) (mem_span_singleton.2 h_dvd)
   simpa [sub_mul] using mem_jacobson_bot.1 h_jac ↑hy.unit⁻¹
 
 omit [Fact p.Prime] in
-/-- An `S`-algebra that is `p`-adically complete as a ring is `p`-adically complete as an
-`S`-module. -/
-lemma isAdicComplete_over_base [Algebra S R] (h_complete : IsAdicComplete (span {(p : R)}) R) :
-    IsAdicComplete (span {(p : S)}) R :=
+/--
+An `S`-algebra that is `p`-adically complete as a ring is `p`-adically complete as an
+`S`-module.
+-/
+lemma isAdicComplete_over_base [Algebra S R] (h_complete : IsAdicComplete (span {(p : R)}) R)
+    : IsAdicComplete (span {(p : S)}) R :=
   (IsAdicComplete.map_algebraMap_iff (S := R) (span {(p : S)}) R).1
     (by simpa [map_span] using h_complete)
 
@@ -175,11 +191,14 @@ def shiftDiff (π : R) (x : ℕ → N) (j : ℕ) : N := x j - π • x (j + 1)
 
 lemma shiftDiff_apply (π : R) (u : ℕ → N) (j : ℕ) : shiftDiff N π u j = u j - π • u (j + 1) := rfl
 
-/-- Let R be a commutative ring with elements x and y. Write `shiftDiff R π` for the operator
+/--
+Let R be a commutative ring with elements x and y. Write `shiftDiff R π` for the operator
 (a_j) ↦ (a_j − π a_{j+1}) on sequences in R. If it is surjective for π = x and for π = y, then R
-is precomplete for the ideal (x, y): every (x, y)-adic Cauchy sequence has a limit. -/
-lemma isPrecomplete_of_shiftDiff_surjective (hx : (shiftDiff R x).Surjective)
-    (hy : (shiftDiff R y).Surjective) : IsPrecomplete (span {x, y}) R := by
+is precomplete for the ideal (x, y): every (x, y)-adic Cauchy sequence has a limit.
+-/
+lemma isPrecomplete_of_shiftDiff_surjective
+    (hx : (shiftDiff R x).Surjective) (hy : (shiftDiff R y).Surjective)
+    : IsPrecomplete (span {x, y}) R := by
   -- For a Cauchy sequence `f`, write `f (2n) - f (2n+2) = u n * x ^ n + v n * y ^ n` and solve
   -- `shiftDiff x U = u`, `shiftDiff y V = v`. Then `f (2n) - U n * x ^ n - V n * y ^ n` does not
   -- depend on `n`, and this constant is the limit.
@@ -212,12 +231,15 @@ end New
 
 /-! ## Ring maps to a p-adically separated ring that agree on a dense set -/
 
-/-- Let `F` and `G` be ring maps from `A` to a `p`-adically separated ring `R`. If every element of
+/--
+Let `F` and `G` be ring maps from `A` to a `p`-adically separated ring `R`. If every element of
 `A` is congruent, modulo each power of `p`, to an element on which `F` and `G` agree, then
-`F = G`. -/
-lemma New.Adic.ringHom_ext_of_approx {p : ℕ} {A R : Type*} [CommRing A] [CommRing R]
-    [IsHausdorff (.span {(p : R)}) R] {F G : A →+* R}
-    (h_approx : ∀ (a : A) (n : ℕ), ∃ b : A, F b = G b ∧ (p : A) ^ n ∣ a - b) : F = G := by
+`F = G`.
+-/
+lemma New.Adic.ringHom_ext_of_approx
+    {p : ℕ} {A R : Type*} [CommRing A] [CommRing R] [IsHausdorff (.span {(p : R)}) R]
+    {F G : A →+* R} (h_approx : ∀ (a : A) (n : ℕ), ∃ b : A, F b = G b ∧ (p : A) ^ n ∣ a - b)
+    : F = G := by
   refine F.ext fun a ↦ eq_of_forall_pow_dvd_sub p fun n ↦ ?_
   obtain ⟨b, hb, c, hc⟩ := h_approx a n
   have h_diff : F a - G a = (p : R) ^ n * (F c - G c) := by
@@ -242,15 +264,22 @@ section RingActions
 
 open Ideal MulSemiringAction AdicCompletion IsLocalization Algebra algebraMap
 
-variable (M : Type*) {R : Type*} {S : Type*} [Monoid M] [CommRing R] [MulSemiringAction M R]
-  [CommRing S] {I : Ideal R} {J : Ideal S} (f : R →+* S) {π : R}
+variable
+  (M : Type*)
+  {R : Type*} {S : Type*} [Monoid M] [CommRing R] [MulSemiringAction M R] [CommRing S]
+  {I : Ideal R} {J : Ideal S}
+  (f : R →+* S)
+  {π : R}
 
-/-- For a ring homomorphism f: R → S carrying the ideal I into J, the induced ring homomorphism
-from the I-adic completion of R to the J-adic completion of S. -/
+/--
+For a ring homomorphism f: R → S carrying the ideal I into J, the induced ring homomorphism
+from the I-adic completion of R to the J-adic completion of S.
+-/
 @[irreducible]
 def adicMap (h : I ≤ comap f J) : AdicCompletion I R →+* AdicCompletion J S :=
   -- the component in `S / J ^ n` is the image of the component in `R / I ^ n`
-  liftRingHom J (fun n ↦ (quotientMap (J ^ n) f (by grw [← le_comap_pow, ← h])).comp (evalₐ I n))
+  liftRingHom J
+    (fun n ↦ (quotientMap (J ^ n) f (by grw [← le_comap_pow, ← h])).comp (evalₐ I n))
     fun {m n} hmn ↦ by
       -- these components are compatible because those of `x` are
       ext x
@@ -259,77 +288,100 @@ def adicMap (h : I ≤ comap f J) : AdicCompletion I R →+* AdicCompletion J S 
       simpa [Quotient.factorPow, Ideal.Quotient.eq] using
         le_comap_pow f m (pow_right_mono h m h_sub)
 
-/-- For a ring map `f : R → S` carrying the ideal `I` into `J`, the component of `adicMap f h x` in
-`S / J ^ n` is the image of the component of `x` in `R / I ^ n`. -/
+/--
+For a ring map `f : R → S` carrying the ideal `I` into `J`, the component of `adicMap f h x` in
+`S / J ^ n` is the image of the component of `x` in `R / I ^ n`.
+-/
 @[simp]
-lemma evalₐ_adicMap (h : I ≤ comap f J) (n : ℕ) (x : AdicCompletion I R) :
-    evalₐ J n (adicMap f h x) = quotientMap (J ^ n) f (by grw [h, le_comap_pow]) (evalₐ I n x) := by
+lemma evalₐ_adicMap (h : I ≤ comap f J) (n : ℕ) (x : AdicCompletion I R)
+    : evalₐ J n (adicMap f h x)
+      = quotientMap (J ^ n) f (by grw [h, le_comap_pow]) (evalₐ I n x) := by
   rw [adicMap]
   generalize_proofs
   exact evalₐ_liftRingHom _ _ (by assumption) n x
 
-/-- For a ring map `f : R → S` carrying `I` into `J`, the induced map `adicMap f h` of adic
-completions sends the image of `x : R` to the image of `f x`. -/
+/--
+For a ring map `f : R → S` carrying `I` into `J`, the induced map `adicMap f h` of adic
+completions sends the image of `x : R` to the image of `f x`.
+-/
 @[simp]
-lemma adicMap_algebraMap (h : I ≤ comap f J) (x : R) :
-    adicMap f h (x : AdicCompletion I R) = (f x : AdicCompletion J S) :=
+lemma adicMap_algebraMap (h : I ≤ comap f J) (x : R)
+    : adicMap f h (x : AdicCompletion I R) = (f x : AdicCompletion J S) :=
   ext_evalₐ (by simp)
 
-variable {A : Type*} {B : Type*} [CommRing A] [CommRing B] [Algebra A R]
+variable
+  {A : Type*} {B : Type*} [CommRing A] [CommRing B] [Algebra A R]
   (i : R →+* B) (f : M → B →+* B) (m : M)
 
 /-! ### Actions of a monoid by ring endomorphisms -/
 
-/-- The action of a monoid M on a ring B by ring endomorphisms given by a family f(m) with f(1)
-the identity and f(ab) = f(a)∘f(b). -/
-abbrev actionOfHoms (h_one : f 1 = 1) (h_mul : ∀ a b : M, f (a * b) = f a * f b) :
-    MulSemiringAction M B :=
-  { MulSemiringAction.compHom B { toFun := f, map_one' := h_one, map_mul' := h_mul } with
-    smul := fun m ↦ f m }
+/--
+The action of a monoid M on a ring B by ring endomorphisms given by a family f(m) with f(1)
+the identity and f(ab) = f(a)∘f(b).
+-/
+abbrev actionOfHoms (h_one : f 1 = 1) (h_mul : ∀ a b : M, f (a * b) = f a * f b)
+    : MulSemiringAction M B := {
+  MulSemiringAction.compHom B { toFun := f, map_one' := h_one, map_mul' := h_mul } with
+  smul := fun m ↦ f m
+}
 
 @[simp]
 lemma smul_natCast' (n : ℕ) : m • (n : R) = n := smul_algebraMap m n
 
-/-- The M-action on B given by endomorphisms f(m) compatible with the action on R along i: R →
-B, when endomorphisms of B are determined on the image of i. -/
-abbrev extendAction (hf : ∀ (m : M) (a : R), f m (i a) = i (m • a))
-    (h_ext : ∀ {F G : B →+* B}, (∀ a : R, F (i a) = G (i a)) → F = G) :
-    MulSemiringAction M B :=
+/--
+The M-action on B given by endomorphisms f(m) compatible with the action on R along i: R →
+B, when endomorphisms of B are determined on the image of i.
+-/
+abbrev extendAction
+    (hf : ∀ (m : M) (a : R), f m (i a) = i (m • a))
+    (h_ext : ∀ {F G : B →+* B}, (∀ a : R, F (i a) = G (i a)) → F = G)
+    : MulSemiringAction M B :=
   actionOfHoms M f (h_ext (by simp [hf])) fun a b ↦ h_ext (by simp [hf, mul_smul])
 
-/-- The action of M on the localisation B of R away from x extending the action on R, given that
-each m sends x to an element invertible in B. -/
-abbrev locAction (x : R) [Algebra R B] [Away x B]
-    (h_unit : ∀ m : M, IsUnit ((algebraMap R B).comp (toRingHom M R m) x)) :
-    MulSemiringAction M B :=
-  extendAction M (algebraMap R B) (fun m ↦ Away.lift x (h_unit m)) (by simp) fun h_eq ↦
-    ringHom_ext (Submonoid.powers x) (RingHom.ext h_eq)
+/--
+The action of M on the localisation B of R away from x extending the action on R, given that
+each m sends x to an element invertible in B.
+-/
+abbrev locAction
+    (x : R) [Algebra R B] [Away x B]
+    (h_unit : ∀ m : M, IsUnit ((algebraMap R B).comp (toRingHom M R m) x))
+    : MulSemiringAction M B :=
+  extendAction M (algebraMap R B)
+    (fun m ↦ Away.lift x (h_unit m))
+    (by simp)
+    fun h_eq ↦ ringHom_ext (Submonoid.powers x) (RingHom.ext h_eq)
 
-/-- A ring action of `M` on `R` induces an action of `M` on the Witt vectors `WittVector p R`. Each
-element acts by mapping Witt vector coordinates through its ring endomorphism of `R`. -/
-instance (priority := 50) wittAction (p : ℕ) [Fact p.Prime] :
-    MulSemiringAction M (WittVector p R) :=
+/--
+A ring action of `M` on `R` induces an action of `M` on the Witt vectors `WittVector p R`. Each
+element acts by mapping Witt vector coordinates through its ring endomorphism of `R`.
+-/
+instance (priority := 50) wittAction (p : ℕ) [Fact p.Prime]
+    : MulSemiringAction M (WittVector p R) :=
   actionOfHoms M (WittVector.map <| toRingHom M R ·) (by aesop) (by aesop (add simp mul_smul))
 
 variable {M} [SMul M A]
 
 instance : SMulDistribClass M R R := ⟨smul_mul'⟩
 
-/-- Let `M` act on `A` and on the `A`-algebra `R`. If `m • (a • r) = (m • a) • (m • r)`, then the
-algebra map `A → R` is equivariant. -/
+/--
+Let `M` act on `A` and on the `A`-algebra `R`. If `m • (a • r) = (m • a) • (m • r)`, then the
+algebra map `A → R` is equivariant.
+-/
 @[simp]
-lemma smul_algebraMap_eq_algebraMap_smul [SMulDistribClass M A R] (a : A) :
-    m • (a : R) = ↑(m • a) :=
+lemma smul_algebraMap_eq_algebraMap_smul [SMulDistribClass M A R] (a : A)
+    : m • (a : R) = ↑(m • a) :=
   (algebraMap.smul' m a R).symm
 
-/-- In a tower `A → B → R` with actions of `M`, if the actions on `A` and `B` are compatible and
-the map `B → R` is equivariant, then the actions on `A` and `R` are compatible. -/
-lemma smulDistribClass_of_tower [Algebra A B] [Algebra B R] [IsScalarTower A B R]
-    [MulSemiringAction M B] [SMulDistribClass M A B]
-    (h_equiv : ∀ {m : M} (b : B), m • (b : R) = ↑(m • b)) :
-    SMulDistribClass M A R where
-  smul_distrib_smul m a r := by
-    simp [smul_def, IsScalarTower.algebraMap_apply A B R, h_equiv]
+/--
+In a tower `A → B → R` with actions of `M`, if the actions on `A` and `B` are compatible and
+the map `B → R` is equivariant, then the actions on `A` and `R` are compatible.
+-/
+lemma smulDistribClass_of_tower
+    [Algebra A B] [Algebra B R] [IsScalarTower A B R] [MulSemiringAction M B]
+    [SMulDistribClass M A B]
+    (h_equiv : ∀ {m : M} (b : B), m • (b : R) = ↑(m • b))
+    : SMulDistribClass M A R where
+  smul_distrib_smul m a r := by simp [smul_def, IsScalarTower.algebraMap_apply A B R, h_equiv]
 
 /-- The `π`-adic completion of a ring `R`: its completion at the principal ideal `(π)`. -/
 abbrev PrincipalCompletion.{u} (R : Type u) [CommRing R] (π : R) : Type u :=
@@ -341,17 +393,22 @@ variable (x : PrincipalCompletion R π)
 
 /-! ### The completion at a principal ideal -/
 
-/-- For an element `π` of a commutative ring `R`, an element `x` of the `π`-adic completion
+/--
+For an element `π` of a commutative ring `R`, an element `x` of the `π`-adic completion
 (`PrincipalCompletion R π`, that is `AdicCompletion (span {π}) R`) is divisible by the image of
-`π ^ n` if and only if its image in `R / π ^ n` is zero. -/
+`π ^ n` if and only if its image in `R / π ^ n` is zero.
+-/
 @[local simp]
-lemma pow_dvd_iff_evalₐ_eq_zero (n : ℕ) :
-    (π : AdicCompletion (span {π}) R) ^ n ∣ x ↔ evalₐ (span {π}) n x = 0 := by
+lemma pow_dvd_iff_evalₐ_eq_zero (n : ℕ)
+    : (π : AdicCompletion (span {π}) R) ^ n ∣ x ↔ evalₐ (span {π}) n x = 0 := by
   -- Mathlib: for a finitely generated ideal `I`, the kernel of the `n`-th component is `I ^ n • ⊤`.
-  have h_ker : span {π} ^ n • (⊤ : Submodule R (AdicCompletion (span {π}) R)) =
-      LinearMap.ker (eval (span {π}) R n) := pow_smul_top_eq_ker_eval ⟨{π}, by simp⟩
+  have h_ker
+      : span {π} ^ n • (⊤ : Submodule R (AdicCompletion (span {π}) R))
+        = LinearMap.ker (eval (span {π}) R n) :=
+    pow_smul_top_eq_ker_eval ⟨{π}, by simp⟩
   simpa [evalₐ, -quotientEquivAlgOfEq_coe_eq_factorₐ, span_singleton_pow, map_span,
-    mem_span_singleton] using! SetLike.ext_iff.1 h_ker x
+      mem_span_singleton]
+    using! SetLike.ext_iff.1 h_ker x
 
 /-- Every element of the `π`-adic completion is congruent modulo `π ^ n` to an element of `R`. -/
 lemma exists_approx (n : ℕ) : ∃ y : R, (π : AdicCompletion (span {π}) R) ^ n ∣ x - y :=
@@ -359,25 +416,29 @@ lemma exists_approx (n : ℕ) : ∃ y : R, (π : AdicCompletion (span {π}) R) ^
 
 variable {x} {X : Type*} [AddCommGroup X] [Module R X]
 
-/-- For elements `π` and `y` of a commutative ring `R`, the image of `y` in the `π`-adic completion
+/--
+For elements `π` and `y` of a commutative ring `R`, the image of `y` in the `π`-adic completion
 `PrincipalCompletion R π` is divisible by the image of `π ^ n` if and only if `π ^ n ∣ y` in
-`R`. -/
-lemma pow_dvd_iff {n : ℕ} {y : R} :
-    (π : PrincipalCompletion R π) ^ n ∣ (y : PrincipalCompletion R π) ↔ π ^ n ∣ y := by
+`R`.
+-/
+lemma pow_dvd_iff {n : ℕ} {y : R}
+    : (π : PrincipalCompletion R π) ^ n ∣ (y : PrincipalCompletion R π) ↔ π ^ n ∣ y := by
   simp [Quotient.eq_zero_iff_mem, span_singleton_pow, mem_span_singleton]
 
-lemma eq_zero_of_forall_pow_dvd (h_dvd : ∀ n : ℕ, (π : AdicCompletion (span {π}) R) ^ n ∣ x) :
-    x = 0 :=
+lemma eq_zero_of_forall_pow_dvd (h_dvd : ∀ n : ℕ, (π : AdicCompletion (span {π}) R) ^ n ∣ x)
+    : x = 0 :=
   ext_evalₐ fun n ↦ by simpa using (pow_dvd_iff_evalₐ_eq_zero x n).1 (h_dvd n)
 
-lemma isAdicComplete :
-    IsAdicComplete (span {(π : PrincipalCompletion R π)}) (PrincipalCompletion R π) := by
+lemma isAdicComplete
+    : IsAdicComplete (span {(π : PrincipalCompletion R π)}) (PrincipalCompletion R π) := by
   simpa [map_span] using isAdicComplete_self (span {π}) ⟨{π}, by simp⟩
 
-/-- Let `X` be a module over a commutative ring `R`. If a natural number `n` acts injectively on
-`X`, then it acts injectively on the `n`-adic completion of `X`. -/
-lemma isSMulRegular_completion {n : ℕ} (h_reg : IsSMulRegular X n) :
-    IsSMulRegular (AdicCompletion (span {(n : R)}) X) n := by
+/--
+Let `X` be a module over a commutative ring `R`. If a natural number `n` acts injectively on
+`X`, then it acts injectively on the `n`-adic completion of `X`.
+-/
+lemma isSMulRegular_completion {n : ℕ} (h_reg : IsSMulRegular X n)
+    : IsSMulRegular (AdicCompletion (span {(n : R)}) X) n := by
   -- Multiplication by `n` is an isomorphism `e` of `X` onto `n X`. On completions it becomes
   -- the isomorphism induced by `e` followed by the injection of the completion of `n X`.
   let J : Ideal R := span {(n : R)}
@@ -408,18 +469,25 @@ section AdicExtension
 
 open Quot Ideal Submodule Finsupp AdicCompletion SModEq Function Module
 
-variable {S F M : Type*} [CommRing S] [AddCommGroup F] [Module S F] [AddCommGroup M] [Module S M]
-  {C : Type*} [AddCommGroup C] [Module S C] (I : Ideal S) [IsAdicComplete I C] (β : F →ₗ[S] M)
+variable
+  {S F M : Type*} [CommRing S] [AddCommGroup F] [Module S F] [AddCommGroup M] [Module S M]
+  {C : Type*} [AddCommGroup C] [Module S C]
+  (I : Ideal S) [IsAdicComplete I C]
+  (β : F →ₗ[S] M)
 instance [IsPrecomplete I S] [Module.Finite S M] : IsPrecomplete I M := by
   -- `M → Ŝ ⊗ M` is onto since `S → Ŝ` is, and `Ŝ ⊗ M` maps onto the completion of the finite `M`.
   refine of_surjective_iff.mp fun x ↦ ?_
-  simpa using (ofTensorProduct_surjective_of_finite I M).comp
-    (TensorProduct.mk_surjective S M _ (of_surjective I S)) x
+  simpa using
+    (ofTensorProduct_surjective_of_finite I M).comp
+      (TensorProduct.mk_surjective S M _ (of_surjective I S)) x
 
-/-- A module that embeds linearly in a product of copies of an `I`-adically separated module is
-`I`-adically separated. -/
-lemma isHausdorff_of_injective_pi [IsHausdorff I F] {ι : Type*} (f : M →ₗ[S] ι → F)
-    (hf : Function.Injective f) : IsHausdorff I M := by
+/--
+A module that embeds linearly in a product of copies of an `I`-adically separated module is
+`I`-adically separated.
+-/
+lemma isHausdorff_of_injective_pi
+    [IsHausdorff I F] {ι : Type*} (f : M →ₗ[S] ι → F) (hf : Function.Injective f)
+    : IsHausdorff I M := by
   -- If `x` and `y` agree in the completion of `M`, so do the coordinates of `f x` and `f y`.
   refine of_injective_iff.mp fun x y hxy ↦ hf (funext fun i ↦ ?_)
   have h_coord : of I F ((LinearMap.proj i ∘ₗ f) x) = of I F ((LinearMap.proj i ∘ₗ f) y) := by
@@ -427,17 +495,20 @@ lemma isHausdorff_of_injective_pi [IsHausdorff I F] {ι : Type*} (f : M →ₗ[S
   exact of_inj.mp h_coord
 
 /-- A finite free module over an `I`-adically complete ring is `I`-adically complete. -/
-lemma isAdicComplete_of_free [IsAdicComplete I S] [Free S M] [Module.Finite S M] :
-    IsAdicComplete I M :=
+lemma isAdicComplete_of_free [IsAdicComplete I S] [Free S M] [Module.Finite S M]
+    : IsAdicComplete I M :=
   have := isHausdorff_of_injective_pi I _ (Free.chooseBasis S M).equivFun.injective
   {}
 
-/-- Let C be I-adically complete, β: F → M have I-adically dense image, and g: F → C satisfy
-g(f) ∈ I^n C whenever β(f) ∈ I^{2n} M. Then g = G ∘ β for some S-linear G: M → C. -/
-lemma exists_adic_extension (I : Ideal S) [IsAdicComplete I C] (β : F →ₗ[S] M)
-    (g : F →ₗ[S] C) (h_dense : Surjective (mkQ (I • ⊤) ∘ₗ β))
-    (h_cont : ∀ n : ℕ, Submodule.comap β (I ^ (n + n) • ⊤) ≤ Submodule.comap g (I ^ n • ⊤)) :
-    ∃ G : M →ₗ[S] C, ∀ f : F, G (β f) = g f := by
+/--
+Let C be I-adically complete, β: F → M have I-adically dense image, and g: F → C satisfy
+g(f) ∈ I^n C whenever β(f) ∈ I^{2n} M. Then g = G ∘ β for some S-linear G: M → C.
+-/
+lemma exists_adic_extension
+    (I : Ideal S) [IsAdicComplete I C]
+    (β : F →ₗ[S] M) (g : F →ₗ[S] C) (h_dense : Surjective (mkQ (I • ⊤) ∘ₗ β))
+    (h_cont : ∀ n : ℕ, Submodule.comap β (I ^ (n + n) • ⊤) ≤ Submodule.comap g (I ^ n • ⊤))
+    : ∃ G : M →ₗ[S] C, ∀ f : F, G (β f) = g f := by
   -- Pass to completions: `β` becomes onto, its kernel is killed by the completed `g`, and the
   -- completion of `C` is `C`.
   have hsurj : Surjective (AdicCompletion.map I β) := map_surjective_of_mkQ_comp_surjective h_dense
@@ -449,25 +520,33 @@ lemma exists_adic_extension (I : Ideal S) [IsAdicComplete I C] (β : F →ₗ[S]
       g (a n) ≡ g (a (n + n)) [SMOD I ^ n • ⊤] := (a.map I g).2 le_add_self
       _ ≡ 0 [SMOD I ^ n • ⊤] := zero.2 (mem_comap.1 (h_cont n hβ))
   -- `e` identifies the completion of `M` with a quotient of that of `F`; `G` is the induced map.
-  let e : (AdicCompletion I F ⧸ LinearMap.ker (AdicCompletion.map I β)) ≃ₗ[AdicCompletion I S]
-      AdicCompletion I M := LinearMap.quotKerEquivOfSurjective _ hsurj
+  let e
+      : (AdicCompletion I F ⧸ LinearMap.ker (AdicCompletion.map I β)) ≃ₗ[AdicCompletion I S]
+        AdicCompletion I M :=
+    LinearMap.quotKerEquivOfSurjective _ hsurj
   let G : AdicCompletion I M →ₗ[AdicCompletion I S] AdicCompletion I C :=
     liftQ _ (AdicCompletion.map I g) hker ∘ₗ e.symm.toLinearMap
-  exact ⟨(ofLinearEquiv I C).symm.toLinearMap ∘ₗ G.restrictScalars S ∘ₗ of I M, fun f ↦ by
-    simp [G, e, ← map_of, LinearEquiv.symm_apply_eq]⟩
+  exact ⟨
+    (ofLinearEquiv I C).symm.toLinearMap ∘ₗ G.restrictScalars S ∘ₗ of I M,
+    fun f ↦ by simp [G, e, ← map_of, LinearEquiv.symm_apply_eq]
+  ⟩
 
 /-- An element lies in `(a, b) M` if and only if it has the form `a • u + b • v`. -/
-lemma mem_span_pair_smul_top {a b : S} {x : M} :
-    x ∈ (Ideal.span {a, b} : Ideal S) • (⊤ : Submodule S M) ↔ ∃ u v : M, a • u + b • v = x := by
+lemma mem_span_pair_smul_top {a b : S} {x : M}
+    : x ∈ (Ideal.span {a, b} : Ideal S) • (⊤ : Submodule S M) ↔ ∃ u v : M, a • u + b • v = x := by
   simp [mem_singleton_set_smul, Ideal.span_insert, sup_smul, span_smul_eq, mem_sup]
 
-/-- Let `β : F → M` be linear. Suppose that `β x ∈ (a, t) M` implies `x ∈ (a, t) F`, and that
+/--
+Let `β : F → M` be linear. Suppose that `β x ∈ (a, t) M` implies `x ∈ (a, t) F`, and that
 `t • y ∈ a M` implies `y ∈ a M` or `t = 0`. Then `β x ∈ (t ^ n, a) M` implies
-`x ∈ (t ^ n, a) F`. -/
-lemma comap_span_pow_smul_le (β : F →ₗ[S] M) {a : S} (t : S)
-    (h_one : Submodule.comap β (Ideal.span {a, t} • ⊤) ≤ Ideal.span {a, t} • ⊤)
-    (h_div : ∀ y w : M, a • w = t • y → t = 0 ∨ ∃ c : M, a • c = y) (n : ℕ) :
-    Submodule.comap β (Ideal.span {t ^ n, a} • ⊤) ≤ Ideal.span {t ^ n, a} • ⊤ := by
+`x ∈ (t ^ n, a) F`.
+-/
+lemma comap_span_pow_smul_le
+    (β : F →ₗ[S] M)
+    {a : S} (t : S) (h_one : Submodule.comap β (Ideal.span {a, t} • ⊤) ≤ Ideal.span {a, t} • ⊤)
+    (h_div : ∀ y w : M, a • w = t • y → t = 0 ∨ ∃ c : M, a • c = y)
+    (n : ℕ)
+    : Submodule.comap β (Ideal.span {t ^ n, a} • ⊤) ≤ Ideal.span {t ^ n, a} • ⊤ := by
   simp only [IsConcreteLE.le_iff, Submodule.mem_comap, mem_span_pair_smul_top] at h_one ⊢
   induction n with
   | zero => exact fun x _ ↦ ⟨x, 0, by simp⟩
@@ -485,12 +564,15 @@ lemma comap_span_pow_smul_le (β : F →ₗ[S] M) {a : S} (t : S)
     obtain ⟨m, m', rfl⟩ := ih (x := c) ⟨v, w, by simp [hw]⟩
     exact ⟨m, u' + t • m', by module⟩
 
-/-- Suppose that `z • a ∈ p M` implies `a ∈ p M`, and that `p` is zero or acts injectively on `M`.
-If `p • y ∈ z ^ n M`, then `p = 0` or `y ∈ z ^ n M`. -/
-lemma eq_zero_or_exists_pow_smul_eq {p z : S}
-    (hz : ∀ a b : M, z • a = p • b → ∃ c : M, a = p • c)
-    (hp : ∀ a : M, p • a = 0 → p = 0 ∨ a = 0) (n : ℕ) (y w : M) (h_eq : z ^ n • w = p • y) :
-    p = 0 ∨ ∃ c : M, z ^ n • c = y := by
+/--
+Suppose that `z • a ∈ p M` implies `a ∈ p M`, and that `p` is zero or acts injectively on `M`.
+If `p • y ∈ z ^ n M`, then `p = 0` or `y ∈ z ^ n M`.
+-/
+lemma eq_zero_or_exists_pow_smul_eq
+    {p z : S}
+    (hz : ∀ a b : M, z • a = p • b → ∃ c : M, a = p • c) (hp : ∀ a : M, p • a = 0 → p = 0 ∨ a = 0)
+    (n : ℕ) (y w : M) (h_eq : z ^ n • w = p • y)
+    : p = 0 ∨ ∃ c : M, z ^ n • c = y := by
   induction n generalizing y w with
   | zero => simp
   | succ n ih =>
@@ -503,9 +585,11 @@ lemma eq_zero_or_exists_pow_smul_eq {p z : S}
     · exact .inl h
     exact (ih c w hc).imp_right fun ⟨c', hc'⟩ ↦ ⟨c', by grind [sub_eq_zero, pow_succ', mul_smul]⟩
 
-/-- A topological basis of `M` over `S` for the `I`-adic topology: vectors `b i` whose finite
+/--
+A topological basis of `M` over `S` for the `I`-adic topology: vectors `b i` whose finite
 combinations are dense, with linear forms `coord i` on `M` that read off the coefficients of a
-finite combination. -/
+finite combination.
+-/
 structure Lift.AdicBasis.{u} (M : Type u) [AddCommGroup M] [Module S M] where
   /-- The index set of the basis. -/
   (Index : Type u)
@@ -518,29 +602,33 @@ structure Lift.AdicBasis.{u} (M : Type u) [AddCommGroup M] [Module S M] where
   /-- The `i`-th coordinate form reads off the `i`-th coefficient of a finite combination. -/
   dual (i : Index) (f : Index →₀ S) : coord i (linearCombination S b f) = f i
 
-/-- Let `S` be `I`-adically complete for a maximal ideal `I = (p, z)`. Suppose that `z` is regular
+/--
+Let `S` be `I`-adically complete for a maximal ideal `I = (p, z)`. Suppose that `z` is regular
 on `M / p M` and that `p` is zero or regular on `M`. Then every set `t ⊆ M` whose elements have
 linearly independent images in the `S / I`-vector space `M / I M` lies in the range of an `I`-adic
 basis `c` of `M`. Such a basis is a family `c.b` whose finite `S`-combinations are `I`-adically
 dense in `M`, with linear forms `c.coord i` on `M` that read off the coefficients of any finite
-combination. -/
-lemma Lift.exists_adicBasis {I : Ideal S} {p z : S} (hI : I = Ideal.span {p, z}) [I.IsMaximal]
-    [IsAdicComplete I S] (hz : ∀ a b : M, z • a = p • b → ∃ c : M, a = p • c) (t : Set M)
-    (ht : LinearIndepOn (S ⧸ I) (I • ⊤ : Submodule S M).mkQ t)
-    (hp : ∀ a : M, p • a = 0 → p = 0 ∨ a = 0) :
-    ∃ c : AdicBasis I M, t ⊆ Set.range c.b := by
+combination.
+-/
+lemma Lift.exists_adicBasis
+    {I : Ideal S} {p z : S} (hI : I = Ideal.span {p, z}) [I.IsMaximal] [IsAdicComplete I S]
+    (hz : ∀ a b : M, z • a = p • b → ∃ c : M, a = p • c)
+    (t : Set M) (ht : LinearIndepOn (S ⧸ I) (I • ⊤ : Submodule S M).mkQ t)
+    (hp : ∀ a : M, p • a = 0 → p = 0 ∨ a = 0)
+    : ∃ c : AdicBasis I M, t ⊆ Set.range c.b := by
   -- Extend `t` to a set `s` that lifts a basis of `M / I M`. Finite combinations of `s` map onto
   -- `M / I M`, and a combination in `I ^ (n + n) M` has coefficients in `I ^ n`, so the coordinates
   -- extend.
   let : Field (S ⧸ I) := Quotient.field I
   obtain ⟨s, -, hts, h_span, h_indep⟩ := exists_linearIndepOn_extension ht le_top
   let β : (s →₀ S) →ₗ[S] M := linearCombination S (↑)
-  have dense : Surjective (mkQ (I • ⊤) ∘ₗ β) := ind fun y ↦ by
-    -- A span over `S ⧸ I` is the span over `S`, as `S → S ⧸ I` is onto.
-    have h_mem : mkQ (I • ⊤) y ∈ span S ((I • ⊤ : Submodule S M).mkQ '' s) :=
-      (restrictScalars_span S _ mk_surjective _).le
-        (h_span (Set.mem_image_of_mem _ (Set.mem_univ y)))
-    simpa [mem_span_iff_linearCombination] using! h_mem
+  have dense : Surjective (mkQ (I • ⊤) ∘ₗ β) :=
+    ind fun y ↦ by
+      -- A span over `S ⧸ I` is the span over `S`, as `S → S ⧸ I` is onto.
+      have h_mem : mkQ (I • ⊤) y ∈ span S ((I • ⊤ : Submodule S M).mkQ '' s) :=
+        (restrictScalars_span S _ mk_surjective _).le
+          (h_span (Set.mem_image_of_mem _ (Set.mem_univ y)))
+      simpa [mem_span_iff_linearCombination] using! h_mem
   -- Coefficients of a combination in `(p, z) M`, then `(z ^ n, p) M`, then `(p ^ n, z ^ n) M`.
   have coef₁ : comap β (span {p, z} • ⊤) ≤ span {p, z} • ⊤ := by
     -- This is the linear independence of `s` modulo `I M`.
@@ -558,8 +646,8 @@ lemma Lift.exists_adicBasis {I : Ideal S} {p z : S} (hI : I = Ideal.span {p, z})
     eq_zero_or_exists_pow_smul_eq hz hp n
   have coef₃ (n : ℕ) : comap β (span {p ^ n, z ^ n} • ⊤) ≤ span {p ^ n, z ^ n} • ⊤ :=
     comap_span_pow_smul_le β p (coef₂ n) (regular n) n
-  have cont (i : s) (n : ℕ) :
-      comap β (I ^ (n + n) • ⊤) ≤ Submodule.comap (lapply i) (I ^ n • (⊤ : Submodule S S)) := by
+  have cont (i : s) (n : ℕ)
+      : comap β (I ^ (n + n) • ⊤) ≤ Submodule.comap (lapply i) (I ^ n • (⊤ : Submodule S S)) := by
     intro f hf
     have le₁ : I ^ (n + n) ≤ span {p ^ n, z ^ n} := by
       simp [hI, ← span_singleton_pow, sup_pow_add_le_pow_sup_pow, Ideal.span_insert]
@@ -577,15 +665,18 @@ end New
 
 /-! ## Finite freeness from a bound on the rank -/
 
-/-- Let `S` be complete for the maximal ideal `I = (p, z)`, and let `M` be an `I`-adically separated
+/--
+Let `S` be complete for the maximal ideal `I = (p, z)`, and let `M` be an `I`-adically separated
 `S`-module of finite rank. Suppose that `p` is zero or acts injectively on `M` (`hp`), and that `z`
-acts injectively on `M / p M` (`hz`). Then `M` is free and finitely generated. -/
-lemma New.free_finite_of_rank_le {S M : Type} [CommRing S] [Nontrivial S] [AddCommGroup M]
-    [Module S M] {I : Ideal S} {p z : S} (hI : I = Ideal.span {p, z}) [I.IsMaximal]
-    [IsAdicComplete I S] (h_sep : IsHausdorff I M)
-    (hz : ∀ x y : M, z • x = p • y → ∃ w : M, x = p • w) (d : ℕ) (h_rank : Module.rank S M ≤ d)
-    (hp : ∀ x : M, p • x = 0 → p = 0 ∨ x = 0) :
-    Module.Free S M ∧ Module.Finite S M := by
+acts injectively on `M / p M` (`hz`). Then `M` is free and finitely generated.
+-/
+lemma New.free_finite_of_rank_le
+    {S M : Type} [CommRing S] [Nontrivial S] [AddCommGroup M] [Module S M]
+    {I : Ideal S} {p z : S} (hI : I = Ideal.span {p, z}) [I.IsMaximal] [IsAdicComplete I S]
+    (h_sep : IsHausdorff I M) (hz : ∀ x y : M, z • x = p • y → ∃ w : M, x = p • w)
+    (d : ℕ) (h_rank : Module.rank S M ≤ d)
+    (hp : ∀ x : M, p • x = 0 → p = 0 ∨ x = 0)
+    : Module.Free S M ∧ Module.Finite S M := by
   -- `M` has a topological basis `c.b` with coordinate forms dual to it (`c.dual`). It is linearly
   -- independent, so finite by the bound on the rank; it spans `M` modulo `I` (`c.dense`), so it
   -- spans `M` (`S` is complete and `M` is separated).
@@ -612,19 +703,21 @@ open Ideal Submodule
 abbrev nsmulRange (n : ℕ) (X : Type*) [AddCommGroup X] : AddSubgroup X :=
   (nsmulAddMonoidHom (α := X) n).range
 
-variable {X Y S : Type*} [AddCommGroup X] [AddCommGroup Y] [CommRing S] [Module S X] [Module S Y]
-  {p : ℕ}
+variable
+  {X Y S : Type*} [AddCommGroup X] [AddCommGroup Y] [CommRing S] [Module S X] [Module S Y] {p : ℕ}
 
 /-- A linear map carries the subgroup `n X` of multiples into `n Y`. -/
-lemma nsmulRange.map_mem (f : X →ₗ[S] Y) {n : ℕ} {x : X} :
-    x ∈ nsmulRange n X → f x ∈ nsmulRange n Y := by
+lemma nsmulRange.map_mem (f : X →ₗ[S] Y) {n : ℕ} {x : X}
+    : x ∈ nsmulRange n X → f x ∈ nsmulRange n Y := by
   rintro ⟨a, rfl⟩
   exact ⟨f a, (map_nsmul f n a).symm⟩
 
-/-- For a module X over a commutative ring S and natural numbers p and k, the submodule (p)^k · X is
-the subgroup p^k X of multiples. -/
-lemma nsmulRange.mem_span_pow_smul_top_iff {k : ℕ} {x : X} :
-    x ∈ Ideal.span {(p : S)} ^ k • (⊤ : Submodule S X) ↔ x ∈ nsmulRange (p ^ k) X := by
+/--
+For a module X over a commutative ring S and natural numbers p and k, the submodule (p)^k · X is
+the subgroup p^k X of multiples.
+-/
+lemma nsmulRange.mem_span_pow_smul_top_iff {k : ℕ} {x : X}
+    : x ∈ Ideal.span {(p : S)} ^ k • (⊤ : Submodule S X) ↔ x ∈ nsmulRange (p ^ k) X := by
   simp [span_singleton_pow, span_smul_eq, mem_singleton_set_smul, ← Nat.cast_smul_eq_nsmul S,
     eq_comm]
 
@@ -644,22 +737,29 @@ open Finsupp Submodule AdicCompletion
 
 variable {S A : Type*} [CommRing S] [AddCommGroup A] [Module S A] {I : Ideal S} (c : AdicBasis I A)
 
-/-- For a topological basis `c` of `A` (vectors `c.b i` with coordinate forms `c.coord i`): if
+/--
+For a topological basis `c` of `A` (vectors `c.b i` with coordinate forms `c.coord i`): if
 `y - ∑ f_j • c.b j` lies in `I ^ n A` for a finitely supported `f`, then `c.coord i y - f i` lies
-in `I ^ n` for every `i`. -/
-lemma coord_sub_mem_pow {n : ℕ} {y : A} {f : c.Index →₀ S}
-    (h : y - linearCombination S c.b f ∈ I ^ n • (⊤ : Submodule S A)) (i : c.Index) :
-    c.coord i y - f i ∈ I ^ n := by
+in `I ^ n` for every `i`.
+-/
+lemma coord_sub_mem_pow
+    {n : ℕ} {y : A} {f : c.Index →₀ S}
+    (h : y - linearCombination S c.b f ∈ I ^ n • (⊤ : Submodule S A))
+    (i : c.Index)
+    : c.coord i y - f i ∈ I ^ n := by
   simpa [dual] using smul_top_le_comap_smul_top _ (c.coord i) h
 
-/-- For a topological basis `c` of `A`, every `y` in `A`, every `n`, and every large enough finite
-set `F` of indices, `y - ∑_{i ∈ F} c.coord i y • c.b i` lies in `I ^ n A`. -/
-lemma eventually_sub_sum_mem (y : A) (n : ℕ) :
-    ∀ᶠ F : Finset c.Index in Filter.atTop,
-      y - ∑ i ∈ F, c.coord i y • c.b i ∈ I ^ n • (⊤ : Submodule S A) := by
+/--
+For a topological basis `c` of `A`, every `y` in `A`, every `n`, and every large enough finite
+set `F` of indices, `y - ∑_{i ∈ F} c.coord i y • c.b i` lies in `I ^ n A`.
+-/
+lemma eventually_sub_sum_mem (y : A) (n : ℕ)
+    : ∀ᶠ F : Finset c.Index in Filter.atTop,
+        y - ∑ i ∈ F, c.coord i y • c.b i ∈ I ^ n • (⊤ : Submodule S A) := by
   -- Finite combinations of the `c.b i` span `A / I A`, so they are dense in the `I`-adic topology.
-  obtain ⟨a, ha⟩ : ∃ a : AdicCauchySequence I (c.Index →₀ S),
-      AdicCompletion.map I (linearCombination S c.b) (AdicCompletion.mk I _ a) = of I A y :=
+  obtain ⟨a, ha⟩
+      : ∃ a : AdicCauchySequence I (c.Index →₀ S),
+        AdicCompletion.map I (linearCombination S c.b) (AdicCompletion.mk I _ a) = of I A y :=
     (map_surjective_of_mkQ_comp_surjective c.dense).comp (mk_surjective I _) (of I A y)
   -- the `n`-th term `a n` of such a sequence approximates `y`
   have hf : y - linearCombination S c.b (a n) ∈ I ^ n • (⊤ : Submodule S A) :=
@@ -668,25 +768,30 @@ lemma eventually_sub_sum_mem (y : A) (n : ℕ) :
   -- every `F` that contains the support of the approximation `f` will do
   refine Filter.mem_atTop_sets.2 ⟨f.support, fun F hF ↦ (sub_mem_iff_right _ hf).1 ?_⟩
   -- the two approximations differ by `∑ (c.coord i y - f i) • c.b i`, with coefficients in `I ^ n`
-  have h_diff : (y - linearCombination S c.b f) - (y - ∑ i ∈ F, c.coord i y • c.b i) =
-      ∑ i ∈ F, (c.coord i y - f i) • c.b i := by
+  have h_diff
+      : (y - linearCombination S c.b f) - (y - ∑ i ∈ F, c.coord i y • c.b i)
+        = ∑ i ∈ F, (c.coord i y - f i) • c.b i := by
     simp [linearCombination_apply_of_mem_supported _ hF, sub_smul]
   rw [h_diff]
   exact sum_mem fun i _ ↦ smul_mem_smul (c.coord_sub_mem_pow hf i) mem_top
 
-/-- For a topological basis `c` of `A`, a submodule `P ⊇ I ^ n A` contains `y` if it contains every
-`c.coord i y • c.b i`. -/
-lemma mem_of_coord {P : Submodule S A} {n : ℕ} {y : A} (hP : I ^ n • ⊤ ≤ P)
-    (h : ∀ i : c.Index, c.coord i y • c.b i ∈ P) :
-    y ∈ P := by
+/--
+For a topological basis `c` of `A`, a submodule `P ⊇ I ^ n A` contains `y` if it contains every
+`c.coord i y • c.b i`.
+-/
+lemma mem_of_coord
+    {P : Submodule S A} {n : ℕ} {y : A}
+    (hP : I ^ n • ⊤ ≤ P) (h : ∀ i : c.Index, c.coord i y • c.b i ∈ P)
+    : y ∈ P := by
   -- `y` differs from a finite sum of the `c.coord i y • c.b i` by an element of `I ^ n • ⊤ ≤ P`
   obtain ⟨F, hF⟩ := (c.eventually_sub_sum_mem y n).exists
   exact (sub_mem_iff_left P (sum_mem fun i _ ↦ h i)).1 (hP hF)
 
-/-- If `A` is `I`-adically separated, an element whose coordinates in a topological basis `c` are
-all zero is zero. -/
-lemma eq_zero_of_coord [H : IsHausdorff I A] {y : A} (h : ∀ i : c.Index, c.coord i y = 0) :
-    y = 0 :=
+/--
+If `A` is `I`-adically separated, an element whose coordinates in a topological basis `c` are
+all zero is zero.
+-/
+lemma eq_zero_of_coord [H : IsHausdorff I A] {y : A} (h : ∀ i : c.Index, c.coord i y = 0) : y = 0 :=
   H.haus y fun n ↦ SModEq.zero.2 (c.mem_of_coord le_rfl fun i ↦ by simp [h])
 
 end New.Lift.AdicBasis
@@ -704,8 +809,10 @@ namespace New
 
 open IsHausdorff AdicCompletion Submodule
 
-variable {R R' N M : Type*} [CommRing R] [CommRing R'] [AddCommGroup N] [Module R N]
-  [AddCommGroup M] [Module R' M] {π : R} {π' : R'}
+variable
+  {R R' N M : Type*}
+  [CommRing R] [CommRing R'] [AddCommGroup N] [Module R N] [AddCommGroup M] [Module R' M]
+  {π : R} {π' : R'}
 
 /-- On a `π`-adically separated module, `(x_j) ↦ (x_j - π • x_{j+1})` is injective. -/
 instance [IsHausdorff (Ideal.span {π}) N] : Fact (shiftDiff N π).Injective := by
@@ -737,14 +844,17 @@ instance [IsAdicComplete (Ideal.span {π}) N] : Fact (shiftDiff N π).Surjective
   -- `using!`: `pi` and `mk` are computed on representatives by definition
   simpa [shiftDiff, f] using! congrArg (fun z ↦ pi (Ideal.span {π}) (fun _ : ℕ ↦ N) z j) hw
 
-/-- Successive approximation: let `New.shiftDiff`, the operator `(x_j) ↦ (x_j - π • x_{j+1})` on
+/--
+Successive approximation: let `New.shiftDiff`, the operator `(x_j) ↦ (x_j - π • x_{j+1})` on
 sequences, be surjective for `π` on `N` and injective for `π'` on `M`. Let `f : N → M` be additive
 with `f (π • n) = π' • f n`. If every `g x` has the form `f n + π' • g y`, then every `g x` lies in
-the range of `f`. -/
-lemma mem_range_of_approx [s : Fact (shiftDiff N π).Surjective]
-    [i : Fact (shiftDiff M π').Injective] (f : N →+ M) (hf : ∀ n : N, f (π • n) = π' • f n)
-    {X : Type*} (g : X → M) (h : ∀ x : X, ∃ (n : N) (y : X), g x = f n + π' • g y) (x : X) :
-    ∃ n : N, f n = g x := by
+the range of `f`.
+-/
+lemma mem_range_of_approx
+    [s : Fact (shiftDiff N π).Surjective] [i : Fact (shiftDiff M π').Injective]
+    (f : N →+ M) (hf : ∀ n : N, f (π • n) = π' • f n)
+    {X : Type*} (g : X → M) (h : ∀ x : X, ∃ (n : N) (y : X), g x = f n + π' • g y) (x : X)
+    : ∃ n : N, f n = g x := by
   -- Iterating `h` along `x, y x, y (y x), …` gives terms `n (y^[j] x)`; surjectivity of
   -- `shiftDiff N π` sums them to a sequence `u`, and injectivity of `shiftDiff M π'` identifies
   -- `f (u j)` with `g (y^[j] x)`.
@@ -753,16 +863,19 @@ lemma mem_range_of_approx [s : Fact (shiftDiff N π).Surjective]
   have key : shiftDiff M π' (f ∘ u) = shiftDiff M π' fun j ↦ g (y^[j] x) := by
     ext j
     calc
-      shiftDiff M π' (f ∘ u) j = f (u j - π • u (j + 1)) := by simp [shiftDiff, hf]
+      shiftDiff M π' (f ∘ u) j
+        = f (u j - π • u (j + 1)) := by simp [shiftDiff, hf]
       _ = f (n (y^[j] x)) := congrArg f (congrFun hu j)
       _ = g (y^[j] x) - π' • g (y^[j + 1] x) := by
         simp [Function.iterate_succ_apply', hstep (y^[j] x)]
   exact ⟨u 0, by simpa using congrFun (i.out key) 0⟩
 
-/-- An element that is not divisible by every power of `π` is `π ^ n * c` for some `n` and some
-`c` not divisible by `π`. -/
-lemma exists_eq_pow_mul_of_not_forall_dvd (π x : R) (h : ¬∀ n : ℕ, π ^ n ∣ x) :
-    ∃ (n : ℕ) (c : R), x = π ^ n * c ∧ ¬π ∣ c :=
+/--
+An element that is not divisible by every power of `π` is `π ^ n * c` for some `n` and some
+`c` not divisible by `π`.
+-/
+lemma exists_eq_pow_mul_of_not_forall_dvd (π x : R) (h : ¬ ∀ n : ℕ, π ^ n ∣ x)
+    : ∃ (n : ℕ) (c : R), x = π ^ n * c ∧ ¬ π ∣ c :=
   have h_fin : FiniteMultiplicity π x := FiniteMultiplicity.not_iff_forall.not_right.mpr h
   ⟨multiplicity π x, h_fin.exists_eq_pow_mul_and_not_dvd⟩
 

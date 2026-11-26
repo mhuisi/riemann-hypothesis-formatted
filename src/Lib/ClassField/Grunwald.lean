@@ -79,12 +79,16 @@ open NumberField QuotientGroup Subgroup QZChar Valued QZ Algebra Nat SUnit Monoi
 
 variable {E : Type} [Field E] [NumberField E] [Algebra E Ω]
 
-/-- Let `p` be prime, `x ∈ Eˣ` not the `p`-th power of an element of `Eˣ`, and `r ∈ Ω` a `p`-th root
+/--
+Let `p` be prime, `x ∈ Eˣ` not the `p`-th power of an element of `Eˣ`, and `r ∈ Ω` a `p`-th root
 of `x`. Then some element of the absolute Galois group of `E` that fixes the `p`-th roots of unity
-(it lies in the kernel of the cyclotomic character `New.cyclotomicCharMod Ω p`) moves `r`. -/
-private lemma exists_mem_ker_cyclotomicCharMod_smul_ne_of_forall_pow_ne {p : ℕ} [Fact p.Prime]
-    {x : Eˣ} (hx : ∀ z : Eˣ, z ^ p ≠ x) {r : Ω} (hr : r ^ p = algebraMap E Ω x) :
-    ∃ g : Gal(Ω/E), g ∈ (cyclotomicCharMod Ω p).ker ∧ g • r ≠ r := by
+(it lies in the kernel of the cyclotomic character `New.cyclotomicCharMod Ω p`) moves `r`.
+-/
+private lemma exists_mem_ker_cyclotomicCharMod_smul_ne_of_forall_pow_ne
+    {p : ℕ} [Fact p.Prime]
+    {x : Eˣ} (hx : ∀ z : Eˣ, z ^ p ≠ x)
+    {r : Ω} (hr : r ^ p = algebraMap E Ω x)
+    : ∃ g : Gal(Ω/E), g ∈ (cyclotomicCharMod Ω p).ker ∧ g • r ≠ r := by
   -- Otherwise `r` lies in the field `E(μ_p)` fixed by the kernel, whose degree over `E` is prime
   -- to `p`; the norm of `r` then shows that `x` is a `p`-th power in `E`.
   by_contra! h_fix
@@ -92,7 +96,8 @@ private lemma exists_mem_ker_cyclotomicCharMod_smul_ne_of_forall_pow_ne {p : ℕ
   let H : Subgroup Gal(Ω/E) := (cyclotomicCharMod Ω p).ker
   have h_coprime : (Module.finrank E (fixedFieldOf H)).Coprime p := by
     have h_dvd : Module.finrank E (fixedFieldOf H) ∣ p - 1 :=
-      calc Module.finrank E (fixedFieldOf H)
+      calc
+        Module.finrank E (fixedFieldOf H)
         _ = Nat.card (cyclotomicCharMod Ω p).range := by rw [finrank_fixedFieldOf, index_ker]
         _ ∣ Nat.card (ZMod p)ˣ := card_subgroup_dvd_card _
         _ = p - 1 := by rw [card_units, Nat.card_zmod]
@@ -105,21 +110,23 @@ private lemma exists_mem_ker_cyclotomicCharMod_smul_ne_of_forall_pow_ne {p : ℕ
     (pow_mem_range_pow_of_coprime h_coprime (x : E)).mp ⟨norm E root, h_norm⟩
   exact hx (x.ofPow z hp.ne_zero hz) (Units.ext hz)
 
-/-- Let `E` be totally complex and `ψ` a character of the finite ideles with values in `ℚ/ℤ`
+/--
+Let `E` be totally complex and `ψ` a character of the finite ideles with values in `ℚ/ℤ`
 (written multiplicatively), with open kernel and killed by `p`. Let `T` be a set of finite places
 such that the principal ideles and the ideles that are units outside `T` (`New.idelesUnitOff T`)
 generate all finite ideles, and let `U` be an open subgroup of the finite ideles that contains the
 `p`-th powers of the ideles that are units outside `T`. If `ψ` is trivial on the principal ideles
 in `U`, then some continuous character `χ` of the absolute Galois group, killed by `p`, has
-`χ ∘ Art = ψ` on `U`. -/
+`χ ∘ Art = ψ` on `U`.
+-/
 private lemma exists_nsmul_eq_zero_abelianLift_artinMap_eq_of_apply_principalIdele_eq_one
-    [IsTotallyComplex E] {p : ℕ} (ψ : (𝔸f E)ˣ →* Multiplicative QZ) (hψ_open : ψ.ker.IsOpen)
-    (hψ_pow : ∀ a : (𝔸f E)ˣ, ψ a ^ p = 1) {T : Set (FinPlace E)}
-    (h_sup : principalIdele.range ⊔ idelesUnitOff T = ⊤) {U : Subgroup (𝔸f E)ˣ}
-    (hU_open : U.IsOpen) (h_pow_mem : ∀ b ∈ idelesUnitOff T, b ^ p ∈ U)
-    (h_principal : ∀ x : Eˣ, principalIdele x ∈ U → ψ (principalIdele x) = 1) :
-    ∃ χ : ↥(QZChar Gal(Ω/E)),
-      p • χ = 0 ∧ ∀ a ∈ U, abelianLift χ (artinMap Gal(Ω/E) a) = ψ a := by
+    [IsTotallyComplex E]
+    {p : ℕ} (ψ : (𝔸f E)ˣ →* Multiplicative QZ) (hψ_open : ψ.ker.IsOpen)
+    (hψ_pow : ∀ a : (𝔸f E)ˣ, ψ a ^ p = 1)
+    {T : Set (FinPlace E)} (h_sup : principalIdele.range ⊔ idelesUnitOff T = ⊤)
+    {U : Subgroup (𝔸f E)ˣ} (hU_open : U.IsOpen) (h_pow_mem : ∀ b ∈ idelesUnitOff T, b ^ p ∈ U)
+    (h_principal : ∀ x : Eˣ, principalIdele x ∈ U → ψ (principalIdele x) = 1)
+    : ∃ χ : ↥(QZChar Gal(Ω/E)), p • χ = 0 ∧ ∀ a ∈ U, abelianLift χ (artinMap Gal(Ω/E) a) = ψ a := by
   -- As `ℚ/ℤ` is divisible, `ψ` on `U` extends to a character `θ` of the finite ideles that kills
   -- the principal ideles; by the existence theorem `θ` comes from a Galois character.
   have h_kill (a : U) (ha : U.subtype a ∈ principalIdele.range) : ψ.domRestrict U a = 1 := by
@@ -134,14 +141,16 @@ private lemma exists_nsmul_eq_zero_abelianLift_artinMap_eq_of_apply_principalIde
   have h_le_ker : ψ.ker ⊓ U ≤ θ.ker := fun a ⟨ha_ker, ha_U⟩ ↦ (hθ ⟨a, ha_U⟩).trans ha_ker
   have hθ_cont : Continuous θ :=
     .of_isOpen_ker _ ((ψ.ker ⊓ U).isOpen_mono h_le_ker (hψ_open.inter hU_open))
-  obtain ⟨μ, hμ_cont : Continuous μ,
-    hμ : ∀ (a : (𝔸f E)ˣ) (g : Gal(Ω/E)), artinMap Gal(Ω/E) a = g → μ g = θ a⟩ :=
+  obtain ⟨
+      μ,
+      hμ_cont : Continuous μ,
+      hμ : ∀ (a : (𝔸f E)ˣ) (g : Gal(Ω/E)), artinMap Gal(Ω/E) a = g → μ g = θ a
+    ⟩ :=
     exists_comp_artinMap Gal(Ω/E) θ hθ_cont fun x ↦ hθ_rat ⟨x, rfl⟩
   -- `θ ^ p` kills the principal ideles and the ideles that are units outside `T` (their `p`-th
   -- powers lie in `U`), and these two subgroups generate all finite ideles.
   have hθ_pow (a : (𝔸f E)ˣ) : θ a ^ p = 1 := by
-    have h_rat : principalIdele.range ≤ (θ ^ p).ker := fun b hb ↦ by
-      simp [mem_ker.mp (hθ_rat hb)]
+    have h_rat : principalIdele.range ≤ (θ ^ p).ker := fun b hb ↦ by simp [mem_ker.mp (hθ_rat hb)]
     have h_units : idelesUnitOff T ≤ (θ ^ p).ker := fun b hb ↦ by
       have hθ_b : θ (b ^ p) = ψ (b ^ p) := hθ ⟨b ^ p, h_pow_mem b hb⟩
       simpa [hψ_pow] using hθ_b
@@ -153,37 +162,45 @@ private lemma exists_nsmul_eq_zero_abelianLift_artinMap_eq_of_apply_principalIde
     change μ g ^ p = 1
     rw [hμ a g ha, hθ_pow]
   · obtain ⟨g, hg⟩ := mk_surjective (artinMap Gal(Ω/E) a)
-    calc _ = μ g := (congrArg _ hg.symm).trans (abelianLift_mk _ g)
+    calc
+      _ = μ g := (congrArg _ hg.symm).trans (abelianLift_mk _ g)
       _ = θ a := hμ a g hg.symm
       _ = ψ a := hθ ⟨a, ha⟩
 
 omit [Algebra E Ω] in
-/-- The idele `New.locIdele u x`, with single component `x` at `u`, is a unit outside `T` if `u ∈ T`
-or if `x` is a local unit (`v x = 1`). -/
-private lemma locIdele_mem_idelesUnitOff_of_mem_or_v_eq_one {T : Set (FinPlace E)} {u : FinPlace E}
-    {x : (LocField u)ˣ} (hu : u ∈ T ∨ v x.val = 1) : locIdele u x ∈ idelesUnitOff T := by
+/--
+The idele `New.locIdele u x`, with single component `x` at `u`, is a unit outside `T` if `u ∈ T`
+or if `x` is a local unit (`v x = 1`).
+-/
+private lemma locIdele_mem_idelesUnitOff_of_mem_or_v_eq_one
+    {T : Set (FinPlace E)} {u : FinPlace E} {x : (LocField u)ˣ} (hu : u ∈ T ∨ v x.val = 1)
+    : locIdele u x ∈ idelesUnitOff T := by
   rcases hu with hu_T | hx_unit
   · refine mem_idelesUnitOff.mpr fun w hw ↦ ?_
     rw [locIdele_apply_of_ne (ne_of_mem_of_not_mem hu_T hw).symm x, map_one]
   · exact locIdele_mem_idelesUnitOff hx_unit
 
-/-- Grunwald's theorem in prime exponent. Let `E` be totally complex, `p` prime, `S` a finite set of
+/--
+Grunwald's theorem in prime exponent. Let `E` be totally complex, `p` prime, `S` a finite set of
 finite places, and `ψ` a character of the finite ideles with values in `ℚ/ℤ` (written
 multiplicatively), with open kernel and killed by `p`; it need not be trivial on `Eˣ`. Then some
 continuous character `χ` of the absolute Galois group, killed by `p`, has `χ ∘ Art = ψ` on the
 ideles `New.locIdele u x` with single component `x` at `u`. This holds for all `x` if `u ∈ S`, and
 for local units `x` (`v x = 1`) if the norm `u.q` of `u` (the size of its residue field) is not
-prime. -/
-lemma grunwald [IsTotallyComplex E] {p : ℕ} {S : Set (FinPlace E)} (hp : p.Prime)
-    (hS : Set.Finite S) (ψ : (𝔸f E)ˣ →* Multiplicative QZ) (hψ_open : ψ.ker.IsOpen)
-    (hψ_pow : ∀ a : (𝔸f E)ˣ, ψ a ^ p = 1) :
-    ∃ χ : ↥(QZChar Gal(Ω/E)),
+prime.
+-/
+lemma grunwald
+    [IsTotallyComplex E]
+    {p : ℕ} {S : Set (FinPlace E)} (hp : p.Prime) (hS : Set.Finite S)
+    (ψ : (𝔸f E)ˣ →* Multiplicative QZ)
+    (hψ_open : ψ.ker.IsOpen) (hψ_pow : ∀ a : (𝔸f E)ˣ, ψ a ^ p = 1)
+    : ∃ χ : ↥(QZChar Gal(Ω/E)),
       -- (a) the Galois character `χ` is killed by `p`
-      p • χ = 0 ∧
-      -- (b) `χ` agrees with `ψ` at places of `S` and on units at places of non-prime norm
-      ∀ (u : FinPlace E) (x : (LocField u)ˣ),
-        u ∈ S ∨ ¬u.q.Prime ∧ v x.val = 1 →
-        abelianLift χ (artinMap Gal(Ω/E) (locIdele u x)) = ψ (locIdele u x) := by
+      p • χ = 0
+        -- (b) `χ` agrees with `ψ` at places of `S` and on units at places of non-prime norm
+        ∧ ∀ (u : FinPlace E) (x : (LocField u)ˣ),
+          u ∈ S ∨ ¬u.q.Prime ∧ v x.val = 1
+            → abelianLift χ (artinMap Gal(Ω/E) (locIdele u x)) = ψ (locIdele u x) := by
   -- Enlarge `S` to `T` such that the principal ideles and the units outside `T` generate. For each
   -- class `q` of `T`-units modulo `p`-th powers that `ψ` does not kill, Chebotarev gives a place
   -- `w q` where `q` is not a local `p`-th power. Then `ψ` kills the principal ideles in the open
@@ -202,10 +219,9 @@ lemma grunwald [IsTotallyComplex E] {p : ℕ} {S : Set (FinPlace E)} (hp : p.Pri
   -- `r a`: a chosen `p`-th root of `a` in `Ω`
   choose r hr using Variety.IsAbsIntegrallyClosed.exists_pow_eq (A := Ω) p
   -- An `x` not killed by `ψ` is no `p`-th power in `E`, so some element of `H` moves its root.
-  have h_moves (x : Eˣ) (hx : ψ (principalIdele x) ≠ 1) :
-      ((H : Set Gal(Ω/E)) \ {g | g • r (algebraMap E Ω x) = r (algebraMap E Ω x)}).Nonempty := by
-    have h_not_pow : ∀ z : Eˣ, z ^ p ≠ x := fun z hz ↦
-      hx (by rw [← hz, map_pow, map_pow, hψ_pow])
+  have h_moves (x : Eˣ) (hx : ψ (principalIdele x) ≠ 1)
+      : ((H : Set Gal(Ω/E)) \ {g | g • r (algebraMap E Ω x) = r (algebraMap E Ω x)}).Nonempty := by
+    have h_not_pow : ∀ z : Eˣ, z ^ p ≠ x := fun z hz ↦ hx (by rw [← hz, map_pow, map_pow, hψ_pow])
     exact exists_mem_ker_cyclotomicCharMod_smul_ne_of_forall_pow_ne h_not_pow (hr _)
   -- `Q`: the classes of `T`-units modulo `p`-th powers whose chosen representative `ψ` does not
   -- kill; `ρ q`: the chosen root of that representative; `W q`: the elements of `H` that move it
@@ -214,12 +230,16 @@ lemma grunwald [IsTotallyComplex E] {p : ℕ} {S : Set (FinPlace E)} (hp : p.Pri
   let W (q : Q) : Set Gal(Ω/E) := (H : Set Gal(Ω/E)) \ {g | g • ρ q = ρ q}
   -- Chebotarev: for each `q` a place `w q ∉ T` of prime norm, a place `A q` of `Ω` over it, and a
   -- Frobenius `σ q` at `A q` that lies in `W q`.
-  have h_cheb (q : Q) : ∃ w ∉ T, w.q.Prime ∧ ∃ A : ClosurePlace, IsPlaceOver A w ∧
-      ∃ σ ∈ W q, IsFrob A w.q σ ∧ ∀ τ : Gal(Ω/E), IsFrob A w.q τ → τ ∈ W q := by
+  have h_cheb (q : Q)
+      : ∃ w ∉ T,
+        w.q.Prime
+          ∧ ∃ A : ClosurePlace,
+            IsPlaceOver A w
+              ∧ ∃ σ ∈ W q, IsFrob A w.q σ ∧ ∀ τ : Gal(Ω/E), IsFrob A w.q τ → τ ∈ W q := by
     -- `W q` is open: `H` is open and the set of elements that fix `ρ q` is closed
     have h_H_open : IsOpen (H : Set Gal(Ω/E)) := Fact.out
-    exact chebotarev (h_H_open.sdiff (isClosed_setOf_smul (ρ q) fun y ↦ y = ρ q))
-      (h_moves _ q.prop) hT_fin
+    exact chebotarev (h_H_open.sdiff (isClosed_setOf_smul (ρ q) fun y ↦ y = ρ q)) (h_moves _ q.prop)
+      hT_fin
   choose w hwT hw_prime A hA σ hσ h_frob using h_cheb
   -- `R q`: the ideles that are `p`-th powers at `w q`; `U`: the ideles in every `R q` that are
   -- units outside `T`
@@ -240,15 +260,14 @@ lemma grunwald [IsTotallyComplex E] {p : ℕ} {S : Set (FinPlace E)} (hp : p.Pri
       exact mul_mem (mem_iInf.mp hx_R q) (by simp [R])
     obtain ⟨hσ_H : σ q ∈ H, hσ_moves : σ q • ρ q ≠ ρ q⟩ := hσ q
     obtain ⟨⟨hσ_decomp : σ q ∈ decompGroup Gal(Ω/E) (A q), -⟩, -⟩ := h_frob q
-    exact hσ_moves
-      ((hA q).smul_root_eq_of_local_pow h_loc_pow (hr _) (σ q) hσ_decomp (mem_ker.mp hσ_H))
+    exact hσ_moves ((hA q).smul_root_eq_of_local_pow h_loc_pow (hr _) (σ q) hσ_decomp
+      (mem_ker.mp hσ_H))
   have hR_open (q : Q) : (R q).IsOpen :=
     (isOpen_of_forall_pow_mem hp.ne_zero fun y ↦ mem_range.mpr ⟨y, rfl⟩).preimage_of_continuous
   have hU_open : U.IsOpen := by
     simpa [U, Subgroup.IsOpen] using
       (isOpen_idelesUnitOff T).inter (isOpen_iInter_of_finite hR_open)
-  have h_pow_mem (b : (𝔸f E)ˣ) (hb : b ∈ idelesUnitOff T) : b ^ p ∈ U := by
-    simp [U, R, pow_mem hb]
+  have h_pow_mem (b : (𝔸f E)ˣ) (hb : b ∈ idelesUnitOff T) : b ^ p ∈ U := by simp [U, R, pow_mem hb]
   obtain ⟨χ, hχ_pow, hχ_eq : ∀ a ∈ U, abelianLift χ (artinMap Gal(Ω/E) a) = ψ a⟩ :=
     exists_nsmul_eq_zero_abelianLift_artinMap_eq_of_apply_principalIdele_eq_one ψ hψ_open hψ_pow
       h_sup hU_open h_pow_mem h_principal
@@ -260,33 +279,42 @@ lemma grunwald [IsTotallyComplex E] {p : ℕ} {S : Set (FinPlace E)} (hp : p.Pri
     rcases hu with hu_S | ⟨hu_not_prime, -⟩
     · exact hwT q (hST hu_S)
     · exact hu_not_prime (hw_prime q)
-  refine ⟨locIdele_mem_idelesUnitOff_of_mem_or_v_eq_one (hu.imp (fun hu_S ↦ hST hu_S) And.right),
-    mem_iInf.mpr fun q ↦ ?_⟩
+  refine ⟨
+    locIdele_mem_idelesUnitOff_of_mem_or_v_eq_one (hu.imp (fun hu_S ↦ hST hu_S) And.right),
+    mem_iInf.mpr fun q ↦ ?_
+  ⟩
   show ideleAt (w q) (locIdele u x) ∈ (powMonoidHom p).range
   rw [ideleAt_locIdele_of_ne (h_ne q) x]
   exact one_mem _
 
 variable [IsCMField E] (χ : QZChar Gal(Ω/E))
 
-/-- For a character `χ` of the absolute Galois group of a CM field, the character
-`g ↦ χ g + χ (gᶜ)`, where `gᶜ` is the conjugate of `g` by complex conjugation (`New.conjGal`). -/
+/--
+For a character `χ` of the absolute Galois group of a CM field, the character
+`g ↦ χ g + χ (gᶜ)`, where `gᶜ` is the conjugate of `g` by complex conjugation (`New.conjGal`).
+-/
 noncomputable abbrev QZChar.symmetrise : ↥(QZChar Gal(Ω/E)) :=
   χ + comap ⟨conjGal, continuous_conjGal⟩ χ
 
-/-- For a `ℚ/ℤ`-valued character `χ` of `Gal(Ω/E)`, the character `exp (2πi χ ∘ Art)` of the
-finite ideles of `E`. -/
+/--
+For a `ℚ/ℤ`-valued character `χ` of `Gal(Ω/E)`, the character `exp (2πi χ ∘ Art)` of the
+finite ideles of `E`.
+-/
 noncomputable abbrev QZChar.ideleChar : (𝔸f E)ˣ →* ℂˣ :=
   expUnit.comp ((abelianLift χ).comp (artinMap Gal(Ω/E)))
 
 /-- The value of `New.QZChar.symmetrise χ` at `g` is `χ g + χ (gᶜ)`. -/
-private lemma QZChar.symmetrise_val_apply (g : Gal(Ω/E)) :
-    (symmetrise χ).val g = χ.val g + χ.val (conjGal g) := rfl
+private lemma QZChar.symmetrise_val_apply (g : Gal(Ω/E))
+    : (symmetrise χ).val g = χ.val g + χ.val (conjGal g) :=
+  rfl
 
-/-- On the Artin symbol of an idele `a`, the symmetrised character `New.QZChar.symmetrise χ` takes
-the value of `χ` at `a` times the value of `χ` at the conjugate idele `star a`. -/
-lemma QZChar.abelianLift_symmetrise (a : (𝔸f E)ˣ) :
-    abelianLift (symmetrise χ) (artinMap Gal(Ω/E) a) =
-      abelianLift χ (artinMap Gal(Ω/E) a) * abelianLift χ (artinMap Gal(Ω/E) (star a)) := by
+/--
+On the Artin symbol of an idele `a`, the symmetrised character `New.QZChar.symmetrise χ` takes
+the value of `χ` at `a` times the value of `χ` at the conjugate idele `star a`.
+-/
+lemma QZChar.abelianLift_symmetrise (a : (𝔸f E)ˣ)
+    : abelianLift (symmetrise χ) (artinMap Gal(Ω/E) a)
+      = abelianLift χ (artinMap Gal(Ω/E) a) * abelianLift χ (artinMap Gal(Ω/E) (star a)) := by
   obtain ⟨g, hg⟩ := mk_surjective (artinMap Gal(Ω/E) a)
   -- the Artin symbol of `star a` is the class of `conjGal g`
   rw [← hg, artinMap_star g hg.symm]
@@ -313,12 +341,16 @@ section
 
 variable [IsCMField E] (χ : QZChar Gal(Ω/E))
 
-/-- The extension of the CM field `E` inside `Ω` cut out by the character `g ↦ χ g + χ (gᶜ)`, that
-is, the fixed field of its kernel. -/
+/--
+The extension of the CM field `E` inside `Ω` cut out by the character `g ↦ χ g + χ (gᶜ)`, that
+is, the fixed field of its kernel.
+-/
 noncomputable abbrev QZChar.stepField : IntermediateField E Ω := fixedFieldOf (ker (symmetrise χ))
 
-/-- The field `New.QZChar.stepField χ` is a CM field: the complex conjugation `cmConj` of `Ω` maps
-it to itself and restricts on it to complex conjugation under every embedding into `ℂ`. -/
+/--
+The field `New.QZChar.stepField χ` is a CM field: the complex conjugation `cmConj` of `Ω` maps
+it to itself and restricts on it to complex conjugation under every embedding into `ℂ`.
+-/
 instance : IsCMField (stepField χ) := by
   refine isCMField_of_forall_exists_conj E fun y ↦ ⟨⟨cmConj y, fun g ↦ ?_⟩, fun φ ↦ ?_⟩
   · -- `cmConj y` is fixed by `g`, since `y` is fixed by `conjGal g`, which is again in the kernel
@@ -355,8 +387,10 @@ end
 
 open scoped Classical in
 open InfinitePlace in
-/-- A CM type of `E` extends to `New.QZChar.stepField χ`: at each infinite place take the embedding
-whose restriction to `E` is the embedding chosen at the place below. -/
+/--
+A CM type of `E` extends to `New.QZChar.stepField χ`: at each infinite place take the embedding
+whose restriction to `E` is the embedding chosen at the place below.
+-/
 noncomputable instance [CMType E] (χ : QZChar Gal(Ω/E)) : CMTypeOver E (stepField χ) where
   -- Of the two embeddings at `u`, take the one that restricts to the chosen embedding below.
   Φ u :=
@@ -366,8 +400,8 @@ noncomputable instance [CMType E] (χ : QZChar Gal(Ω/E)) : CMTypeOver E (stepFi
     else
       star e
   mk_Φ := by aesop
-  eq_chosen_iff := by grind [embedding_mk_eq, Φ_mk_eq_or_star_eq, comap_mk, conjugate_comp,
-    star_star]
+  eq_chosen_iff := by
+    grind [embedding_mk_eq, Φ_mk_eq_or_star_eq, comap_mk, conjugate_comp, star_star]
 
 variable [IsCMField E] (χ : QZChar Gal(Ω/E))
 
@@ -377,13 +411,16 @@ instance [h : HasPrimitiveRoot5040 E] : HasPrimitiveRoot5040 (stepField χ) wher
     obtain ⟨ζ, hζ : IsPrimitiveRoot ζ 5040⟩ := h.exists_primitive_root
     exact ⟨algebraMap E (stepField χ) ζ, hζ.map_of_injective (algebraMap E (stepField χ)).injective⟩
 
-/-- If `New.QZChar.symmetrise χ` kills the inertia groups at the places `A : ClosurePlace` of `Ω`
+/--
+If `New.QZChar.symmetrise χ` kills the inertia groups at the places `A : ClosurePlace` of `Ω`
 (valuation subrings) over (`IsPlaceOver`) the prime of `E` below `u`, then `u` does not divide the
-different of `New.QZChar.stepField χ` over `E`. -/
-lemma QZChar.not_dvd_differentIdeal_stepField {u : FinPlace (stepField χ)}
+different of `New.QZChar.stepField χ` over `E`.
+-/
+lemma QZChar.not_dvd_differentIdeal_stepField
+    {u : FinPlace (stepField χ)}
     (h_inertia : ∀ {A : ClosurePlace},
-      IsPlaceOver A (u.below E) → inertiaGroup Gal(Ω/E) A ≤ ker (symmetrise χ)) :
-    ¬u.asIdeal ∣ differentIdeal (𝓞 E) (𝓞 (stepField χ)) := by
+      IsPlaceOver A (u.below E) → inertiaGroup Gal(Ω/E) A ≤ ker (symmetrise χ))
+    : ¬ u.asIdeal ∣ differentIdeal (𝓞 E) (𝓞 (stepField χ)) := by
   -- Take a place of `Ω` over `u`. Its inertia group lies in the kernel of `symmetrise χ`, which
   -- cuts out `stepField χ`, so the ramification index of `u` is one.
   have h_below : IsPlaceOver (placeOver u) (u.below E) := u.isPlaceOver_placeOver.isPlaceOver_below
@@ -392,13 +429,16 @@ lemma QZChar.not_dvd_differentIdeal_stepField {u : FinPlace (stepField χ)}
   have h_one : u.asIdeal.ramificationIdx (𝓞 E) = 1 := h_unram_of_le (h_inertia h_below)
   exact not_dvd_differentIdeal_iff.mpr (ramificationIdx_eq_one_iff.mp h_one)
 
-/-- Suppose that `New.QZChar.stepField χ` has degree `p` over `E` and that `New.QZChar.symmetrise χ`
+/--
+Suppose that `New.QZChar.stepField χ` has degree `p` over `E` and that `New.QZChar.symmetrise χ`
 kills the inertia groups at the places above `p`. Then the trace from the integers of
-`New.QZChar.stepField χ` to the integers of `E` is onto. -/
-private lemma range_intTrace_stepField_eq_top {p : ℕ} (h_rank : Module.finrank E (stepField χ) = p)
-    (h_unram : ∀ {A : ClosurePlace} {u : FinPlace E}, IsPlaceOver A u → ↑p ∈ u.asIdeal →
-      inertiaGroup Gal(Ω/E) A ≤ ker (symmetrise χ)) :
-    (intTrace (𝓞 E) (𝓞 (stepField χ))).range = ⊤ := by
+`New.QZChar.stepField χ` to the integers of `E` is onto.
+-/
+private lemma range_intTrace_stepField_eq_top
+    {p : ℕ} (h_rank : Module.finrank E (stepField χ) = p)
+    (h_unram : ∀ {A : ClosurePlace} {u : FinPlace E},
+      IsPlaceOver A u → ↑p ∈ u.asIdeal → inertiaGroup Gal(Ω/E) A ≤ ker (symmetrise χ))
+    : (intTrace (𝓞 E) (𝓞 (stepField χ))).range = ⊤ := by
   -- Otherwise all traces lie in a prime `u` of `E`. It contains `tr 1 = p`, so a prime `P` above
   -- `u` is unramified; yet `P` divides the different.
   by_contra h_ne
@@ -409,8 +449,8 @@ private lemma range_intTrace_stepField_eq_top {p : ℕ} (h_rank : Module.finrank
     ext (by simp [algebraMap_intTrace (L := stepField χ), trace_apply, map_one, h_rank])
   have hp_mem : (p : 𝓞 E) ∈ u.asIdeal := hu ⟨1, h_trace_one⟩
   obtain ⟨P, rfl⟩ := FinPlace.comap_surjective (algebraMap E (stepField χ)) u
-  refine not_dvd_differentIdeal_stepField χ (fun h_place ↦ h_unram h_place hp_mem)
-    (dvd_iff_le.mpr ?_)
+  refine
+    not_dvd_differentIdeal_stepField χ (fun h_place ↦ h_unram h_place hp_mem) (dvd_iff_le.mpr ?_)
   -- `P` contains the different if the traces of `P⁻¹` are integers
   rw [differentialIdeal_le_iff (K := E) (L := stepField χ) P.ne_bot]
   rintro _ ⟨x, hx, rfl⟩
@@ -423,8 +463,13 @@ private lemma range_intTrace_stepField_eq_top {p : ℕ} (h_rank : Module.finrank
   -- for `a ∈ u ⊆ P`, `x * a` is an integer `z`, and `tr z = tr x * a` lies in `u`
   refine (mem_div_iff_of_ne_zero hu_ne).mpr ?_
   rintro _ ⟨a, ha, rfl⟩
-  obtain ⟨z, -, hz : algebraMap (𝓞 (stepField χ)) (stepField χ) z =
-      x * algebraMap (𝓞 (stepField χ)) (stepField χ) (algebraMap (𝓞 E) (𝓞 (stepField χ)) a)⟩ :=
+  obtain ⟨
+      z,
+      -,
+      hz
+        : algebraMap (𝓞 (stepField χ)) (stepField χ) z
+          = x * algebraMap (𝓞 (stepField χ)) (stepField χ) (algebraMap (𝓞 E) (𝓞 (stepField χ)) a)
+    ⟩ :=
     (mem_inv_iff (coeIdeal_ne_zero.mpr P.ne_bot)).mp hx _ ⟨_, ha, rfl⟩
   refine ⟨_, hu ⟨z, rfl⟩, ?_⟩
   -- `z = x * a`, so `tr z = tr x * a`
@@ -433,7 +478,8 @@ private lemma range_intTrace_stepField_eq_top {p : ℕ} (h_rank : Module.finrank
   rw [algebraMap_intTrace (L := stepField χ), hz]
   simp [algebraMap_eq_smul_one]
 
-/-- Let `E` be a CM field containing a primitive 5040th root of unity (`New.HasPrimitiveRoot5040`),
+/--
+Let `E` be a CM field containing a primitive 5040th root of unity (`New.HasPrimitiveRoot5040`),
 and let `p` be prime. Write `New.QZChar.symmetrise χ` for the character `g ↦ χ g + χ gᶜ`, where `gᶜ`
 is the conjugate of `g` by complex conjugation. Suppose that (a) `p • χ = 0`, (b)
 `New.QZChar.symmetrise χ` is not zero, and (c) it kills the inertia groups at the places above `p`.
@@ -441,12 +487,15 @@ Then the field `New.QZChar.stepField χ`, the fixed field of the kernel of `symm
 `p` over `E`. It is a step (`New.IsStep`: a CM field Galois of prime degree over `E`, with an
 integer of trace `1`) for the Hecke character `New.QZChar.ideleChar χ = exp (2πi χ ∘ Art)`. This
 character has open kernel, is trivial on `Eˣ`, and is `1` at `z z̄` exactly when `z` is a principal
-idele times a norm from the field. -/
-lemma isStep_stepField [HasPrimitiveRoot5040 E] {p : ℕ} (hp : Nat.Prime p) (hχ : p • χ = 0)
+idele times a norm from the field.
+-/
+lemma isStep_stepField
+    [HasPrimitiveRoot5040 E]
+    {p : ℕ} (hp : Nat.Prime p) (hχ : p • χ = 0)
     (hχ_sym_ne : symmetrise χ ≠ 0)
-    (h_unram : ∀ {A : ClosurePlace} {u : FinPlace E}, IsPlaceOver A u → ↑p ∈ u.asIdeal →
-      inertiaGroup Gal(Ω/E) A ≤ ker (symmetrise χ)) :
-    IsStep (stepField χ) (ideleChar χ) ∧ Module.finrank E (stepField χ) = p := by
+    (h_unram : ∀ {A : ClosurePlace} {u : FinPlace E},
+      IsPlaceOver A u → ↑p ∈ u.asIdeal → inertiaGroup Gal(Ω/E) A ≤ ker (symmetrise χ))
+    : IsStep (stepField χ) (ideleChar χ) ∧ Module.finrank E (stepField χ) = p := by
   have h_fact : Fact p.Prime := ⟨hp⟩
   -- The degree is the order of the image of `symmetrise χ`, a nontrivial group inside the
   -- `p`-torsion of `ℚ/ℤ`, which is the image of `ZMod p`.
@@ -457,7 +506,8 @@ lemma isStep_stepField [HasPrimitiveRoot5040 E] {p : ℕ} (hp : Nat.Prime p) (h�
       rintro _ ⟨g, rfl⟩
       exact exists_ofZMod (a := χ.val g + χ.val (conjGal g)) (by simp [hχ_apply])
     have h_dvd : (toHom (symmetrise χ)).ker.index ∣ p :=
-      calc (toHom (symmetrise χ)).ker.index
+      calc
+        (toHom (symmetrise χ)).ker.index
         _ = Nat.card (toHom (symmetrise χ)).range := index_ker _
         _ ∣ Nat.card (ofZMod p).toMultiplicative.range := card_dvd_of_le h_range
         _ ∣ Nat.card (Multiplicative (ZMod p)) := card_range_dvd _
@@ -483,8 +533,9 @@ lemma isStep_stepField [HasPrimitiveRoot5040 E] {p : ℕ} (hp : Nat.Prime p) (h�
   · -- `ideleChar χ (z * star z)` is `expUnit` of `symmetrise χ` at the Artin symbol of `z`; this
     -- is `1` exactly on the norm group of `stepField χ` (`abelianLift_artinMap_eq_one_iff`)
     intro z
-    have h_sym : ideleChar χ (z * star z) =
-        expUnit (abelianLift (symmetrise χ) (artinMap Gal(Ω/E) z)) := by
+    have h_sym
+        : ideleChar χ (z * star z)
+          = expUnit (abelianLift (symmetrise χ) (artinMap Gal(Ω/E) z)) := by
       simp [← abelianLift_symmetrise]
     rw [h_sym, expUnit_eq_one_iff, abelianLift_artinMap_eq_one_iff (symmetrise χ)]
     simp [isTotallyPositive_of_isTotallyComplex]
@@ -510,23 +561,29 @@ section WeilDataExtension
 open NumberField WithZero Valued Ideal IsDedekindDomain HeightOneSpectrum FiniteMultiplicity Finset
   New WeilData RingHom
 
-/-- Let the CM type of `L` restrict to that of `E` (`New.CMTypeOver E L`). Then the embedding `Φ u`
+/--
+Let the CM type of `L` restrict to that of `E` (`New.CMTypeOver E L`). Then the embedding `Φ u`
 of `L` into `ℂ` that the CM type chooses at the infinite place `u` extends the embedding chosen at
-the place of `E` below `u`. -/
-lemma New.Φ_algebraMap_eq_Φ_comap {E L : Type} [Field E] [CMType E] [Field L] [Algebra E L]
-    [h : CMTypeOver E L] (u : InfinitePlace L) (r : E) :
-    Φ u (algebraMap E L r) = Φ (u.comap (algebraMap E L)) r := by
+the place of `E` below `u`.
+-/
+lemma New.Φ_algebraMap_eq_Φ_comap
+    {E L : Type} [Field E] [CMType E] [Field L] [Algebra E L] [h : CMTypeOver E L]
+    (u : InfinitePlace L) (r : E)
+    : Φ u (algebraMap E L r) = Φ (u.comap (algebraMap E L)) r := by
   have h_comp : (Φ u).comp (algebraMap E L) = Φ (u.comap (algebraMap E L)) := by
     simpa only [mk_Φ] using (h.eq_chosen_iff (Φ u)).mp (by rw [mk_Φ])
   exact RingHom.congr_fun h_comp r
 
-/-- Let the CM type of `L` restrict to that of `E` (`New.CMTypeOver E L`), and let `w` be an
+/--
+Let the CM type of `L` restrict to that of `E` (`New.CMTypeOver E L`), and let `w` be an
 infinite place of `E`. The embeddings `Φ u` chosen at the places `u` of `L` above `w` are exactly
 the embeddings of `L` that extend `Φ w`; so for `x` in `L` the product of the `Φ u x` is `Φ w` of
-the norm of `x` from `L` to `E`. -/
-lemma New.prod_Φ_eq_Φ_norm {E L : Type} [Field E] [CMType E] [Field L] [Algebra E L]
-    [h : CMTypeOver E L] (w : InfinitePlace E) (x : L) :
-    ∏ u : InfinitePlace L with u.comap (algebraMap E L) = w, Φ u x = Φ w (Algebra.norm E x) := by
+the norm of `x` from `L` to `E`.
+-/
+lemma New.prod_Φ_eq_Φ_norm
+    {E L : Type} [Field E] [CMType E] [Field L] [Algebra E L] [h : CMTypeOver E L]
+    (w : InfinitePlace E) (x : L)
+    : ∏ u : InfinitePlace L with u.comap (algebraMap E L) = w, Φ u x = Φ w (Algebra.norm E x) := by
   algebraize [Φ w]
   -- with `ℂ` an `E`-algebra through `Φ w`, the norm is the product over the `E`-embeddings
   have h_norm : Φ w (Algebra.norm E x) = ∏ σ : L →ₐ[E] ℂ, σ x :=
@@ -536,22 +593,28 @@ lemma New.prod_Φ_eq_Φ_norm {E L : Type} [Field E] [CMType E] [Field L] [Algebr
     rw [eq_comm, h.eq_chosen_iff]
     simp [algebraMap_toAlgebra]
   -- the bijection sends `u` to `Φ u` as an `E`-embedding, and an `E`-embedding `σ` to its place
-  refine prod_bij' (fun u hu ↦ ⟨Φ u, fun r ↦ ?_⟩) (fun σ _ ↦ .mk σ) ?_ ?_ ?_
-    (fun σ _ ↦ AlgHom.toRingHom_injective (h_chosen σ)) ?_
+  refine prod_bij'
+    (fun u hu ↦ ⟨Φ u, fun r ↦ ?_⟩)
+    (fun σ _ ↦ .mk σ)
+    ?_ ?_ ?_
+    (fun σ _ ↦ AlgHom.toRingHom_injective (h_chosen σ))
+    ?_
   · simp_all [algebraMap_toAlgebra, Φ_algebraMap_eq_Φ_comap] -- `Φ u` extends `Φ w`
   · simp
   · simp_all [algebraMap_toAlgebra] -- the place of an `E`-embedding lies above `w`
   · simp
   · simp
 
-/-- Let the CM type of `L` restrict to that of `E` (`New.CMTypeOver E L`), and let `E` carry a
+/--
+Let the CM type of `L` restrict to that of `E` (`New.CMTypeOver E L`), and let `E` carry a
 splitting character `υ` (`New.SplittingChar`: a unitary Hecke character with `υ x̄ = (υ x)⁻¹` that
 is `∏ x_τ / |x_τ|` on ideles whose finite part is a unit of `Ô`). Then `L` has a splitting
 character: `υ` composed with the norm of ideles from `L` to `E`, which at an infinite place `w` of
-`E` is the product of the components at the places of `L` above `w`. -/
-lemma New.nonempty_splittingChar_of_cmTypeOver {E L : Type} [Field E] [CMType E] [Field L]
-    [Algebra E L] [CMTypeOver E L] [SplittingChar E] :
-    Nonempty (SplittingChar L) := by
+`E` is the product of the components at the places of `L` above `w`.
+-/
+lemma New.nonempty_splittingChar_of_cmTypeOver
+    {E L : Type} [Field E] [CMType E] [Field L] [Algebra E L] [CMTypeOver E L] [SplittingChar E]
+    : Nonempty (SplittingChar L) := by
   -- the norm of adeles: at an infinite place, the product over the places above it
   let Nm : 𝔸 L →* 𝔸 E :=
     .prodMap (.pi fun w ↦ ∏ u with u.comap (algebraMap E L) = w, Pi.evalMonoidHom _ u)
@@ -562,15 +625,17 @@ lemma New.nonempty_splittingChar_of_cmTypeOver {E L : Type} [Field E] [CMType E]
       MonoidHom.pi, MonoidHom.finsetProd_apply, Pi.evalMonoidHom_apply, MonoidHom.coe_mk,
       OneHom.coe_mk]
     fun_prop
-  refine ⟨{ υ := ⟨υ.val.comp ⟨Units.map Nm, hNm.units_map _⟩, fun y ⟨x, hx⟩ ↦ ?_⟩
-            υ_unit := fun y hy ↦ ?_
-            υ_star := fun y ↦ ?_ }⟩
+  refine ⟨{
+    υ := ⟨υ.val.comp ⟨Units.map Nm, hNm.units_map _⟩, fun y ⟨x, hx⟩ ↦ ?_⟩
+    υ_unit := fun y hy ↦ ?_
+    υ_star := fun y ↦ ?_
+  }⟩
   · -- trivial on `Lˣ`, as the norm of a principal idele is principal
     refine υ.prop _ ⟨Algebra.norm E x, .symm ?_⟩
     ext w <;> simp [Nm, ← hx, prod_Φ_eq_Φ_norm]
   · -- the value on ideles whose finite part is a unit of `Ô L`
-    have h_unit_Nm :
-        (Units.map Nm y).map (MonoidHom.snd (InfinitePlace E → ℂ) (𝔸f E)) ∈ (Ô E).units := by
+    have h_unit_Nm
+        : (Units.map Nm y).map (MonoidHom.snd (InfinitePlace E → ℂ) (𝔸f E)) ∈ (Ô E).units := by
       simp_all [Nm, adeleNorm_mem_Ô, Submonoid.mem_units_iff]
     change (υ.val (Units.map Nm y) : ℂ) = _
     rw [υ_unit (Units.map Nm y) h_unit_Nm]
@@ -581,19 +646,22 @@ lemma New.nonempty_splittingChar_of_cmTypeOver {E L : Type} [Field E] [CMType E]
       ext <;> simp [Nm, adeleNorm_star]
     exact (congrArg υ.val h_star).trans (υ_star _)
 
-/-- The different of a CM field `L` is invariant under complex conjugation: a finite place `u`
-and its conjugate `star u` have the same multiplicity in it. -/
-lemma New.multiplicity_star_differentIdeal {L : Type} [Field L] [CMType L] (u : FinPlace L) :
-    multiplicity (star u).asIdeal (differentIdeal ℤ (𝓞 L)) =
-      multiplicity u.asIdeal (differentIdeal ℤ (𝓞 L)) := by
+/--
+The different of a CM field `L` is invariant under complex conjugation: a finite place `u`
+and its conjugate `star u` have the same multiplicity in it.
+-/
+lemma New.multiplicity_star_differentIdeal {L : Type} [Field L] [CMType L] (u : FinPlace L)
+    : multiplicity (star u).asIdeal (differentIdeal ℤ (𝓞 L))
+      = multiplicity u.asIdeal (differentIdeal ℤ (𝓞 L)) := by
   -- Take an idele `g` with the order of the different at every place; `g y` is integral exactly
   -- when the different times `y` is, that is (`forall_ψf_mul_eq_one_iff`), when `ψf` is trivial on
   -- `Ô L * y`. As `ψf` is invariant under conjugation, `g * star g⁻¹` is integral, which bounds
   -- the multiplicity at `star u` by the one at `u`; the other bound is this one at `star u`.
-  obtain ⟨g, hg_val, hg_dual⟩ : ∃ g : (𝔸f L)ˣ,
-      (∀ u' : FinPlace L,
-        v (g.val u') = exp (-(multiplicity u'.asIdeal (differentIdeal ℤ (𝓞 L)) : ℤ))) ∧
-      ∀ y : 𝔸f L, (∀ c ∈ differentIdeal ℤ (𝓞 L), c • y ∈ Ô L) ↔ g.val * y ∈ Ô L := by
+  obtain ⟨g, hg_val, hg_dual⟩
+      : ∃ g : (𝔸f L)ˣ,
+        (∀ u' : FinPlace L,
+            v (g.val u') = exp (-(multiplicity u'.asIdeal (differentIdeal ℤ (𝓞 L)) : ℤ)))
+          ∧ ∀ y : 𝔸f L, (∀ c ∈ differentIdeal ℤ (𝓞 L), c • y ∈ Ô L) ↔ g.val * y ∈ Ô L := by
     obtain ⟨-, -, -, g, -, hg_val, hg_dual⟩ :=
       exists_reduction_and_idele_generator (E := L) (differentIdeal_ne_bot (A := ℤ))
     exact ⟨g, hg_val, hg_dual⟩
@@ -605,61 +673,72 @@ lemma New.multiplicity_star_differentIdeal {L : Type} [Field L] [CMType L] (u : 
     -- conjugation: `ψf (a * star g⁻¹) = ψf (g⁻¹ * star a)`, and `star a` is integral
     rw [← ψf_star, star_mul', star_star]
     exact h_inv_dual (star a) (star_mem_Ô ha)
-  have h_star_le (u' : FinPlace L) : multiplicity (star u').asIdeal (differentIdeal ℤ (𝓞 L)) ≤
-      multiplicity u'.asIdeal (differentIdeal ℤ (𝓞 L)) := by
+  have h_star_le (u' : FinPlace L)
+      : multiplicity (star u').asIdeal (differentIdeal ℤ (𝓞 L))
+        ≤ multiplicity u'.asIdeal (differentIdeal ℤ (𝓞 L)) := by
     simpa [hg_val, ← evalAt_apply _ g⁻¹.val, ← log_le_log] using mem_Ô.mp hg_star u'
   exact (h_star_le u).antisymm (by simpa only [star_star] using h_star_le (star u))
 
-/-- Let `u` be a finite place of `L` that does not divide the relative different of `L / E`. Then
+/--
+Let `u` be a finite place of `L` that does not divide the relative different of `L / E`. Then
 the multiplicity of `u` in the different of `L` is the ramification index of `u` over the place
-`w` of `E` below it times the multiplicity of `w` in the different of `E`. -/
-lemma New.multiplicity_differentIdeal_eq_ramificationIdx'_mul_of_not_dvd {E L : Type} [Field E]
-    [NumberField E] [Field L] [NumberField L] [Algebra E L] (u : FinPlace L)
-    (h_not_dvd : ¬u.asIdeal ∣ differentIdeal (𝓞 E) (𝓞 L)) :
-    multiplicity u.asIdeal (differentIdeal ℤ (𝓞 L)) =
-      (u.below E).asIdeal.ramificationIdx' u.asIdeal *
-        multiplicity (u.below E).asIdeal (differentIdeal ℤ (𝓞 E)) := by
+`w` of `E` below it times the multiplicity of `w` in the different of `E`.
+-/
+lemma New.multiplicity_differentIdeal_eq_ramificationIdx'_mul_of_not_dvd
+    {E L : Type} [Field E] [NumberField E] [Field L] [NumberField L] [Algebra E L]
+    (u : FinPlace L) (h_not_dvd : ¬ u.asIdeal ∣ differentIdeal (𝓞 E) (𝓞 L))
+    : multiplicity u.asIdeal (differentIdeal ℤ (𝓞 L))
+      = (u.below E).asIdeal.ramificationIdx' u.asIdeal
+        * multiplicity (u.below E).asIdeal (differentIdeal ℤ (𝓞 E)) := by
   -- the different of `L` is that of `E`, pushed to `L`, times the relative one, which is prime
   -- to `u`; the first factor has multiplicity `e * ord_w` at `u`
   apply multiplicity_eq_of_emultiplicity_eq_some
-  rw [differentIdeal_eq_differentIdeal_mul_differentIdeal ℤ (𝓞 E) (𝓞 L),
-    emultiplicity_mul u.prime, emultiplicity_eq_zero.mpr h_not_dvd]
+  rw [differentIdeal_eq_differentIdeal_mul_differentIdeal ℤ (𝓞 E) (𝓞 L), emultiplicity_mul u.prime,
+    emultiplicity_eq_zero.mpr h_not_dvd]
   simp [emultiplicity_eq_multiplicity, ne_bot,
     emultiplicity_map_eq_ramificationIdx'_mul _ (u.below E).irreducible u.irreducible, prime,
     differentIdeal_ne_bot, of_prime_left]
 
-/-- Let `E` carry Weil data and let the finite place `w` be fixed by complex conjugation. Then the
+/--
+Let `E` carry Weil data and let the finite place `w` be fixed by complex conjugation. Then the
 log of the valuation of `j` at `w` is the multiplicity of `w` in the different of `E` minus twice
 the log of the valuation of `α` at `w` (this is the condition `self_dual` at `w`, where `α` and
-`star α` have the same order). -/
-lemma New.WeilData.log_valuation_j_of_star_eq {E : Type} [Field E] [CMType E] [WeilData E]
-    (w : FinPlace E) (hw_fix : star w = w) :
-    (w.valuation E j).log =
-      multiplicity w.asIdeal (differentIdeal ℤ (𝓞 E)) - 2 * (v (α.val w)).log := by
+`star α` have the same order).
+-/
+lemma New.WeilData.log_valuation_j_of_star_eq
+    {E : Type} [Field E] [CMType E] [WeilData E] (w : FinPlace E) (hw_fix : star w = w)
+    : (w.valuation E j).log
+      = multiplicity w.asIdeal (differentIdeal ℤ (𝓞 E)) - 2 * (v (α.val w)).log := by
   have hα : v (α.val (star w)) = v (α.val w) := by rw [hw_fix]
   have h_ne : v ((algebraMap E (𝔸f E) j * α.val * star α.val : 𝔸f E) w) ≠ 0 := by
     rw [self_dual w]
     exact exp_ne_zero
-  have h_log : (v ((algebraMap E (𝔸f E) j * α.val * star α.val : 𝔸f E) w)).log =
-      (exp (multiplicity w.asIdeal (differentIdeal ℤ (𝓞 E)) : ℤ)).log := by rw [self_dual w]
+  have h_log
+      : (v ((algebraMap E (𝔸f E) j * α.val * star α.val : 𝔸f E) w)).log
+        = (exp (multiplicity w.asIdeal (differentIdeal ℤ (𝓞 E)) : ℤ)).log := by
+    rw [self_dual w]
   -- `log` turns the self-duality at `w` into a sum of orders; `star α` has the order of `α` at `w`
-  have h_sum : (w.valuation E j).log + (v (α.val w)).log + (v (α.val w)).log =
-      multiplicity w.asIdeal (differentIdeal ℤ (𝓞 E)) := by
+  have h_sum
+      : (w.valuation E j).log + (v (α.val w)).log + (v (α.val w)).log
+        = multiplicity w.asIdeal (differentIdeal ℤ (𝓞 E)) := by
     -- no factor vanishes, by `h_ne`
     have hα_ne : v (α.val w) ≠ 0 := by simp_all
     simpa [j_ne_zero, log_mul, hα, hα_ne] using h_log
   linarith
 
-/-- Let `L / E` be an extension of CM fields with compatible CM types, where `E` carries Weil data
+/--
+Let `L / E` be an extension of CM fields with compatible CM types, where `E` carries Weil data
 and `L` contains a primitive 5040th root of unity. Weil data consist of such a root of unity, an
 element `ȷ = −ȷ̄` with `Im τȷ > 0` and `(1 − ȷ⁻¹)/2` integral, a finite idele making the integers
 self-dual for the standard additive character, and a splitting character equal to `−1` at
 uniformisers of places fixed by conjugation. If no finite prime of `L` fixed by complex conjugation
-divides the relative different ideal of `𝓞 L` over `𝓞 E`, then `L` also carries Weil data. -/
-lemma New.nonempty_weilData_of_not_dvd_differentIdeal {E L : Type} [Field E] [CMType E] [Field L]
-    [Algebra E L] [h : CMTypeOver E L] [WeilData E] [HasPrimitiveRoot5040 L]
-    (h_unram : ∀ u : FinPlace L, star u = u → ¬u.asIdeal ∣ differentIdeal (𝓞 E) (𝓞 L)) :
-    Nonempty (WeilData L) := by
+divides the relative different ideal of `𝓞 L` over `𝓞 E`, then `L` also carries Weil data.
+-/
+lemma New.nonempty_weilData_of_not_dvd_differentIdeal
+    {E L : Type} [Field E] [CMType E] [Field L] [Algebra E L] [h : CMTypeOver E L] [WeilData E]
+    [HasPrimitiveRoot5040 L]
+    (h_unram : ∀ u : FinPlace L, star u = u → ¬ u.asIdeal ∣ differentIdeal (𝓞 E) (𝓞 L))
+    : Nonempty (WeilData L) := by
   -- Keep `j`, compose the splitting character with the norm, and choose a new idele `β`. With `g` a
   -- generator of the different, `s = j * g` has the same order at `u` and at `star u`, and an even
   -- order if `u = star u`; `β` cancels half of it at each of the two places, so `s * β * star β`
@@ -669,9 +748,10 @@ lemma New.nonempty_weilData_of_not_dvd_differentIdeal {E L : Type} [Field E] [CM
   obtain ⟨-, -, -, g, -, hg_val, -⟩ :=
     exists_reduction_and_idele_generator (E := L) (differentIdeal_ne_bot (A := ℤ))
   obtain ⟨s, hs⟩ : IsUnit (algebraMap L (𝔸f L) (algebraMap E L j) * g.val) := by simp [j_ne_zero]
-  have hs_ord (u : FinPlace L) : (v (s.val u)).log =
-      (u.valuation L (algebraMap E L j)).log -
-        multiplicity u.asIdeal (differentIdeal ℤ (𝓞 L)) := by
+  have hs_ord (u : FinPlace L)
+      : (v (s.val u)).log
+        = (u.valuation L (algebraMap E L j)).log
+          - multiplicity u.asIdeal (differentIdeal ℤ (𝓞 L)) := by
     simp [hs, hg_val, j_ne_zero, sub_eq_add_neg]
   have hs_star (u : FinPlace L) : (v (s.val (star u))).log = (v (s.val u)).log := by
     have hj : (star u).valuation L (algebraMap E L j) = u.valuation L (algebraMap E L j) := by
@@ -680,11 +760,14 @@ lemma New.nonempty_weilData_of_not_dvd_differentIdeal {E L : Type} [Field E] [CM
   have hs_even (u : FinPlace L) (hu_fix : star u = u) : 2 ∣ (v (s.val u)).log := by
     let w : FinPlace E := u.below E
     have hw_fix : star w = w := by rw [← below_star, hu_fix]
-    have hj : (w.valuation E j).log =
-        multiplicity w.asIdeal (differentIdeal ℤ (𝓞 E)) - 2 * (v (α.val w)).log :=
+    have hj
+        : (w.valuation E j).log
+          = multiplicity w.asIdeal (differentIdeal ℤ (𝓞 E)) - 2 * (v (α.val w)).log :=
       WeilData.log_valuation_j_of_star_eq w hw_fix
-    have h_tower : multiplicity u.asIdeal (differentIdeal ℤ (𝓞 L)) =
-        w.asIdeal.ramificationIdx' u.asIdeal * multiplicity w.asIdeal (differentIdeal ℤ (𝓞 E)) :=
+    have h_tower
+        : multiplicity u.asIdeal (differentIdeal ℤ (𝓞 L))
+          = w.asIdeal.ramificationIdx' u.asIdeal
+            * multiplicity w.asIdeal (differentIdeal ℤ (𝓞 E)) :=
       multiplicity_differentIdeal_eq_ramificationIdx'_mul_of_not_dvd u (h_unram u hu_fix)
     refine ⟨-(w.asIdeal.ramificationIdx' u.asIdeal * (v (α.val w)).log), ?_⟩
     rw [hs_ord, h_tower, ← w.valuation_liesOver L, log_pow, hj,
@@ -700,28 +783,33 @@ lemma New.nonempty_weilData_of_not_dvd_differentIdeal {E L : Type} [Field E] [CM
   have h_half_eq_zero (u : FinPlace L) (h_one : v (s.val u) = 1) : halfOrder u = 0 := by
     simp only [halfOrder, h_one, log_one, sub_zero]
     split_ifs <;> omega
-  obtain ⟨β, hβ⟩ : ∃ β : (𝔸f L)ˣ, ∀ u : FinPlace L,
-      β.val u = ↑((uniformizer u)⁻¹ ^ halfOrder u) :=
+  obtain ⟨β, hβ⟩ : ∃ β : (𝔸f L)ˣ, ∀ u : FinPlace L, β.val u = ↑((uniformizer u)⁻¹ ^ halfOrder u) :=
     exists_idele_eq_uniformizer_zpow halfOrder
       ((finite_setOf_valued_val_ne_one s).subset fun u h_ne_zero h_one ↦
         h_ne_zero (h_half_eq_zero u h_one))
   obtain ⟨h_splittingChar⟩ : Nonempty (SplittingChar L) :=
     nonempty_splittingChar_of_cmTypeOver (E := E)
-  have h_star_j : star (algebraMap E L j) = -algebraMap E L j := by simp [← map_star_CM]
+  have h_star_j : star (algebraMap E L j) = - algebraMap E L j := by simp [← map_star_CM]
   have h_im_pos (u : InfinitePlace L) : 0 < (Φ u (algebraMap E L j)).im := by
     simp [Φ_algebraMap_eq_Φ_comap, im_pos]
   have h_integral : IsIntegral ℤ ((1 - (algebraMap E L j)⁻¹) / 2) := by
     simpa [map_ofNat] using map_isIntegral_int (algebraMap E L) isIntegral_traceOne
-  refine ⟨{ j := algebraMap E L j, α := β, self_dual u := ?_
-            star_j := h_star_j
-            im_pos := h_im_pos
-            isIntegral_traceOne := h_integral
-            υ_inert := Cohomology.upsilon_atUniformizer_eq_neg_one }⟩
+  refine ⟨{
+    j := algebraMap E L j
+    α := β
+    self_dual u := ?_
+    star_j := h_star_j
+    im_pos := h_im_pos
+    isIntegral_traceOne := h_integral
+    υ_inert := Cohomology.upsilon_atUniformizer_eq_neg_one
+  }⟩
   rw [← exp_log (x := v ((algebraMap L (𝔸f L) (algebraMap E L j) * β.val * star β.val) u))
-    (by simp [j_ne_zero, hβ]), exp_inj]
+      (by simp [j_ne_zero, hβ]),
+    exp_inj]
   -- `log v` of `j β β̄` at `u` is that of `j` plus the two halves at `u` and `star u`
-  have h_log_eq : (v ((algebraMap L (𝔸f L) (algebraMap E L j) * β.val * star β.val : 𝔸f L) u)).log =
-      (u.valuation L (algebraMap E L j)).log + halfOrder u + halfOrder (star u) := by
+  have h_log_eq
+      : (v ((algebraMap L (𝔸f L) (algebraMap E L j) * β.val * star β.val : 𝔸f L) u)).log
+        = (u.valuation L (algebraMap E L j)).log + halfOrder u + halfOrder (star u) := by
     simp [hβ, j_ne_zero]
   -- the two halves add up to `-(v (s u)).log`: exactly one gets the `1` if `u ≠ star u`, and the
   -- order is even if `u = star u`
@@ -746,16 +834,21 @@ section GrunwaldStep
 
 open New NumberField Valued QZChar
 
-/-- Let `A` be a place of the algebraic closure `Ω` (a valuation subring), `w` a finite place of
+/--
+Let `A` be a place of the algebraic closure `Ω` (a valuation subring), `w` a finite place of
 `E`, `χ` a character of `E_wˣ` (`LocField w`) with values in `ℚ/ℤ`, `ν` a Galois character of `E`
 with `E' = stepField ν` the fixed field of the kernel of `symmetrise ν`, and `u` a finite place of
 `E'`. The predicate says that `E' / E` is a step (`New.IsStep`: CM, Galois of prime degree, an
 integer of trace `1`, for `ideleChar ν = exp (2πi ν ∘ Art)`) of degree `p` and `E'` has Weil data,
 that `u` is split, lies below `A` and is the only place of `E'` above `w`, and that under the local
-Artin map at `w` the character `ν` is trivial and `symmetrise ν` is `χ`. -/
-structure New.GaloisRep.IsStepOfLocalChar {E : Type} [Field E] [EmbeddedNumberField E] [CMType E]
-    {w : FinPlace E} (A : ClosurePlace) (χ : (LocField w)ˣ →* Multiplicative QZ) (p : ℕ)
-    (ν : QZChar Gal(Ω/E)) (u : FinPlace (stepField ν)) : Prop where
+Artin map at `w` the character `ν` is trivial and `symmetrise ν` is `χ`.
+-/
+structure New.GaloisRep.IsStepOfLocalChar
+    {E : Type} [Field E] [EmbeddedNumberField E] [CMType E]
+    {w : FinPlace E}
+    (A : ClosurePlace) (χ : (LocField w)ˣ →* Multiplicative QZ) (p : ℕ)
+    (ν : QZChar Gal(Ω/E)) (u : FinPlace (stepField ν))
+    : Prop where
   /-- The field `E'` has Weil data. -/
   nonempty_weilData : Nonempty (WeilData (stepField ν))
   /-- The extension `E' / E`, with the idele character of `ν`, is a step. -/
@@ -771,76 +864,91 @@ structure New.GaloisRep.IsStepOfLocalChar {E : Type} [Field E] [EmbeddedNumberFi
   /-- Under the local Artin map at `w`, the character `ν` is trivial. -/
   abelianLift_artinAt (x : (LocField w)ˣ) : abelianLift ν (artinAt Gal(Ω/E) w x) = 1
   /-- Under the local Artin map at `w`, the character `symmetrise ν` is `χ`. -/
-  abelianLift_symmetrise_artinAt (x : (LocField w)ˣ) :
-    abelianLift (symmetrise ν) (artinAt Gal(Ω/E) w x) = χ x
+  abelianLift_symmetrise_artinAt (x : (LocField w)ˣ)
+    : abelianLift (symmetrise ν) (artinAt Gal(Ω/E) w x) = χ x
 
-/-- Let `χ` be a character of `E_wˣ` (`LocField w`) with values in `ℚ/ℤ` that is killed by `p` and
+/--
+Let `χ` be a character of `E_wˣ` (`LocField w`) with values in `ℚ/ℤ` that is killed by `p` and
 kills the `(q - 1)`-th powers of units, `q = w.q` being the norm of `w`. If `w` lies above `p`,
-then `χ` kills the units of `E_w`, since `p` divides `q` and so is prime to `q - 1`. -/
-lemma New.GaloisRep.apply_eq_one_of_natCast_mem_asIdeal {E : Type} [Field E] [NumberField E]
+then `χ` kills the units of `E_w`, since `p` divides `q` and so is prime to `q - 1`.
+-/
+lemma New.GaloisRep.apply_eq_one_of_natCast_mem_asIdeal
+    {E : Type} [Field E] [NumberField E]
     {w : FinPlace E} {p : ℕ} (hp : p.Prime) (χ : (LocField w)ˣ →* Multiplicative QZ)
     (hχ_pow : ∀ x : (LocField w)ˣ, χ x ^ p = 1)
     (h_tame : ∀ x : (LocField w)ˣ, v x.val = 1 → χ (x ^ (w.q - 1)) = 1)
-    (hpw : (p : 𝓞 E) ∈ w.asIdeal) (x : (LocField w)ˣ) (hx : v x.val = 1) : χ x = 1 := by
+    (hpw : (p : 𝓞 E) ∈ w.asIdeal) (x : (LocField w)ˣ) (hx : v x.val = 1)
+    : χ x = 1 := by
   have h_fact : Fact p.Prime := ⟨hp⟩
   have h_dvd : p ∣ w.q := (w.natCast_mem_iff_dvd hpw).mp w.asIdeal.absNorm_mem
   have h_cop : p.Coprime (w.q - 1) := .of_dvd_left h_dvd (by simp)
   exact (pow_eq_one_iff_of_coprime h_cop).mp ⟨hχ_pow x, by rw [← map_pow, h_tame x hx]⟩
 
-/-- The local behaviour of the Galois character `ν` of `E` that Grunwald's theorem gives in the
+/--
+The local behaviour of the Galois character `ν` of `E` that Grunwald's theorem gives in the
 proof of `New.GaloisRep.exists_isStepOfLocalChar`, for a character `χ` of `E_wˣ` (`LocField w`)
 and a number `p`: `ν` is killed by `p`; under the local Artin map at `w` it is trivial and
 `symmetrise ν` is `χ`; and it kills the local units at every finite place that is fixed by
-complex conjugation or lies above `p`. -/
-private structure New.GaloisRep.IsGrunwaldChar {E : Type} [Field E] [EmbeddedNumberField E]
-    [CMType E] (w : FinPlace E) (χ : (LocField w)ˣ →* Multiplicative QZ) (p : ℕ)
-    (ν : QZChar Gal(Ω/E)) : Prop where
+complex conjugation or lies above `p`.
+-/
+private structure New.GaloisRep.IsGrunwaldChar
+    {E : Type} [Field E] [EmbeddedNumberField E] [CMType E]
+    (w : FinPlace E) (χ : (LocField w)ˣ →* Multiplicative QZ)
+    (p : ℕ) (ν : QZChar Gal(Ω/E))
+    : Prop where
   /-- The character `ν` is killed by `p`. -/
   nsmul_eq_zero : p • ν = 0
   /-- Under the local Artin map at `w`, the character `ν` is trivial. -/
   abelianLift_artinAt (x : (LocField w)ˣ) : abelianLift ν (artinAt Gal(Ω/E) w x) = 1
   /-- Under the local Artin map at `w`, the character `symmetrise ν` is `χ`. -/
-  abelianLift_symmetrise_artinAt (x : (LocField w)ˣ) :
-    abelianLift (symmetrise ν) (artinAt Gal(Ω/E) w x) = χ x
+  abelianLift_symmetrise_artinAt (x : (LocField w)ˣ)
+    : abelianLift (symmetrise ν) (artinAt Gal(Ω/E) w x) = χ x
   /-- At a place `u` fixed by conjugation or above `p`, the character `ν` kills the local units. -/
-  abelianLift_artinMap_locIdele (u : FinPlace E) (x : (LocField u)ˣ)
-    (hu : star u = u ∨ (p : 𝓞 E) ∈ u.asIdeal) (hx : v x.val = 1) :
-    abelianLift ν (artinMap Gal(Ω/E) (locIdele u x)) = 1
+  abelianLift_artinMap_locIdele
+    (u : FinPlace E) (x : (LocField u)ˣ)
+    (hu : star u = u ∨ (p : 𝓞 E) ∈ u.asIdeal) (hx : v x.val = 1)
+    : abelianLift ν (artinMap Gal(Ω/E) (locIdele u x)) = 1
 
-/-- Let `w` be a split finite place of the CM field `E`, `p` a prime, and `χ` a character of `E_wˣ`
+/--
+Let `w` be a split finite place of the CM field `E`, `p` a prime, and `χ` a character of `E_wˣ`
 killed by `p` that kills the `(w.q - 1)`-th powers of units (`E` also satisfies
 `New.HasPrimitiveRoot5040`). Then some Galois character of `E` has the local behaviour of
-`New.GaloisRep.IsGrunwaldChar`. -/
-private lemma New.GaloisRep.exists_isGrunwaldChar {E : Type} [Field E] [EmbeddedNumberField E]
-    [CMType E] [HasPrimitiveRoot5040 E] {w : FinPlace E} {p : ℕ} (hw : w.IsSplit) (hp : p.Prime)
+`New.GaloisRep.IsGrunwaldChar`.
+-/
+private lemma New.GaloisRep.exists_isGrunwaldChar
+    {E : Type} [Field E] [EmbeddedNumberField E] [CMType E] [HasPrimitiveRoot5040 E]
+    {w : FinPlace E} {p : ℕ} (hw : w.IsSplit) (hp : p.Prime)
     (χ : (LocField w)ˣ →* Multiplicative QZ) (hχ_pow : ∀ x : (LocField w)ˣ, χ x ^ p = 1)
-    (h_tame : ∀ x : (LocField w)ˣ, v x.val = 1 → χ (x ^ (w.q - 1)) = 1) :
-    ∃ ν : QZChar Gal(Ω/E), IsGrunwaldChar w χ p ν := by
+    (h_tame : ∀ x : (LocField w)ˣ, v x.val = 1 → χ (x ^ (w.q - 1)) = 1)
+    : ∃ ν : QZChar Gal(Ω/E), IsGrunwaldChar w χ p ν := by
   -- Grunwald's theorem for the character `ψ : b ↦ χ ((star b) w)` and the places `w`, `star w` and
   -- those above `p` gives `ν`. As `ψ` only sees the place `star w`, `ν` is trivial at `w`, and at
   -- the places `u = star u` (whose norm is not prime) and above `p` it kills the local units.
   have h_fact : Fact p.Prime := ⟨hp⟩
   have h_neZero : NeZero p := ⟨hp.ne_zero⟩
   let ψ : (𝔸f E)ˣ →* Multiplicative QZ := .mk' (fun b ↦ χ (ideleAt w (star b))) (by simp)
-  have hχ_open : χ.ker.IsOpen :=
-    isOpen_of_forall_pow_mem hp.ne_zero fun x ↦ by simpa using hχ_pow x
+  have hχ_open : χ.ker.IsOpen := isOpen_of_forall_pow_mem hp.ne_zero fun x ↦ by simpa using hχ_pow x
   let S : Set (FinPlace E) := insert (star w) (insert w {u | (p : 𝓞 E) ∈ u.asIdeal})
   have hS : S.Finite := ((finite_natCast_mem p).insert w).insert (star w)
-  obtain ⟨ν, hν, h_grun⟩ : ∃ ν : QZChar Gal(Ω/E), p • ν = 0 ∧
-      ∀ (u : FinPlace E) (x : (LocField u)ˣ), u ∈ S ∨ ¬u.q.Prime ∧ v x.val = 1 →
-        abelianLift ν (artinMap Gal(Ω/E) (locIdele u x)) = ψ (locIdele u x) :=
+  obtain ⟨ν, hν, h_grun⟩
+      : ∃ ν : QZChar Gal(Ω/E),
+        p • ν = 0
+          ∧ ∀ (u : FinPlace E) (x : (LocField u)ˣ),
+            u ∈ S ∨ ¬u.q.Prime ∧ v x.val = 1
+              → abelianLift ν (artinMap Gal(Ω/E) (locIdele u x)) = ψ (locIdele u x) :=
     grunwald hp hS ψ hχ_open.preimage_of_continuous fun b ↦ hχ_pow (ideleAt w (star b))
   -- on ideles at `w` the character `ψ` is trivial, and `ψ ∘ star` is `χ` there
   have hν_w (x : (LocField w)ˣ) : abelianLift ν (artinAt Gal(Ω/E) w x) = 1 := by
     simpa [ψ, star_locIdele, hw.symm] using h_grun w x (.inl (by simp [S]))
-  have h_sym_w (x : (LocField w)ˣ) :
-      abelianLift (symmetrise ν) (artinAt Gal(Ω/E) w x) = χ x := by
-    have h_conj :
-        abelianLift ν (artinMap Gal(Ω/E) (star (locIdele w x))) = ψ (star (locIdele w x)) := by
+  have h_sym_w (x : (LocField w)ˣ) : abelianLift (symmetrise ν) (artinAt Gal(Ω/E) w x) = χ x := by
+    have h_conj
+        : abelianLift ν (artinMap Gal(Ω/E) (star (locIdele w x))) = ψ (star (locIdele w x)) := by
       rw [star_locIdele, h_grun _ _ (.inl (by simp [S]))]
     simpa [ψ, hν_w, h_conj] using abelianLift_symmetrise ν (locIdele w x)
-  have hν_unit (u : FinPlace E) (x : (LocField u)ˣ) (hu : star u = u ∨ (p : 𝓞 E) ∈ u.asIdeal)
-      (hx : v x.val = 1) : abelianLift ν (artinMap Gal(Ω/E) (locIdele u x)) = 1 := by
+  have hν_unit
+      (u : FinPlace E) (x : (LocField u)ˣ)
+      (hu : star u = u ∨ (p : 𝓞 E) ∈ u.asIdeal) (hx : v x.val = 1)
+      : abelianLift ν (artinMap Gal(Ω/E) (locIdele u x)) = 1 := by
     have h_place : u ∈ S ∨ ¬u.q.Prime ∧ v x.val = 1 := by
       rcases hu with h_fixed | h_above
       · exact .inr ⟨fun hq ↦ isSplit_of_q_prime hq h_fixed, hx⟩
@@ -858,19 +966,22 @@ private lemma New.GaloisRep.exists_isGrunwaldChar {E : Type} [Field E] [Embedded
     · rw [ideleAt_locIdele_of_ne hwu, map_one]
   exact ⟨ν, hν, hν_w, h_sym_w, hν_unit⟩
 
-/-- Grunwald's theorem for CM extensions of prime degree. Let `E` be a CM field with Weil data. Let
+/--
+Grunwald's theorem for CM extensions of prime degree. Let `E` be a CM field with Weil data. Let
 `w` be a split finite place of `E` (one that differs from its conjugate) lying below the place `A`
 of `Ω`. Let `χ ≠ 1` be a character of `E_wˣ` that is killed by the prime `p` and kills the
 `(q - 1)`-th powers of units, `q = w.q` being the norm of `w`. Then there are a Galois character `ν`
 of `E` and a place `u` of `stepField ν` (the fixed field of the kernel of `g ↦ ν g + ν gᶜ`) forming
 a step of degree `p` with local character `χ` at `w` (`New.GaloisRep.IsStepOfLocalChar`). This says
-that `stepField ν / E` is a step of degree `p`, `stepField ν` has Weil data, and `u` is split. -/
-lemma New.GaloisRep.exists_isStepOfLocalChar {E : Type} [Field E] [EmbeddedNumberField E]
-    [CMType E] [WeilData E] {w : FinPlace E} {A : ClosurePlace} {p : ℕ} (hw : w.IsSplit)
-    (hA : IsPlaceOver A w) (hp : p.Prime) (χ : (LocField w)ˣ →* Multiplicative QZ) (hχ_ne : χ ≠ 1)
-    (hχ_pow : ∀ x : (LocField w)ˣ, χ x ^ p = 1)
-    (h_tame : ∀ x : (LocField w)ˣ, v x.val = 1 → χ (x ^ (w.q - 1)) = 1) :
-    ∃ (ν : QZChar Gal(Ω/E)) (u : FinPlace (stepField ν)), IsStepOfLocalChar A χ p ν u := by
+that `stepField ν / E` is a step of degree `p`, `stepField ν` has Weil data, and `u` is split.
+-/
+lemma New.GaloisRep.exists_isStepOfLocalChar
+    {E : Type} [Field E] [EmbeddedNumberField E] [CMType E] [WeilData E]
+    {w : FinPlace E} {A : ClosurePlace} {p : ℕ}
+    (hw : w.IsSplit) (hA : IsPlaceOver A w) (hp : p.Prime) (χ : (LocField w)ˣ →* Multiplicative QZ)
+    (hχ_ne : χ ≠ 1) (hχ_pow : ∀ x : (LocField w)ˣ, χ x ^ p = 1)
+    (h_tame : ∀ x : (LocField w)ˣ, v x.val = 1 → χ (x ^ (w.q - 1)) = 1)
+    : ∃ (ν : QZChar Gal(Ω/E)) (u : FinPlace (stepField ν)), IsStepOfLocalChar A χ p ν u := by
   -- Grunwald's theorem gives `ν` (`exists_isGrunwaldChar`). Then `symmetrise ν` is `χ` at `w` and
   -- unramified at the places `u = star u` and above `p`, which gives the step and the Weil data;
   -- only one place lies above `w`, since `symmetrise ν` is non-trivial there and the degree is
@@ -878,9 +989,10 @@ lemma New.GaloisRep.exists_isStepOfLocalChar {E : Type} [Field E] [EmbeddedNumbe
   obtain ⟨ν, hν⟩ : ∃ ν : QZChar Gal(Ω/E), IsGrunwaldChar w χ p ν :=
     exists_isGrunwaldChar hw hp χ hχ_pow h_tame
   -- hence `symmetrise ν` is unramified at these places, a set that is stable under `star`
-  have h_unram {B : ClosurePlace} {u : FinPlace E} (hB : IsPlaceOver B u)
-      (hu : star u = u ∨ (p : 𝓞 E) ∈ u.asIdeal) :
-      inertiaGroup Gal(Ω/E) B ≤ ker (symmetrise ν) := by
+  have h_unram
+      {B : ClosurePlace} {u : FinPlace E}
+      (hB : IsPlaceOver B u) (hu : star u = u ∨ (p : 𝓞 E) ∈ u.asIdeal)
+      : inertiaGroup Gal(Ω/E) B ≤ ker (symmetrise ν) := by
     have hu_star : star (star u) = star u ∨ (p : 𝓞 E) ∈ (star u).asIdeal :=
       hu.imp (fun h_fixed ↦ by rw [h_fixed, h_fixed]) fun h_above ↦ by simpa using h_above
     refine (hB.artinAt_units_trivial_iff_inertiaGroup_le (symmetrise ν)).mp fun x hx ↦ ?_
@@ -898,22 +1010,23 @@ lemma New.GaloisRep.exists_isStepOfLocalChar {E : Type} [Field E] [EmbeddedNumbe
     h_sym_g₀_ne (congrArg (fun s : QZChar Gal(Ω/E) ↦ toHom s g₀) h_zero)
   obtain ⟨u, hAu, hu_below⟩ : ∃ u : FinPlace (stepField ν), IsPlaceOver A u ∧ u.below E = w :=
     hA.exists_above
-  obtain ⟨h_step, h_deg⟩ :
-      IsStep (stepField ν) (ideleChar ν) ∧ Module.finrank E (stepField ν) = p :=
+  obtain ⟨h_step, h_deg⟩
+      : IsStep (stepField ν) (ideleChar ν) ∧ Module.finrank E (stepField ν) = p :=
     isStep_stepField ν hp hν.nsmul_eq_zero h_sym_ne fun hB hu ↦ h_unram hB (.inr hu)
   -- (number of places above `w`) * (index of the kernel in the decomposition group) = `p`, and
   -- `g₀` shows that the index is not `1`: so `u` is the only place above `w`
   have h_index : (ker (symmetrise ν)).relIndex (decompGroup Gal(Ω/E) A) ≠ 1 := fun h_one ↦
     hx₀ (hg₀_eq.symm.trans (Subgroup.relIndex_eq_one.mp h_one hg₀))
   have h_count : {u' : FinPlace (stepField ν) | u'.below E = w}.ncard = 1 := by
-    have h_prime_mul : ({u' : FinPlace (stepField ν) | u'.below E = w}.ncard *
-        (ker (symmetrise ν)).relIndex (decompGroup Gal(Ω/E) A)).Prime := by
+    have h_prime_mul
+        : ({u' : FinPlace (stepField ν) | u'.below E = w}.ncard
+          * (ker (symmetrise ν)).relIndex (decompGroup Gal(Ω/E) A)).Prime := by
       rwa [hA.ncard_above_mul_relIndex_eq_finrank (ker (symmetrise ν)), h_deg]
     rcases Nat.prime_mul_iff.mp h_prime_mul with ⟨-, h_index_eq_one⟩ | ⟨-, h_ncard_eq_one⟩
     · exact absurd h_index_eq_one h_index
     · exact h_ncard_eq_one
-  obtain ⟨u₁, h_set_eq⟩ : ∃ u₁ : FinPlace (stepField ν),
-      {u' : FinPlace (stepField ν) | u'.below E = w} = {u₁} :=
+  obtain ⟨u₁, h_set_eq⟩
+      : ∃ u₁ : FinPlace (stepField ν), {u' : FinPlace (stepField ν) | u'.below E = w} = {u₁} :=
     Set.ncard_eq_one.mp h_count
   have h_unique (u' : FinPlace (stepField ν)) : u'.below E = w ↔ u' = u₁ := by
     simpa using Set.ext_iff.mp h_set_eq u'
@@ -921,25 +1034,37 @@ lemma New.GaloisRep.exists_isStepOfLocalChar {E : Type} [Field E] [EmbeddedNumbe
   have hu_split : u.IsSplit := fun hu_fix ↦ hw (by rw [← hu_below, ← below_star, hu_fix])
   -- the relative different is prime to the places fixed by conjugation, where `symmetrise ν` is
   -- unramified
-  have h_relDiff (u' : FinPlace (stepField ν)) (hu'_fix : star u' = u') :
-      ¬u'.asIdeal ∣ differentIdeal (𝓞 E) (𝓞 (stepField ν)) :=
-    not_dvd_differentIdeal_stepField ν fun hB ↦
-      h_unram hB (.inl (by rw [← below_star, hu'_fix]))
+  have h_relDiff (u' : FinPlace (stepField ν)) (hu'_fix : star u' = u')
+      : ¬ u'.asIdeal ∣ differentIdeal (𝓞 E) (𝓞 (stepField ν)) :=
+    not_dvd_differentIdeal_stepField ν fun hB ↦ h_unram hB (.inl (by rw [← below_star, hu'_fix]))
   have h_data : Nonempty (WeilData (stepField ν)) :=
     nonempty_weilData_of_not_dvd_differentIdeal h_relDiff
-  exact ⟨ν, u,
-    { nonempty_weilData := h_data, isStep := h_step, finrank_eq := h_deg, isSplit := hu_split,
-      below_eq_iff := h_unique, isPlaceOver := hAu,
-      abelianLift_artinAt := hν.abelianLift_artinAt,
-      abelianLift_symmetrise_artinAt := hν.abelianLift_symmetrise_artinAt }⟩
+  exact ⟨
+    ν,
+    u,
+    {
+      nonempty_weilData := h_data
+      isStep := h_step
+      finrank_eq := h_deg
+      isSplit := hu_split
+      below_eq_iff := h_unique
+      isPlaceOver := hAu
+      abelianLift_artinAt := hν.abelianLift_artinAt
+      abelianLift_symmetrise_artinAt := hν.abelianLift_symmetrise_artinAt
+    }
+  ⟩
 
 /-- `New.GaloisRep.exists_isStepOfLocalChar` with `χ ≠ 1` given by a point `x₀` where `χ x₀ ≠ 1`. -/
-lemma New.GaloisRep.exists_step_of_local_char {E : Type} [Field E] [EmbeddedNumberField E]
-    [CMType E] {w : FinPlace E} {A : ClosurePlace} [WeilData E] {p : ℕ} (hw : w.IsSplit)
-    (hA : IsPlaceOver A w) (hp : p.Prime) (χ : (LocField w)ˣ →* Multiplicative QZ)
-    {x₀ : (LocField w)ˣ} (hx₀ : χ x₀ ≠ 1) (hχ_pow : ∀ x : (LocField w)ˣ, χ x ^ p = 1)
-    (h_tame : ∀ x : (LocField w)ˣ, v x.val = 1 → χ (x ^ (w.q - 1)) = 1) :
-    ∃ (ν : QZChar Gal(Ω/E)) (u : FinPlace (stepField ν)), IsStepOfLocalChar A χ p ν u := by
+lemma New.GaloisRep.exists_step_of_local_char
+    {E : Type} [Field E] [EmbeddedNumberField E] [CMType E]
+    {w : FinPlace E} {A : ClosurePlace} [WeilData E]
+    {p : ℕ}
+    (hw : w.IsSplit) (hA : IsPlaceOver A w) (hp : p.Prime)
+    (χ : (LocField w)ˣ →* Multiplicative QZ)
+    {x₀ : (LocField w)ˣ} (hx₀ : χ x₀ ≠ 1)
+    (hχ_pow : ∀ x : (LocField w)ˣ, χ x ^ p = 1)
+    (h_tame : ∀ x : (LocField w)ˣ, v x.val = 1 → χ (x ^ (w.q - 1)) = 1)
+    : ∃ (ν : QZChar Gal(Ω/E)) (u : FinPlace (stepField ν)), IsStepOfLocalChar A χ p ν u := by
   exact exists_isStepOfLocalChar hw hA hp χ (DFunLike.ne_iff.mpr ⟨x₀, hx₀⟩) hχ_pow h_tame
 
 end GrunwaldStep

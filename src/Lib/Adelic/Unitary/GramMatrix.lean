@@ -34,8 +34,10 @@ section
 
 variable {E : Type*} [Field E] [NumberField E] {n : Type*} [Fintype n] [DecidableEq n] {s : n → ℤˣ}
 
-/-- The standard form `stdForm E s`, which is diagonal with the signs `s` at the infinite places
-and `1` at the finite places, is its own inverse. -/
+/--
+The standard form `stdForm E s`, which is diagonal with the signs `s` at the infinite places
+and `1` at the finite places, is its own inverse.
+-/
 @[simp]
 lemma stdForm_mul_self : stdForm E s * stdForm E s = 1 := by
   simp [stdForm, funext_iff, ← Int.cast_mul]
@@ -55,25 +57,31 @@ end
 variable {E : Type*} [Field E] [CMType E] {n : Type*} [Fintype n] [DecidableEq n] {s : n → ℤˣ}
 
 omit [Fintype n] in
-/-- The standard form `stdForm E s`, a diagonal matrix with the signs `s` at the infinite places
-and `1` at the finite places, is hermitian. -/
+/--
+The standard form `stdForm E s`, a diagonal matrix with the signs `s` at the infinite places
+and `1` at the finite places, is hermitian.
+-/
 @[simp]
 lemma conjTranspose_stdForm : (stdForm E s)ᴴ = stdForm E s := by
   rw [stdForm, diagonal_conjTranspose, diagonal_eq_diagonal_iff]
   intro i
   ext <;> simp
 
-/-- The diagonal embedding `toAdele` of `E` in its adeles, given at the infinite places by the CM
-type, commutes with the conjugate transpose of matrices. -/
+/--
+The diagonal embedding `toAdele` of `E` in its adeles, given at the infinite places by the CM
+type, commutes with the conjugate transpose of matrices.
+-/
 @[simp]
-lemma conjTranspose_map_toAdele {m k : Type*} (a : Matrix m k E) :
-    (a.map toAdele)ᴴ = aᴴ.map toAdele := by
+lemma conjTranspose_map_toAdele {m k : Type*} (a : Matrix m k E)
+    : (a.map toAdele)ᴴ = aᴴ.map toAdele := by
   exact (conjTranspose_map _ fun x ↦ (star_toAdele x).symm).symm
 
 namespace Space
-/-- A space `V` is a matrix `J` over `E` with an invertible adelic matrix `x` such that
+/--
+A space `V` is a matrix `J` over `E` with an invertible adelic matrix `x` such that
 `xᴴ J x = S`, where `S = stdForm E s` is the diagonal matrix of signs and `toAdele` maps `E` to
-its adeles. Over the adeles `J = (x⁻¹)ᴴ S x⁻¹`. -/
+its adeles. Over the adeles `J = (x⁻¹)ᴴ S x⁻¹`.
+-/
 lemma map_J (V : Space E n s) : V.J.map toAdele = V.x⁻¹.valᴴ * stdForm E s * V.x⁻¹.val :=
   (gram_inv_of_gram_eq V.gram_point).symm
 
@@ -86,8 +94,7 @@ lemma map_J_inv_mul_map_J (V : Space E n s) : V.J⁻¹.map toAdele * V.J.map toA
   have h_det : IsUnit V.J.det := (isUnit_iff_isUnit_det V.J).mp V.isUnit_J
   simp [← Matrix.map_mul, nonsing_inv_mul V.J h_det]
 
-lemma map_J_inv (V : Space E n s) :
-    V.J⁻¹.map toAdele = V.x.val * stdForm E s * V.x.valᴴ := by
+lemma map_J_inv (V : Space E n s) : V.J⁻¹.map toAdele = V.x.val * stdForm E s * V.x.valᴴ := by
   have h_gram_mul_stdForm : V.x.valᴴ * V.J.map toAdele * V.x.val * stdForm E s = 1 := by
     rw [V.gram_point, stdForm_mul_self]
   have h_right_inv : V.J.map toAdele * (V.x.val * stdForm E s * V.x.valᴴ) = 1 := by
@@ -102,11 +109,13 @@ lemma isHermitian_J (V : Space E n s) : V.J.IsHermitian := by
 
 lemma conjTranspose_J (V : Space E n s) : V.Jᴴ = V.J := V.isHermitian_J.eq
 
-/-- The Gram matrix `J` of a space `V` is hermitian, so for matrices `X`, `Y` over `E` with rows
-indexed by `n`, the matrix `Yᴴ J X` is the conjugate transpose of `Xᴴ J Y`. -/
-lemma conjTranspose_mul_J_mul_swap (V : Space E n s) {a b : Type*} (X : Matrix n a E)
-    (Y : Matrix n b E) :
-    Yᴴ * V.J * X = (Xᴴ * V.J * Y)ᴴ := by
+/--
+The Gram matrix `J` of a space `V` is hermitian, so for matrices `X`, `Y` over `E` with rows
+indexed by `n`, the matrix `Yᴴ J X` is the conjugate transpose of `Xᴴ J Y`.
+-/
+lemma conjTranspose_mul_J_mul_swap
+    (V : Space E n s) {a b : Type*} (X : Matrix n a E) (Y : Matrix n b E)
+    : Yᴴ * V.J * X = (Xᴴ * V.J * Y)ᴴ := by
   rw [conjTranspose_mul, conjTranspose_mul, conjTranspose_conjTranspose, V.conjTranspose_J,
     Matrix.mul_assoc]
 
@@ -120,21 +129,28 @@ namespace New
 
 open scoped Matrix
 
-variable {E : Type*} [Field E] [NumberField E] [NumberField.IsCMField E]
-  {n : Type*} [Fintype n] [DecidableEq n] {s : n → ℤˣ}
+variable
+  {E : Type*} [Field E] [NumberField E] [NumberField.IsCMField E]
+  {n : Type*} [Fintype n] [DecidableEq n]
+  {s : n → ℤˣ}
 
-/-- The element of the adelic unitary group `G E s` given by an adelic matrix `m` with
-`mᴴ S m = S`, where `S` is the standard form `stdForm E s`. -/
-noncomputable def G.ofMatrix (m : Matrix n n (𝔸 E)) (h : mᴴ * stdForm E s * m = stdForm E s) :
-    G E s :=
+/--
+The element of the adelic unitary group `G E s` given by an adelic matrix `m` with
+`mᴴ S m = S`, where `S` is the standard form `stdForm E s`.
+-/
+noncomputable def G.ofMatrix (m : Matrix n n (𝔸 E)) (h : mᴴ * stdForm E s * m = stdForm E s)
+    : G E s :=
   toUnitary.symm (U.of isUnit_stdForm m h)
 
-/-- For a CM field `E` and signs `s` indexed by a finite type `n`, let `S = stdForm E s` be the
+/--
+For a CM field `E` and signs `s` indexed by a finite type `n`, let `S = stdForm E s` be the
 diagonal adelic matrix with the signs `s` at the infinite places and `1` at the finite places. If an
 adelic matrix `m` satisfies `mᴴ S m = S`, the element `G.ofMatrix m h` of the adelic unitary group
-`G E s` of `S` has matrix `m`. -/
+`G E s` of `S` has matrix `m`.
+-/
 @[simp]
-lemma G.adeleMatrix_ofMatrix (m : Matrix n n (𝔸 E)) (h : mᴴ * stdForm E s * m = stdForm E s) :
-    (ofMatrix m h).adeleMatrix = m := rfl
+lemma G.adeleMatrix_ofMatrix (m : Matrix n n (𝔸 E)) (h : mᴴ * stdForm E s * m = stdForm E s)
+    : (ofMatrix m h).adeleMatrix = m :=
+  rfl
 
 end New

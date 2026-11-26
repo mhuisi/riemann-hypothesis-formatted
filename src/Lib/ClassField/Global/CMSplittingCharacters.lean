@@ -71,40 +71,44 @@ section CMField
 variable {L : Type} [Field L] [NumberField L] [IsCMField L]
 
 /-- The norm to `L⁺` of a finite adele `y` of `L`, seen in the adeles of `L`, is `y ȳ`. -/
-lemma finAdeleIncl_adeleNorm_eq_mul_star (y : 𝔸f L) :
-    finAdeleIncl (maximalRealSubfield L) L (adeleNorm (maximalRealSubfield L) L y) =
-      y * star y := by
+lemma finAdeleIncl_adeleNorm_eq_mul_star (y : 𝔸f L)
+    : finAdeleIncl (maximalRealSubfield L) L (adeleNorm (maximalRealSubfield L) L y)
+      = y * star y := by
   -- Both sides are continuous in `y` and agree on the dense subring `L`.
-  have h_on_L (a : L) :
-      finAdeleIncl (maximalRealSubfield L) L (adeleNorm (maximalRealSubfield L) L (a : 𝔸f L)) =
-        (a : 𝔸f L) * star (a : 𝔸f L) := by
+  have h_on_L (a : L)
+      : finAdeleIncl (maximalRealSubfield L) L (adeleNorm (maximalRealSubfield L) L (a : 𝔸f L))
+        = (a : 𝔸f L) * star (a : 𝔸f L) := by
     simp [norm_maximalRealSubfield_eq_mul_star, Subfield.algebraMap_ofSubfield]
   exact denseRange_algebraMap_finAdele.eq
     (f := fun y ↦ finAdeleIncl (maximalRealSubfield L) L (adeleNorm (maximalRealSubfield L) L y))
-    (g := fun y ↦ y * star y) h_on_L (x := y)
+    (g := fun y ↦ y * star y)
+    h_on_L (x := y)
 
-/-- A property of the identity and of complex conjugation holds on all of `Gal(L/L⁺)`, which has
-these two elements only. -/
-lemma gal_maximalReal_induction {P : Gal(L/maximalRealSubfield L) → Prop} (h_one : P 1)
-    (h_conj : P (complexConj L)) (σ : Gal(L/maximalRealSubfield L)) : P σ := by
+/--
+A property of the identity and of complex conjugation holds on all of `Gal(L/L⁺)`, which has
+these two elements only.
+-/
+lemma gal_maximalReal_induction
+    {P : Gal(L/maximalRealSubfield L) → Prop} (h_one : P 1) (h_conj : P (complexConj L))
+    (σ : Gal(L/maximalRealSubfield L))
+    : P σ := by
   classical
-  have h_cases : σ = 1 ∨ σ = complexConj L := by
-    simpa [← pair_complexConj_eq_univ] using mem_univ σ
+  have h_cases : σ = 1 ∨ σ = complexConj L := by simpa [← pair_complexConj_eq_univ] using mem_univ σ
   rcases h_cases with rfl | rfl
   · exact h_one
   · exact h_conj
 
 /-- Base change of finite ideles from `L⁺` to `L` sends `x` times the norm of `z` to `x z z̄`. -/
-lemma map_finAdeleIncl_principalIdele_mul_adeleNorm (x : (maximalRealSubfield L)ˣ) (z : (𝔸f L)ˣ) :
-    Units.map (finAdeleIncl (maximalRealSubfield L) L).toMonoidHom
-        (principalIdele x * z.map (adeleNorm (maximalRealSubfield L) L)) =
-      principalIdele (x.map (maximalRealSubfield L).subtype) * (z * star z) := by
+lemma map_finAdeleIncl_principalIdele_mul_adeleNorm (x : (maximalRealSubfield L)ˣ) (z : (𝔸f L)ˣ)
+    : Units.map (finAdeleIncl (maximalRealSubfield L) L).toMonoidHom
+        (principalIdele x * z.map (adeleNorm (maximalRealSubfield L) L))
+      = principalIdele (x.map (maximalRealSubfield L).subtype) * (z * star z) := by
   ext1
   simp [finAdeleIncl_adeleNorm_eq_mul_star, Subfield.algebraMap_ofSubfield]
 
 /-- Galois descent: a finite idele `t` of `L` with `t̄ = t` comes from a finite idele of `L⁺`. -/
-lemma exists_map_finAdeleIncl_eq_of_star_eq {t : (𝔸f L)ˣ} (ht : star t.val = t.val) :
-    ∃ b : (𝔸f (maximalRealSubfield L))ˣ,
+lemma exists_map_finAdeleIncl_eq_of_star_eq {t : (𝔸f L)ˣ} (ht : star t.val = t.val)
+    : ∃ b : (𝔸f (maximalRealSubfield L))ˣ,
       Units.map (finAdeleIncl (maximalRealSubfield L) L).toMonoidHom b = t := by
   have h_one : ((1 : Gal(L/maximalRealSubfield L)) : L →+* L) = RingHom.id L :=
     RingHom.ext fun _ ↦ rfl
@@ -114,29 +118,36 @@ lemma exists_map_finAdeleIncl_eq_of_star_eq {t : (𝔸f L)ˣ} (ht : star t.val =
     · rw [h_one, adeleMap_id]
     · rw [h_conj, ← star_eq_adeleMap, ht]
   -- the inverse of `t` is fixed by the Galois group too, so both come from adeles of `L⁺`
-  have h_fixed_inv (σ : Gal(L/maximalRealSubfield L)) :
-      adeleMap (σ : L →+* L) t⁻¹.val = t⁻¹.val := by
+  have h_fixed_inv (σ : Gal(L/maximalRealSubfield L))
+      : adeleMap (σ : L →+* L) t⁻¹.val = t⁻¹.val := by
     apply t.mul_right_inj.mp
     rw [t.mul_inv, ← h_fixed σ, ← map_mul, t.mul_inv, map_one]
   obtain ⟨b, hb⟩ := mem_range_finAdeleIncl_iff.mpr h_fixed
   obtain ⟨c, hc⟩ := mem_range_finAdeleIncl_iff.mpr h_fixed_inv
-  have hbc : b * c = 1 := adeleMap_injective (algebraMap (maximalRealSubfield L) L)
-    (by rw [map_mul, hb, hc, t.mul_inv, map_one])
+  have hbc : b * c = 1 :=
+    adeleMap_injective (algebraMap (maximalRealSubfield L) L)
+      (by rw [map_mul, hb, hc, t.mul_inv, map_one])
   exact ⟨mkOfMulEqOne b c hbc, ext hb⟩
 
-/-- For an embedding of `L` in `Ω`, some character `χ` of `Gal(Ω/L⁺)` cuts out `L`: its kernel is
-`Gal(Ω/L)`. -/
-lemma exists_char_isProGalois_ker [Algebra L Ω] :
-    ∃ χ : QZChar Gal(Ω/maximalRealSubfield L), IsProGalois (ker χ) L Ω :=
+/--
+For an embedding of `L` in `Ω`, some character `χ` of `Gal(Ω/L⁺)` cuts out `L`: its kernel is
+`Gal(Ω/L)`.
+-/
+lemma exists_char_isProGalois_ker [Algebra L Ω]
+    : ∃ χ : QZChar Gal(Ω/maximalRealSubfield L), IsProGalois (ker χ) L Ω :=
   exists_isProGalois_ker_of_isCyclic (isQuadraticExtension L).isCyclic
 
-/-- Let `χ` cut out `L` over `L⁺`, and let `w = w̄` be a finite place of `L`. Then `χ` does not kill
-all local Artin symbols at the place of `L⁺` below `w`, as this place does not split in `L`. -/
-lemma exists_abelianLift_artinAt_ne_one [Algebra L Ω] {χ : QZChar Gal(Ω/maximalRealSubfield L)}
-    [IsProGalois (ker χ) L Ω] {w : FinPlace L} (hw : star w = w) :
-    ∃ x : (LocField (w.below (maximalRealSubfield L)))ˣ,
-      abelianLift χ (artinAt Gal(Ω/maximalRealSubfield L) (w.below (maximalRealSubfield L)) x) ≠
-        1 := by
+/--
+Let `χ` cut out `L` over `L⁺`, and let `w = w̄` be a finite place of `L`. Then `χ` does not kill
+all local Artin symbols at the place of `L⁺` below `w`, as this place does not split in `L`.
+-/
+lemma exists_abelianLift_artinAt_ne_one
+    [Algebra L Ω]
+    {χ : QZChar Gal(Ω/maximalRealSubfield L)} [IsProGalois (ker χ) L Ω]
+    {w : FinPlace L} (hw : star w = w)
+    : ∃ x : (LocField (w.below (maximalRealSubfield L)))ˣ,
+      abelianLift χ (artinAt Gal(Ω/maximalRealSubfield L) (w.below (maximalRealSubfield L)) x)
+        ≠ 1 := by
   let K : Subfield L := maximalRealSubfield L
   by_contra! h_local
   have h_place : IsPlaceOver (placeOver (w.below K)) (w.below K) :=
@@ -154,17 +165,20 @@ section CMTypeField
 
 variable {L : Type} [Field L] [CMType L]
 
-/-- Restricted to `L⁺`, the embeddings of the CM type are all the complex embeddings of `L⁺`,
-each once. -/
-lemma bijective_cmType_restrict :
-    Bijective fun w : InfinitePlace L ↦ (Φ w).comp (maximalRealSubfield L).subtype := by
+/--
+Restricted to `L⁺`, the embeddings of the CM type are all the complex embeddings of `L⁺`,
+each once.
+-/
+lemma bijective_cmType_restrict
+    : Bijective fun w : InfinitePlace L ↦ (Φ w).comp (maximalRealSubfield L).subtype := by
   -- Followed by `mk`, this is the bijection from the infinite places of `L` to those of `L⁺`; and
   -- `mk` is injective on the embeddings of `L⁺`, which are all real.
   have h_inj : Injective fun φ : maximalRealSubfield L →+* ℂ ↦ mk φ :=
     LeftInverse.injective fun φ ↦ embedding_mk_eq_of_isReal (complexEmbedding_isReal φ)
-  have h_comp : (fun φ : maximalRealSubfield L →+* ℂ ↦ mk φ) ∘
-      (fun w : InfinitePlace L ↦ (Φ w).comp (maximalRealSubfield L).subtype) =
-        ⇑(equivInfinitePlace L) := by
+  have h_comp
+      : (fun φ : maximalRealSubfield L →+* ℂ ↦ mk φ)
+          ∘ (fun w : InfinitePlace L ↦ (Φ w).comp (maximalRealSubfield L).subtype)
+        = ⇑(equivInfinitePlace L) := by
     funext w
     rw [Function.comp_apply, ← comap_mk, mk_Φ]
     rfl
@@ -172,65 +186,73 @@ lemma bijective_cmType_restrict :
   rw [h_comp]
   exact (equivInfinitePlace L).bijective
 
-/-- For any signs `r w = ±1` at the infinite places `w` of `L`, there is a nonzero `a ∈ L⁺` such
+/--
+For any signs `r w = ±1` at the infinite places `w` of `L`, there is a nonzero `a ∈ L⁺` such
 that `r (mk φ) * φ a` is a positive real number for every complex embedding `φ` of `L` (weak
-approximation for the signs of `L⁺`). -/
-lemma exists_maximalRealSubfield_sign_eq (r : InfinitePlace L → ℤˣ) :
-    ∃ a : (maximalRealSubfield L)ˣ, ∀ φ : L →+* ℂ, 0 < r (InfinitePlace.mk φ) * φ a.val := by
+approximation for the signs of `L⁺`).
+-/
+lemma exists_maximalRealSubfield_sign_eq (r : InfinitePlace L → ℤˣ)
+    : ∃ a : (maximalRealSubfield L)ˣ, ∀ φ : L →+* ℂ, 0 < r (InfinitePlace.mk φ) * φ a.val := by
   -- Take the trace of a `y ∈ L` whose real parts have these signs.
   obtain ⟨y, hy⟩ : ∃ y : L, ∀ w : InfinitePlace L, 0 < r w * (Φ w y).re := by
     let V : Set (InfinitePlace L → ℂ) := Set.univ.pi fun w ↦ {c : ℂ | 0 < r w * c.re}
-    have h_open : IsOpen V := isOpen_set_pi Set.finite_univ fun w _ ↦
-      isOpen_lt continuous_zero (continuous_re.const_mul (r w))
+    have h_open : IsOpen V :=
+      isOpen_set_pi Set.finite_univ fun w _ ↦
+        isOpen_lt continuous_zero (continuous_re.const_mul (r w))
     have h_mem : (fun w ↦ (r w : ℂ)) ∈ V := by simp [V]
     obtain ⟨y, hy⟩ : ∃ y : L, RingHom.pi Φ y ∈ V := denseRange_Φ.exists_mem_open h_open ⟨_, h_mem⟩
     exact ⟨y, fun w ↦ hy w (Set.mem_univ w)⟩
-  have h_sign (φ : L →+* ℂ) :
-      0 < r (InfinitePlace.mk φ) * φ (trace (maximalRealSubfield L) L y) := by
+  have h_sign (φ : L →+* ℂ)
+      : 0 < r (InfinitePlace.mk φ) * φ (trace (maximalRealSubfield L) L y) := by
     -- `φ` is `Φ (mk φ)` or its conjugate, and the trace is `y + ȳ`
     have h_re : (φ y).re = (Φ (InfinitePlace.mk φ) y).re := by
       rcases Φ_mk_eq_or_star_eq φ with h_eq | h_eq <;> simp [← RingHom.congr_fun h_eq y]
     have h_pos : 0 < r (InfinitePlace.mk φ) * (φ y).re := by
       simpa [h_re] using hy (InfinitePlace.mk φ)
     simpa [trace_maximalRealSubfield_eq_add_star, lt_def, field] using h_pos
-  have h_trace_ne : trace (maximalRealSubfield L) L y ≠ 0 := fun h_zero ↦ by
-    simp [h_zero] at h_sign
+  have h_trace_ne : trace (maximalRealSubfield L) L y ≠ 0 := fun h_zero ↦ by simp [h_zero] at h_sign
   exact ⟨.mk0 _ h_trace_ne, h_sign⟩
 
 section Character
 
 variable [Algebra L Ω]
 
-/-- The sign law for a CM field `L` with an embedding into `Ω`, the algebraic closure of `ℚ`. If
+/--
+The sign law for a CM field `L` with an embedding into `Ω`, the algebraic closure of `ℚ`. If
 the character `χ` of `Gal(Ω/L⁺)` cuts out `L`, then it kills the Artin symbol of `b ∈ (L⁺)ˣ`
-exactly when `∏ w, Φ w b` is positive. -/
-lemma abelianLift_artinMap_eq_one_iff_prod_pos {χ : QZChar Gal(Ω/maximalRealSubfield L)}
-    [IsProGalois (ker χ) L Ω] (b : (maximalRealSubfield L)ˣ) :
-    abelianLift χ (artinMap Gal(Ω/maximalRealSubfield L) (principalIdele b)) = 1 ↔
-      0 < ∏ w : InfinitePlace L, Φ w (b.val : L) := by
+exactly when `∏ w, Φ w b` is positive.
+-/
+lemma abelianLift_artinMap_eq_one_iff_prod_pos
+    {χ : QZChar Gal(Ω/maximalRealSubfield L)} [IsProGalois (ker χ) L Ω]
+    (b : (maximalRealSubfield L)ˣ)
+    : abelianLift χ (artinMap Gal(Ω/maximalRealSubfield L) (principalIdele b)) = 1
+      ↔ 0 < ∏ w : InfinitePlace L, Φ w (b.val : L) := by
   -- `χ` kills no complex conjugation, as `L` is totally complex, so it kills the symbol of `b`
   -- iff the norm of `b` to `ℚ` is positive (`abelianLift_artinMap_principalIdele_eq_one_iff`)
   have hχ_conj (c : Gal(Ω/maximalRealSubfield L)) (hc : IsComplexConj c) : χ.val c ≠ 0 :=
     fun h_zero ↦ hc.false_of_isTotallyComplex (c := (⟨c, h_zero⟩ : ker χ))
   -- `w ↦ Φ w` runs through the embeddings of `L⁺`, so the product is the norm of `b`
-  have h_prod : ∏ w : InfinitePlace L, Φ w (b.val : L) =
-      ∏ φ : maximalRealSubfield L →ₐ[ℚ] ℂ, φ b.val :=
+  have h_prod
+      : ∏ w : InfinitePlace L, Φ w (b.val : L) = ∏ φ : maximalRealSubfield L →ₐ[ℚ] ℂ, φ b.val :=
     ((RingHom.equivRatAlgHom (maximalRealSubfield L) ℂ).bijective.comp
       bijective_cmType_restrict).prod_comp fun φ ↦ φ b.val
   simp [h_prod, abelianLift_artinMap_principalIdele_eq_one_iff hχ_conj, lt_def,
     ← norm_eq_prod_embeddings]
 
-/-- Let `L` be a CM field with an embedding into `Ω`, the algebraic closure of `ℚ`, and `χ` a
+/--
+Let `L` be a CM field with an embedding into `Ω`, the algebraic closure of `ℚ`, and `χ` a
 character of `Gal(Ω/L⁺)` that cuts out `L`. Let `b` be a finite idele of `L⁺`, and let `s w = ±1`
 be signs whose product is `1` exactly when `χ` kills the Artin symbol of `b`. Then `b` is `x` times
-a norm from `L`, where `x ∈ (L⁺)ˣ` has the signs `s`. -/
-lemma exists_sign_eq_principalIdele_mul_adeleNorm {χ : QZChar Gal(Ω/maximalRealSubfield L)}
-    [IsProGalois (ker χ) L Ω] {b : (𝔸f (maximalRealSubfield L))ˣ} {s : InfinitePlace L → ℤˣ}
-    (hs : abelianLift χ (artinMap Gal(Ω/maximalRealSubfield L) b) = 1 ↔
-      ∏ w : InfinitePlace L, s w = 1) :
-    ∃ (x : (maximalRealSubfield L)ˣ) (y : (𝔸f L)ˣ),
-      (∀ φ : L →+* ℂ, 0 < s (mk φ) * φ x.val) ∧
-        b = principalIdele x * y.map (adeleNorm (maximalRealSubfield L) L) := by
+a norm from `L`, where `x ∈ (L⁺)ˣ` has the signs `s`.
+-/
+lemma exists_sign_eq_principalIdele_mul_adeleNorm
+    {χ : QZChar Gal(Ω/maximalRealSubfield L)} [IsProGalois (ker χ) L Ω]
+    {b : (𝔸f (maximalRealSubfield L))ˣ} {s : InfinitePlace L → ℤˣ}
+    (hs : abelianLift χ (artinMap Gal(Ω/maximalRealSubfield L) b) = 1
+      ↔ ∏ w : InfinitePlace L, s w = 1)
+    : ∃ (x : (maximalRealSubfield L)ˣ) (y : (𝔸f L)ˣ),
+      (∀ φ : L →+* ℂ, 0 < s (mk φ) * φ x.val)
+        ∧ b = principalIdele x * y.map (adeleNorm (maximalRealSubfield L) L) := by
   -- The kernel of `f = χ ∘ artinMap` has index two and consists of the totally positive elements
   -- times norms.
   let K : Subfield L := maximalRealSubfield L
@@ -259,14 +281,15 @@ lemma exists_sign_eq_principalIdele_mul_adeleNorm {χ : QZChar Gal(Ω/maximalRea
 end Character
 
 /-- Every finite idele of `L⁺` is an element of `(L⁺)ˣ` times a norm from `L`. -/
-lemma exists_eq_principalIdele_mul_adeleNorm (b : (𝔸f (maximalRealSubfield L))ˣ) :
-    ∃ (x : (maximalRealSubfield L)ˣ) (y : (𝔸f L)ˣ),
+lemma exists_eq_principalIdele_mul_adeleNorm (b : (𝔸f (maximalRealSubfield L))ˣ)
+    : ∃ (x : (maximalRealSubfield L)ˣ) (y : (𝔸f L)ˣ),
       b = principalIdele x * y.map (adeleNorm (maximalRealSubfield L) L) := by
   algebraize [Ω.fieldEmb L]
   obtain ⟨χ, hχ⟩ := exists_char_isProGalois_ker (L := L)
   -- take signs of product `1` if `χ` kills the symbol of `b`, and of product `-1` otherwise
-  obtain ⟨s, hs⟩ : ∃ s : InfinitePlace L → ℤˣ,
-      abelianLift χ (artinMap Gal(Ω/maximalRealSubfield L) b) = 1 ↔ ∏ w, s w = 1 := by
+  obtain ⟨s, hs⟩
+      : ∃ s : InfinitePlace L → ℤˣ,
+        abelianLift χ (artinMap Gal(Ω/maximalRealSubfield L) b) = 1 ↔ ∏ w, s w = 1 := by
     by_cases hb : abelianLift χ (artinMap Gal(Ω/maximalRealSubfield L) b) = 1
     · exact ⟨1, by simp [hb]⟩
     · exact ⟨Pi.mulSingle Classical.ofNonempty (-1), by simp [hb]⟩
@@ -274,36 +297,41 @@ lemma exists_eq_principalIdele_mul_adeleNorm (b : (𝔸f (maximalRealSubfield L)
   exact ⟨x, y, hxy⟩
 
 /-- A finite idele `t` of `L` with `t̄ = t` is `x z z̄` with `x ∈ Lˣ` and `z` a finite idele. -/
-lemma exists_eq_principalIdele_mul_mul_star_of_star_eq {t : (𝔸f L)ˣ} (ht : star t.val = t.val) :
-    ∃ (x : Lˣ) (z : (𝔸f L)ˣ), t = principalIdele x * (z * star z) := by
+lemma exists_eq_principalIdele_mul_mul_star_of_star_eq {t : (𝔸f L)ˣ} (ht : star t.val = t.val)
+    : ∃ (x : Lˣ) (z : (𝔸f L)ˣ), t = principalIdele x * (z * star z) := by
   -- `t` is the base change of a finite idele `b` of `L⁺`, and `b` is `x` times a norm
   obtain ⟨b, hb⟩ := exists_map_finAdeleIncl_eq_of_star_eq ht
   obtain ⟨x, y, hxy⟩ := exists_eq_principalIdele_mul_adeleNorm b
   refine ⟨x.map (maximalRealSubfield L).subtype, y, ?_⟩
   rw [← hb, hxy, map_finAdeleIncl_principalIdele_mul_adeleNorm]
 
-/-- Given signs `s w = ±1` of product `1`, there are `x ∈ Lˣ` and a finite idele `z` with
-`x z z̄ = 1` such that every `φ x` is real with the sign that `s` gives to the place of `φ`. -/
-lemma exists_sign_principalIdele_mul_norm_eq_one {s : InfinitePlace L → ℤˣ}
-    (hs : ∏ w : InfinitePlace L, s w = 1) :
-    ∃ (x : Lˣ) (z : (𝔸f L)ˣ),
+/--
+Given signs `s w = ±1` of product `1`, there are `x ∈ Lˣ` and a finite idele `z` with
+`x z z̄ = 1` such that every `φ x` is real with the sign that `s` gives to the place of `φ`.
+-/
+lemma exists_sign_principalIdele_mul_norm_eq_one
+    {s : InfinitePlace L → ℤˣ} (hs : ∏ w : InfinitePlace L, s w = 1)
+    : ∃ (x : Lˣ) (z : (𝔸f L)ˣ),
       (∀ φ : L →+* ℂ, 0 < s (mk φ) * φ x.val) ∧ principalIdele x * (z * star z) = 1 := by
   algebraize [Ω.fieldEmb L]
   obtain ⟨χ, hχ⟩ := exists_char_isProGalois_ker (L := L)
   -- `χ` kills the Artin symbol of the idele `1` of `L⁺`
-  have hs_one : abelianLift χ (artinMap Gal(Ω/maximalRealSubfield L) 1) = 1 ↔
-      ∏ w : InfinitePlace L, s w = 1 := by
+  have hs_one
+      : abelianLift χ (artinMap Gal(Ω/maximalRealSubfield L) 1) = 1
+        ↔ ∏ w : InfinitePlace L, s w = 1 := by
     simpa using hs
   obtain ⟨x, y, hx_sign, hxy⟩ := exists_sign_eq_principalIdele_mul_adeleNorm hs_one
   have h_one : principalIdele (x.map (maximalRealSubfield L).subtype) * (y * star y) = 1 := by
     rw [← map_finAdeleIncl_principalIdele_mul_adeleNorm, ← hxy, map_one]
   exact ⟨_, y, hx_sign, h_one⟩
 
-/-- If `a ∈ Lˣ` has `ā = a` and `a z z̄ = 1` for a finite idele `z`, then `∏ w, Φ w a` is
-positive. -/
-lemma prod_Φ_pos_of_principalIdele_mul_norm_eq_one {a : Lˣ} {z : (𝔸f L)ˣ}
-    (ha : star a.val = a.val) (haz : principalIdele a * (z * star z) = 1) :
-    0 < ∏ w : InfinitePlace L, Φ w a.val := by
+/--
+If `a ∈ Lˣ` has `ā = a` and `a z z̄ = 1` for a finite idele `z`, then `∏ w, Φ w a` is
+positive.
+-/
+lemma prod_Φ_pos_of_principalIdele_mul_norm_eq_one
+    {a : Lˣ} {z : (𝔸f L)ˣ} (ha : star a.val = a.val) (haz : principalIdele a * (z * star z) = 1)
+    : 0 < ∏ w : InfinitePlace L, Φ w a.val := by
   let K : Subfield L := maximalRealSubfield L
   algebraize [Ω.fieldEmb L]
   obtain ⟨χ, hχ⟩ : ∃ χ : QZChar Gal(Ω/K), IsProGalois (ker χ) L Ω := exists_char_isProGalois_ker
@@ -328,43 +356,49 @@ open ComplexConjugate
 variable {E : Type} [Field E] [CMType E]
 
 variable (E) in
-/-- The idele `x` of `E` lies in `F^× N(𝔸_E^×)`, for the maximal real subfield `F` of `E`: it
+/--
+The idele `x` of `E` lies in `F^× N(𝔸_E^×)`, for the maximal real subfield `F` of `E`: it
 is `a z z̄` for an element `a` of `E^×` fixed by conjugation and an idele `z` of `E`. Here
-`a.map toAdele` is `a` as a principal idele, and `star` is complex conjugation. -/
+`a.map toAdele` is `a` as a principal idele, and `star` is complex conjugation.
+-/
 def IsRealTimesNorm (x : (𝔸 E)ˣ) : Prop :=
   ∃ (a : Eˣ) (z : (𝔸 E)ˣ), star (a : E) = a ∧ x = a.map (toAdele (E := E)) * (z * star z)
 
 open scoped Classical in
 variable (E) in
-/-- The quadratic character `η` of `E/F`, for the maximal real subfield `F` of `E`. The ideles of
+/--
+The quadratic character `η` of `E/F`, for the maximal real subfield `F` of `E`. The ideles of
 `F` are the ideles of `E` fixed by conjugation; `η` is `1` on `F^× N(𝔸_E^×)` and `-1` on the other
 ideles of `F`. Its values at ideles of `E` that conjugation moves are not used. At a finite place
 `w = w̄`, `η` is `-1` at some finite idele `t` fixed by conjugation that is `1` at the other finite
-places and at infinity (`exists_quadraticIdeleChar_eq_neg_one`). -/
-noncomputable def quadraticIdeleChar (x : (𝔸 E)ˣ) : ℂ :=
-  if IsRealTimesNorm E x then 1 else -1
+places and at infinity (`exists_quadraticIdeleChar_eq_neg_one`).
+-/
+noncomputable def quadraticIdeleChar (x : (𝔸 E)ˣ) : ℂ := if IsRealTimesNorm E x then 1 else -1
 
 private lemma val_fst_apply_ne_zero (x : (𝔸 E)ˣ) (w : InfinitePlace E) : (x : 𝔸 E).1 w ≠ 0 := by
   have h_mul : (x : 𝔸 E).1 w * ((x⁻¹ : (𝔸 E)ˣ) : 𝔸 E).1 w = 1 :=
     congrFun (congrArg Prod.fst x.mul_inv) w
   exact left_ne_zero_of_mul_eq_one h_mul
 
-/-- Let `w = w̄` be a finite place of `E`, above the place `v` of the maximal real subfield `F`. The
+/--
+Let `w = w̄` be a finite place of `E`, above the place `v` of the maximal real subfield `F`. The
 quadratic character `η` of `E/F` is not trivial on `F_v^×`: it is `-1` at some finite idele `t` that
 is fixed by conjugation and has the component `1` at all finite places other than `w`. Here
 `finIdeleIncl t` is the idele with finite part `t` and components `1` at infinity.
 
 This is part of the local description of `η` in class field theory: non-triviality at a non-split
-finite place only, without identifying the kernel on `F_v^×` with the local norms. -/
-lemma exists_quadraticIdeleChar_eq_neg_one {w : FinPlace E} (hw : star w = w) :
-    ∃ t : (𝔸f E)ˣ, star (finIdeleIncl t) = finIdeleIncl t ∧
-      (∀ u : FinPlace E, u ≠ w → t.val u = 1) ∧ quadraticIdeleChar E (finIdeleIncl t) = -1 := by
+finite place only, without identifying the kernel on `F_v^×` with the local norms.
+-/
+lemma exists_quadraticIdeleChar_eq_neg_one {w : FinPlace E} (hw : star w = w)
+    : ∃ t : (𝔸f E)ˣ,
+      star (finIdeleIncl t) = finIdeleIncl t ∧ (∀ u : FinPlace E, u ≠ w → t.val u = 1)
+        ∧ quadraticIdeleChar E (finIdeleIncl t) = -1 := by
   -- Let `χ` cut out `E` over `K = F`, and let `x ∈ F_v^×` have a symbol that `χ` does not kill.
   let K : Subfield E := maximalRealSubfield E
   algebraize [Ω.fieldEmb E]
   obtain ⟨χ, hχ⟩ := exists_char_isProGalois_ker (L := E)
-  obtain ⟨x, hx⟩ : ∃ x : (LocField (w.below K))ˣ,
-      abelianLift χ (artinAt Gal(Ω/K) (w.below K) x) ≠ 1 :=
+  obtain ⟨x, hx⟩
+      : ∃ x : (LocField (w.below K))ˣ, abelianLift χ (artinAt Gal(Ω/K) (w.below K) x) ≠ 1 :=
     exists_abelianLift_artinAt_ne_one hw
   -- `t` is the base change of the idele of `x`; only `w` lies above `w.below K`
   let t : (𝔸f E)ˣ := Units.map (finAdeleIncl K E).toMonoidHom (locIdele (w.below K) x)
@@ -406,37 +440,45 @@ lemma exists_quadraticIdeleChar_eq_neg_one {w : FinPlace E} (hw : star w = w) :
     mul_one]
 
 /-- If `a z z̄` is fixed by conjugation, for `a ∈ E^×` and a finite idele `z`, then so is `a`. -/
-lemma star_eq_of_star_principalIdele_mul_norm {a : Eˣ} {z : (𝔸f E)ˣ}
-    (h_star : star (principalIdele a * (z * star z)) = principalIdele a * (z * star z)) :
-    star (a : E) = a := by
+lemma star_eq_of_star_principalIdele_mul_norm
+    {a : Eˣ} {z : (𝔸f E)ˣ}
+    (h_star : star (principalIdele a * (z * star z)) = principalIdele a * (z * star z))
+    : star (a : E) = a := by
   -- Conjugation fixes the norm `z z̄`, a unit, which then cancels.
-  have h_alg : algebraMap E (𝔸f E) (star (a : E)) * ↑(z * star z) =
-      algebraMap E (𝔸f E) a * ↑(z * star z) := by
+  have h_alg
+      : algebraMap E (𝔸f E) (star (a : E)) * ↑(z * star z)
+        = algebraMap E (𝔸f E) a * ↑(z * star z) := by
     simpa [mul_comm] using congrArg Units.val h_star
   exact (algebraMap E (𝔸f E)).injective ((Units.mul_left_inj (z * star z)).mp h_alg)
 
-/-- A splitting character `υ` is `1` on the ideles `a z z̄` of `IsRealTimesNorm`: it is trivial
-on `E^×`, and `υ(z̄) = υ(z)⁻¹`. -/
-lemma upsilon_eq_one_of_isRealTimesNorm [SplittingChar E] {x : (𝔸 E)ˣ}
-    (hx : IsRealTimesNorm E x) : υ.val x = 1 := by
+/--
+A splitting character `υ` is `1` on the ideles `a z z̄` of `IsRealTimesNorm`: it is trivial
+on `E^×`, and `υ(z̄) = υ(z)⁻¹`.
+-/
+lemma upsilon_eq_one_of_isRealTimesNorm [SplittingChar E] {x : (𝔸 E)ˣ} (hx : IsRealTimesNorm E x)
+    : υ.val x = 1 := by
   obtain ⟨a, z, -, rfl⟩ := hx
   rw [map_mul, map_mul, υ_star, mul_inv_cancel, mul_one, upsilon_toAdele]
 
 /-- If a real number `t` has the sign `s = ±1`, then `t / |t| = s` in `ℂ`. -/
-private lemma ofReal_div_norm_eq_of_sign {t : ℝ} {s : ℤˣ} (h_sign : 0 < ((s : ℤ) : ℝ) * t) :
-    (t : ℂ) / ‖(t : ℂ)‖ = ((s : ℤ) : ℂ) := by
+private lemma ofReal_div_norm_eq_of_sign {t : ℝ} {s : ℤˣ} (h_sign : 0 < ((s : ℤ) : ℝ) * t)
+    : (t : ℂ) / ‖(t : ℂ)‖ = ((s : ℤ) : ℂ) := by
   rcases Int.units_eq_one_or s with rfl | rfl
   · simp_all [abs_of_pos, ne_of_gt]
   · simp_all [abs_of_neg, ne_of_lt]
 
-/-- Let `r` be an idele of `E` with real components at infinity and finite part `1`, on which the
+/--
+Let `r` be an idele of `E` with real components at infinity and finite part `1`, on which the
 splitting character `υ` is `1`. Then the signs `s w` of its components at infinity have product
-`1`. -/
-private lemma exists_signs_of_upsilon_eq_one [SplittingChar E] {r : (𝔸 E)ˣ}
-    (h_real : ∀ w : InfinitePlace E, (((r : 𝔸 E).1 w).re : ℂ) = (r : 𝔸 E).1 w)
-    (hr_fin : (r : 𝔸 E).2 = 1) (h_one : υ.val r = 1) :
-    ∃ s : InfinitePlace E → ℤˣ, ∏ w : InfinitePlace E, s w = 1 ∧
-      ∀ w : InfinitePlace E, 0 < ((s w : ℤ) : ℝ) * ((r : 𝔸 E).1 w).re := by
+`1`.
+-/
+private lemma exists_signs_of_upsilon_eq_one
+    [SplittingChar E]
+    {r : (𝔸 E)ˣ} (h_real : ∀ w : InfinitePlace E, (((r : 𝔸 E).1 w).re : ℂ) = (r : 𝔸 E).1 w)
+    (hr_fin : (r : 𝔸 E).2 = 1) (h_one : υ.val r = 1)
+    : ∃ s : InfinitePlace E → ℤˣ,
+      ∏ w : InfinitePlace E, s w = 1
+        ∧ ∀ w : InfinitePlace E, 0 < ((s w : ℤ) : ℝ) * ((r : 𝔸 E).1 w).re := by
   let s : InfinitePlace E → ℤˣ := fun w ↦ if 0 < ((r : 𝔸 E).1 w).re then 1 else -1
   have h_r_sign (w : InfinitePlace E) : 0 < ((s w : ℤ) : ℝ) * ((r : 𝔸 E).1 w).re := by
     have h_ne : ((r : 𝔸 E).1 w).re ≠ 0 := fun h_zero ↦
@@ -449,21 +491,26 @@ private lemma exists_signs_of_upsilon_eq_one [SplittingChar E] {r : (𝔸 E)ˣ}
     exact Units.ext hr_fin
   -- `υ_unit` computes `υ(r) = 1` as the product of the signs
   have h_prod : ∏ w : InfinitePlace E, ((s w : ℤ) : ℂ) = 1 :=
-    calc ∏ w : InfinitePlace E, ((s w : ℤ) : ℂ)
-        = ∏ w : InfinitePlace E, (r : 𝔸 E).1 w / ‖(r : 𝔸 E).1 w‖ :=
-          prod_congr rfl fun w _ ↦ by
-            simpa [h_real] using (ofReal_div_norm_eq_of_sign (h_r_sign w)).symm
+    calc
+      ∏ w : InfinitePlace E, ((s w : ℤ) : ℂ)
+          = ∏ w : InfinitePlace E, (r : 𝔸 E).1 w / ‖(r : 𝔸 E).1 w‖ :=
+        prod_congr rfl fun w _ ↦ by
+          simpa [h_real] using (ofReal_div_norm_eq_of_sign (h_r_sign w)).symm
       _ = (υ.val r : ℂ) := (υ_unit r h_mem).symm
       _ = 1 := by rw [h_one, Circle.coe_one]
   refine ⟨s, Units.ext ?_, h_r_sign⟩
   push_cast
   exact_mod_cast h_prod
 
-/-- Let `r` be an idele of `E` fixed by conjugation (an idele of the maximal real subfield), with
+/--
+Let `r` be an idele of `E` fixed by conjugation (an idele of the maximal real subfield), with
 finite part `1`, on which the splitting character `υ` is `1`. Then `r = b v v̄` for some `b ∈ E^×`
-fixed by conjugation and some idele `v` (`IsRealTimesNorm`). -/
-lemma isRealTimesNorm_of_finPart_eq_one [SplittingChar E] {r : (𝔸 E)ˣ} (hr : star r = r)
-    (hr_fin : (r : 𝔸 E).2 = 1) (h_one : υ.val r = 1) : IsRealTimesNorm E r := by
+fixed by conjugation and some idele `v` (`IsRealTimesNorm`).
+-/
+lemma isRealTimesNorm_of_finPart_eq_one
+    [SplittingChar E]
+    {r : (𝔸 E)ˣ} (hr : star r = r) (hr_fin : (r : 𝔸 E).2 = 1) (h_one : υ.val r = 1)
+    : IsRealTimesNorm E r := by
   -- The components of `r` at infinity are real, and `υ(r) = 1` is the product of their signs.
   -- Some `b ∈ E^×` fixed by conjugation has these signs, and `r / b` is `v v̄` for the idele `v`
   -- with the square roots of the positive reals `r_w / b_w` at infinity.
@@ -487,10 +534,8 @@ lemma isRealTimesNorm_of_finPart_eq_one [SplittingChar E] {r : (𝔸 E)ˣ} (hr :
   have hq_ne (w : InfinitePlace E) : (q w : ℂ) ≠ 0 :=
     ofReal_ne_zero.mpr (Real.sqrt_ne_zero'.mpr (h_ratio_pos w))
   let v : 𝔸 E := (fun w ↦ (q w : ℂ), (u : 𝔸f E))
-  have hv : IsUnit v :=
-    Prod.isUnit_iff.mpr ⟨Pi.isUnit_iff.mpr fun w ↦ (hq_ne w).isUnit, u.isUnit⟩
-  have h_inf (w : InfinitePlace E) :
-      (r : 𝔸 E).1 w = Φ w b * ((q w : ℂ) * conj (q w : ℂ)) := by
+  have hv : IsUnit v := Prod.isUnit_iff.mpr ⟨Pi.isUnit_iff.mpr fun w ↦ (hq_ne w).isUnit, u.isUnit⟩
+  have h_inf (w : InfinitePlace E) : (r : 𝔸 E).1 w = Φ w b * ((q w : ℂ) * conj (q w : ℂ)) := by
     have h_ne_b : (Φ w b).re ≠ 0 := right_ne_zero_of_mul (h_b_sign w).ne'
     rw [conj_ofReal, ← ofReal_mul, Real.mul_self_sqrt (h_ratio_pos w).le]
     nth_rw 1 [← h_real w, ← h_b_real w]
@@ -500,13 +545,16 @@ lemma isRealTimesNorm_of_finPart_eq_one [SplittingChar E] {r : (𝔸 E)ˣ} (hr :
   rw [hr_fin]
   exact congrArg Units.val h_u.symm
 
-/-- Let `υ` be a splitting character of the CM field `E`: a unitary Hecke character with
+/--
+Let `υ` be a splitting character of the CM field `E`: a unitary Hecke character with
 `υ x̄ = (υ x)⁻¹` that equals `∏ x_τ / |x_τ|` on ideles whose finite part is a unit of `Ô`. Let `x`
 be an idele of `E` fixed by conjugation (an idele of the maximal real subfield) with `υ x = 1`. Then
 `x = a z z̄` for some `a ∈ E^×` fixed by conjugation and some idele `z` of `E`
-(`IsRealTimesNorm`). -/
-lemma isRealTimesNorm_of_upsilon_eq_one [SplittingChar E] {x : (𝔸 E)ˣ} (hx : star x = x)
-    (h_one : υ.val x = 1) : IsRealTimesNorm E x := by
+(`IsRealTimesNorm`).
+-/
+lemma isRealTimesNorm_of_upsilon_eq_one
+    [SplittingChar E] {x : (𝔸 E)ˣ} (hx : star x = x) (h_one : υ.val x = 1)
+    : IsRealTimesNorm E x := by
   -- The finite part of `x` is `a z z̄` with `a ∈ E^×` fixed by conjugation. Divided by
   -- `y = a z z̄`, `x` leaves an idele fixed by conjugation with finite part `1`.
   let finPart : (𝔸 E)ˣ →* (𝔸f E)ˣ := Units.map (MonoidHom.snd (InfinitePlace E → ℂ) (𝔸f E))
@@ -529,7 +577,8 @@ lemma isRealTimesNorm_of_upsilon_eq_one [SplittingChar E] {x : (𝔸 E)ˣ} (hx :
   obtain ⟨b, ρ, hb, h_r⟩ : IsRealTimesNorm E (x / y) :=
     isRealTimesNorm_of_finPart_eq_one hr_star (congrArg Units.val hr_fin) hr_one
   refine ⟨b * a, ρ * ζ, by simp [hb, ha], ?_⟩
-  calc x = x / y * y := (div_mul_cancel x y).symm
+  calc
+    x = x / y * y := (div_mul_cancel x y).symm
     _ = (b * a).map (toAdele (E := E)) * (ρ * ζ * star (ρ * ζ)) := by
       rw [h_r]
       apply Units.ext
@@ -537,11 +586,13 @@ lemma isRealTimesNorm_of_upsilon_eq_one [SplittingChar E] {x : (𝔸 E)ˣ} (hx :
         star_mul']
       ring
 
-/-- On an idele `x` of `E` fixed by conjugation, that is, an idele of the maximal real subfield
+/--
+On an idele `x` of `E` fixed by conjugation, that is, an idele of the maximal real subfield
 `F`, a splitting character `υ` equals the quadratic character `η` of `E/F`
-(`quadraticIdeleChar`). -/
-theorem upsilon_eq_quadraticIdeleChar [SplittingChar E] {x : (𝔸 E)ˣ} (hx : star x = x) :
-    (υ.val x : ℂ) = quadraticIdeleChar E x := by
+(`quadraticIdeleChar`).
+-/
+theorem upsilon_eq_quadraticIdeleChar [SplittingChar E] {x : (𝔸 E)ˣ} (hx : star x = x)
+    : (υ.val x : ℂ) = quadraticIdeleChar E x := by
   -- `υ(x)² = υ(x) υ(x̄) = 1`, so `υ(x) = ±1`; and `υ(x) = 1` exactly on `F^× N(𝔸_E^×)`.
   have h_sq : (υ.val x : ℂ) * υ.val x = 1 := by
     have h_mul_star : υ.val x * υ.val (star x) = 1 := by rw [υ_star, mul_inv_cancel]
@@ -554,14 +605,18 @@ theorem upsilon_eq_quadraticIdeleChar [SplittingChar E] {x : (𝔸 E)ˣ} (hx : s
     rw [quadraticIdeleChar, ite_eq_right h_mem]
     exact (mul_self_eq_one_iff.mp h_sq).resolve_left h_ne
 
-/-- Let `E` be a CM field with a CM type, and let `υ` be a splitting character of `E`. That is, `υ`
+/--
+Let `E` be a CM field with a CM type, and let `υ` be a splitting character of `E`. That is, `υ`
 is a unitary Hecke character with `υ x̄ = (υ x)⁻¹`, and it equals `∏ x_τ / |x_τ|` on ideles whose
 finite part is a unit of `Ô`. If `w` is a finite place of `E` with `star w = w` and `ϖ ∈ E_w^×` has
 valuation `exp(-1)` (a uniformiser), then `υ` takes the value `-1` on `locFullIdele w ϖ`, the idele
-that is `ϖ` at `w` and `1` at every other place. -/
-theorem upsilon_locFullIdele_eq_neg_one_of_star_eq [SplittingChar E] (w : FinPlace E)
-    (ϖ : (LocField w)ˣ) (hw : star w = w) (hϖ : Valued.v (ϖ : LocField w) = WithZero.exp (-1)) :
-    (υ.val (locFullIdele w ϖ) : ℂ) = -1 := by
+that is `ϖ` at `w` and `1` at every other place.
+-/
+theorem upsilon_locFullIdele_eq_neg_one_of_star_eq
+    [SplittingChar E]
+    (w : FinPlace E) (ϖ : (LocField w)ˣ)
+    (hw : star w = w) (hϖ : Valued.v (ϖ : LocField w) = WithZero.exp (-1))
+    : (υ.val (locFullIdele w ϖ) : ℂ) = -1 := by
   -- `υ` is `η` on the ideles fixed by conjugation, so it is `-1` at some `t` that is `1` off `w`.
   obtain ⟨t, ht_star, ht_one, ht⟩ := exists_quadraticIdeleChar_eq_neg_one hw
   have h_value : (υ.val (finIdeleIncl t) : ℂ) = -1 := by
@@ -580,25 +635,32 @@ theorem upsilon_locFullIdele_eq_neg_one_of_star_eq [SplittingChar E] (w : FinPla
   norm_num [upsilon_eq_atUniformizer_zpow w h_unit, h_one] at h_value
 
 /-- A splitting character is `-1` at the chosen uniformiser at a finite place `w = w̄`. -/
-lemma upsilon_atUniformizer_eq_neg_one [SplittingChar E] (w : FinPlace E) (hw : star w = w) :
-    υ.atUniformizer w = -1 :=
+lemma upsilon_atUniformizer_eq_neg_one [SplittingChar E] (w : FinPlace E) (hw : star w = w)
+    : υ.atUniformizer w = -1 :=
   upsilon_locFullIdele_eq_neg_one_of_star_eq w (uniformizer w) hw (v_uniformizer w)
 
-/-- The four properties of a splitting character `υ` of `E` that are used: (1) `υ(ȳ) = υ(y)⁻¹`;
+/--
+The four properties of a splitting character `υ` of `E` that are used: (1) `υ(ȳ) = υ(y)⁻¹`;
 (2) `υ(y) = ∏_τ y_τ/|y_τ|` over the infinite places `τ` if the finite part of `y` is a unit of
 `Ô E`; (3) `υ(ϖ) = -1` for every uniformiser `ϖ` at a finite place `w = w̄`, placed at `w` in an
 idele by `locFullIdele`; (4) on the ideles fixed by conjugation, the ideles of the maximal real
 subfield `F`, `υ` is the quadratic character `η` of `E/F`. This collects `υ_star`, `υ_unit`,
-`upsilon_locFullIdele_eq_neg_one_of_star_eq` and `upsilon_eq_quadraticIdeleChar`. -/
-theorem υ_star_eq_inv_and_apply_eq [SplittingChar E] :
-    (∀ y : (𝔸 E)ˣ, υ.val (star y) = (υ.val y)⁻¹) ∧
-    (∀ y : (𝔸 E)ˣ, y.map (MonoidHom.snd (InfinitePlace E → ℂ) (𝔸f E)) ∈ (Ô E).units →
-      (υ.val y : ℂ) = ∏ w : InfinitePlace E, (y : 𝔸 E).1 w / ‖(y : 𝔸 E).1 w‖) ∧
-    (∀ (w : FinPlace E) (ϖ : (LocField w)ˣ), star w = w →
-      Valued.v (ϖ : LocField w) = WithZero.exp (-1) → (υ.val (locFullIdele w ϖ) : ℂ) = -1) ∧
-    ∀ y : (𝔸 E)ˣ, star y = y → (υ.val y : ℂ) = quadraticIdeleChar E y :=
-  ⟨υ_star, υ_unit, upsilon_locFullIdele_eq_neg_one_of_star_eq,
-    fun _ hy ↦ upsilon_eq_quadraticIdeleChar hy⟩
+`upsilon_locFullIdele_eq_neg_one_of_star_eq` and `upsilon_eq_quadraticIdeleChar`.
+-/
+theorem υ_star_eq_inv_and_apply_eq [SplittingChar E]
+    : (∀ y : (𝔸 E)ˣ, υ.val (star y) = (υ.val y)⁻¹)
+      ∧ (∀ y : (𝔸 E)ˣ,
+        y.map (MonoidHom.snd (InfinitePlace E → ℂ) (𝔸f E)) ∈ (Ô E).units
+          → (υ.val y : ℂ) = ∏ w : InfinitePlace E, (y : 𝔸 E).1 w / ‖(y : 𝔸 E).1 w‖)
+      ∧ (∀ (w : FinPlace E) (ϖ : (LocField w)ˣ),
+        star w = w → Valued.v (ϖ : LocField w) = WithZero.exp (-1)
+          → (υ.val (locFullIdele w ϖ) : ℂ) = -1)
+      ∧ ∀ y : (𝔸 E)ˣ, star y = y → (υ.val y : ℂ) = quadraticIdeleChar E y := ⟨
+  υ_star,
+  υ_unit,
+  upsilon_locFullIdele_eq_neg_one_of_star_eq,
+  fun _ hy ↦ upsilon_eq_quadraticIdeleChar hy
+⟩
 
 end Restriction
 
@@ -622,31 +684,36 @@ section SplittingCharExists
 open NumberField Units Finset Complex ComplexOrder Embeddings New.Cohomology Circle Function
   Submonoid
 
-/-- Suppose that every root of unity of `E` is `δ / δ̄` for a unit `δ` of `𝓞 E` with
+/--
+Suppose that every root of unity of `E` is `δ / δ̄` for a unit `δ` of `𝓞 E` with
 `∏ w, Φ w δ = 1`. Let `x = y b b̄` for `y ∈ E^×` and an idele `b` of `E`, where the finite part
-of `x` is a unit at every finite place. Then `∏_w x_w / |x_w| = 1`, over the infinite places `w`. -/
-private lemma New.prod_div_norm_eq_one_of_mem_idelesUnitOff {E : Type} [Field E] [CMType E]
-    [HasPrimitiveRoot5040 E]
-    (hE : ∀ y : E, IsOfFinOrder y → ∃ δ : (𝓞 E)ˣ,
-      ∏ w : InfinitePlace E, Φ w (δ : E) = 1 ∧ y * star (δ : E) = δ)
+of `x` is a unit at every finite place. Then `∏_w x_w / |x_w| = 1`, over the infinite places `w`.
+-/
+private lemma New.prod_div_norm_eq_one_of_mem_idelesUnitOff
+    {E : Type} [Field E] [CMType E] [HasPrimitiveRoot5040 E]
+    (hE : ∀ y : E,
+      IsOfFinOrder y → ∃ δ : (𝓞 E)ˣ, ∏ w : InfinitePlace E, Φ w (δ : E) = 1 ∧ y * star (δ : E) = δ)
     {y : Eˣ} {b x : (𝔸 E)ˣ} (hx_eq : Units.map toAdele.toMonoidHom y * (b * star b) = x)
-    (hx_unit : x.map (MonoidHom.snd (InfinitePlace E → ℂ) (𝔸f E)) ∈ idelesUnitOff ∅) :
-    ∏ w : InfinitePlace E, (x : 𝔸 E).1 w / ‖(x : 𝔸 E).1 w‖ = 1 := by
+    (hx_unit : x.map (MonoidHom.snd (InfinitePlace E → ℂ) (𝔸f E)) ∈ idelesUnitOff ∅)
+    : ∏ w : InfinitePlace E, (x : 𝔸 E).1 w / ‖(x : 𝔸 E).1 w‖ = 1 := by
   -- `y` and `ȳ` have the same valuations, so `ȳ / y` is a root of unity, `δ / δ̄` by `hE`. Then
   -- `a = y δ` is real and the finite part of `a b b̄` is a norm, so `∏ Φ w a > 0` by class field
   -- theory for `E/E⁺`. As `b b̄ > 0` at infinity and `∏ Φ w δ = 1`, the product is
   -- `∏ Φ w a / |∏ Φ w a| = 1`.
   rw [← hx_eq] at hx_unit
-  have h_val (w : FinPlace E) : w.valuation E (y : E) *
-      (Valued.v ((b : 𝔸 E).2 w) * Valued.v ((b : 𝔸 E).2 (star w))) = 1 := by
+  have h_val (w : FinPlace E)
+      : w.valuation E (y : E) * (Valued.v ((b : 𝔸 E).2 w) * Valued.v ((b : 𝔸 E).2 (star w)))
+        = 1 := by
     simpa using mem_idelesUnitOff.mp hx_unit w (Set.notMem_empty w)
   -- `ȳ / y` is an algebraic integer whose conjugates all have absolute value 1, so a root of unity
   have h_int : IsIntegral ℤ (star (y : E) / y) := by
     refine algebraMap_mem_Ô.mp (mem_Ô.mpr fun w ↦ ?_)
-    have h_star : w.valuation E (star (y : E)) *
-        (Valued.v ((b : 𝔸 E).2 (star w)) * Valued.v ((b : 𝔸 E).2 w)) = 1 := by
-      simpa using (v_star_apply _ w).trans
-        (mem_idelesUnitOff.mp hx_unit (star w) (Set.notMem_empty (star w)))
+    have h_star
+        : w.valuation E (star (y : E))
+            * (Valued.v ((b : 𝔸 E).2 (star w)) * Valued.v ((b : 𝔸 E).2 w))
+          = 1 := by
+      simpa using
+        (v_star_apply _ w).trans (mem_idelesUnitOff.mp hx_unit (star w) (Set.notMem_empty (star w)))
     suffices h_ratio : w.valuation E (star (y : E)) / w.valuation E (y : E) ≤ 1 by
       simpa using h_ratio
     rw [eq_inv_of_mul_eq_one_left h_star, eq_inv_of_mul_eq_one_left (h_val w), mul_comm]
@@ -670,27 +737,31 @@ private lemma New.prod_div_norm_eq_one_of_mem_idelesUnitOff {E : Type} [Field E]
   have h_pos : 0 < ∏ w : InfinitePlace E, Φ w (a : E) :=
     prod_Φ_pos_of_principalIdele_mul_norm_eq_one ha_real h_az
   -- each factor is that of `Φ w y`, as `b_w b̄_w = ‖b_w‖² > 0`; and `∏ Φ w y = ∏ Φ w a`
-  have h_factor (w : InfinitePlace E) :
-      (x : 𝔸 E).1 w / ‖(x : 𝔸 E).1 w‖ = Φ w (y : E) / ‖Φ w (y : E)‖ := by
+  have h_factor (w : InfinitePlace E)
+      : (x : 𝔸 E).1 w / ‖(x : 𝔸 E).1 w‖ = Φ w (y : E) / ‖Φ w (y : E)‖ := by
     have hb : (b : 𝔸 E).1 w ≠ 0 := val_fst_apply_ne_zero b w
     simp [← hx_eq, mul_conj', field]
   have h_prod_a : ∏ w : InfinitePlace E, Φ w (a : E) = ∏ w : InfinitePlace E, Φ w (y : E) := by
     simp [a, prod_mul_distrib, hδ_prod]
-  calc _ = ∏ w : InfinitePlace E, Φ w (y : E) / ‖Φ w (y : E)‖ := prod_congr rfl fun w _ ↦ h_factor w
+  calc
+    _ = ∏ w : InfinitePlace E, Φ w (y : E) / ‖Φ w (y : E)‖ := prod_congr rfl fun w _ ↦ h_factor w
     _ = (∏ w : InfinitePlace E, Φ w (a : E)) / ‖∏ w : InfinitePlace E, Φ w (a : E)‖ := by
       rw [prod_div_distrib, h_prod_a, norm_prod, ofReal_prod]
     _ = 1 := by rw [norm_of_nonneg' h_pos.le, div_self h_pos.ne']
 
-/-- Let `E` be a CM field with a CM type `Φ` (a complex embedding `Φ w` inducing each infinite place
+/--
+Let `E` be a CM field with a CM type `Φ` (a complex embedding `Φ w` inducing each infinite place
 `w`) that contains a primitive 5040-th root of unity (`New.HasPrimitiveRoot5040`). Suppose every
 root of unity `y` of `E` (written `IsOfFinOrder y`) equals `δ / δ̄` for some unit `δ` of `𝓞 E` with
 `∏ w, Φ w δ = 1`. Then `E` has a splitting character (`New.SplittingChar`), that is, a unitary Hecke
 character `υ` of `E` with `υ x̄ = (υ x)⁻¹` that equals `∏ x_τ / |x_τ|` (over the infinite places) on
-ideles whose finite part is a unit of `Ô`. -/
-lemma New.nonempty_splittingChar {E : Type} [Field E] [CMType E] [HasPrimitiveRoot5040 E]
-    (hE : ∀ y : E, IsOfFinOrder y → ∃ δ : (𝓞 E)ˣ,
-      ∏ w : InfinitePlace E, Φ w (δ : E) = 1 ∧ y * star (δ : E) = δ) :
-    Nonempty (SplittingChar E) := by
+ideles whose finite part is a unit of `Ô`.
+-/
+lemma New.nonempty_splittingChar
+    {E : Type} [Field E] [CMType E] [HasPrimitiveRoot5040 E]
+    (hE : ∀ y : E,
+      IsOfFinOrder y → ∃ δ : (𝓞 E)ˣ, ∏ w : InfinitePlace E, Φ w (δ : E) = 1 ∧ y * star (δ : E) = δ)
+    : Nonempty (SplittingChar E) := by
   -- Let `S x = ∏ x_w / |x_w|`, `U` the ideles that are units at all finite places, and `R` the
   -- group of the `y b b̄` with `y ∈ Eˣ`. Once `S = 1` on `U ∩ R`, the restriction of `S` to `U`
   -- extends to a character of the ideles that is trivial on `R`, as the circle is divisible.
@@ -721,8 +792,9 @@ lemma New.nonempty_splittingChar {E : Type} [Field E] [CMType E] [HasPrimitiveRo
   have h_open : IsOpen (U : Set (𝔸 E)ˣ) :=
     (isOpen_idelesUnitOff ∅).preimage (continuous_snd.units_map _)
   have hυU : Set.EqOn υ S U := fun x hx ↦ hυ ⟨x, hx⟩
-  have h_cont : Continuous υ := continuous_of_continuousAt_one υ
-    (h_open.continuousOn_iff.mp (S.continuous.continuousOn.congr hυU) U.one_mem)
+  have h_cont : Continuous υ :=
+    continuous_of_continuousAt_one υ
+      (h_open.continuousOn_iff.mp (S.continuous.continuousOn.congr hυU) U.one_mem)
   -- `υ` is trivial on `Eˣ ≤ R`, equals `S` on `U`, and `υ x * υ x̄ = 1`, as `x x̄ ∈ R`.
   refine ⟨{ υ := ⟨⟨υ, h_cont⟩, ?_⟩, υ_unit := fun x hx ↦ ?_, υ_star := fun x ↦ ?_ }⟩
   · -- a principal idele `x = y` lies in `R`, as the image of `(y, 1)`
@@ -740,9 +812,11 @@ end SplittingCharExists
 
 namespace New
 
-variable {ℓ : ℕ} [ThePrime ℓ]
+variable
+  {ℓ : ℕ} [ThePrime ℓ]
   {E : Type} [Field E] [EmbeddedNumberField E] [NumberField.IsCMField E]
-  {A : ClosurePlace} {v : FinPlace E} (b : Bool) (g : Gal(Ω/E))
+  {A : ClosurePlace} {v : FinPlace E}
+  (b : Bool) (g : Gal(Ω/E))
 
 @[simp, grind =]
 lemma star_mem_placesDividing {T : ℕ} : star v ∈ placesDividing E T ↔ v ∈ placesDividing E T := by
@@ -775,11 +849,13 @@ lemma continuous_conjGal : Continuous (conjGal (E := E)) :=
 lemma cyclotomicChar_conjGal : cyclotomicChar Ω ℓ (conjGal g) = cyclotomicChar Ω ℓ g :=
   cyclotomicChar_eq_of_equivariant ℓ (cmConj_conjGal_smul g)
 
-/-- The global Artin map of a CM field `E` is compatible with complex conjugation: if the Artin
+/--
+The global Artin map of a CM field `E` is compatible with complex conjugation: if the Artin
 symbol of the finite idele `x` is the class of `g ∈ Gal(Ω/E)`, then that of the conjugate idele `x̄`
-is the class of `conjGal g = c g c`, where `c` is the chosen complex conjugation of `Ω`. -/
-lemma artinMap_star {x : (𝔸f E)ˣ} (h : artinMap Gal(Ω/E) x = g) :
-    artinMap Gal(Ω/E) (star x) = conjGal g := by
+is the class of `conjGal g = c g c`, where `c` is the chosen complex conjugation of `Ω`.
+-/
+lemma artinMap_star {x : (𝔸f E)ˣ} (h : artinMap Gal(Ω/E) x = g)
+    : artinMap Gal(Ω/E) (star x) = conjGal g := by
   -- Norm compatibility (`artinMap_map_adeleNorm`) for `E` as an extension of itself through complex
   -- conjugation.
   let h_starAlgebra : Algebra E E := (starRingEnd E).toAlgebra
@@ -793,8 +869,10 @@ lemma artinMap_star {x : (𝔸f E)ˣ} (h : artinMap Gal(Ω/E) x = g) :
   rw [← h_norm]
   exact artinMap_map_adeleNorm h_art _ cmConj_algebraMap (cmConj_conjGal_smul g)
 
-/-- The conjugate place: the preimage of the valuation subring A of Ω under the chosen complex
-conjugation. -/
+/--
+The conjugate place: the preimage of the valuation subring A of Ω under the chosen complex
+conjugation.
+-/
 noncomputable def conjPlace (A : ClosurePlace) : ValuationSubring Ω := A.comap cmConj.toRingHom
 
 variable {g}
@@ -804,9 +882,11 @@ lemma conjPlace_conjPlace : conjPlace (conjPlace A) = A := by
   ext
   simp [conjPlace]
 
-/-- Let E be a CM field. If the valuation subring A of Ω lies over the finite place v of E, then
+/--
+Let E be a CM field. If the valuation subring A of Ω lies over the finite place v of E, then
 the conjugate place of A under the chosen complex conjugation lies over the conjugate prime
-v̄. -/
+v̄.
+-/
 lemma IsPlaceOver.conjPlace_star (h : IsPlaceOver A v) : IsPlaceOver (conjPlace A) (star v) := by
   intro x
   have h_conj : cmConj.toRingHom (algebraMap E Ω (x : E)) = algebraMap E Ω (star (x : E)) :=
@@ -814,18 +894,21 @@ lemma IsPlaceOver.conjPlace_star (h : IsPlaceOver A v) : IsPlaceOver (conjPlace 
   rw [conjPlace, comap_apply_lt_one_iff, h_conj, mem_star_place]
   exact h (star x)
 
-/-- Conjugation maps a Frobenius element of exponent `q` at the place `A` to one at the conjugate
-place. -/
-lemma IsFrob.conjPlace_conjGal {q : ℕ} (hg : IsFrob A q g) :
-    IsFrob (conjPlace A) q (conjGal g) :=
+/--
+Conjugation maps a Frobenius element of exponent `q` at the place `A` to one at the conjugate
+place.
+-/
+lemma IsFrob.conjPlace_conjGal {q : ℕ} (hg : IsFrob A q g) : IsFrob (conjPlace A) q (conjGal g) :=
   map cmConj_conjGal_smul hg
 
-/-- Let E be a CM field, g in Gal(Ω/E) and c the chosen complex conjugation. Then g^c = cgc lies
+/--
+Let E be a CM field, g in Gal(Ω/E) and c the chosen complex conjugation. Then g^c = cgc lies
 in the inertia group of the conjugate place of A if and only if g lies in the inertia group
-of A. -/
+of A.
+-/
 @[simp]
-lemma conjGal_mem_inertiaGroup_iff :
-    conjGal g ∈ inertiaGroup Gal(Ω/E) (conjPlace A) ↔ g ∈ inertiaGroup Gal(Ω/E) A := by
+lemma conjGal_mem_inertiaGroup_iff
+    : conjGal g ∈ inertiaGroup Gal(Ω/E) (conjPlace A) ↔ g ∈ inertiaGroup Gal(Ω/E) A := by
   -- inertia is the case `q = 1` of `IsFrob.conjPlace_conjGal`; both conjugations are involutions
   refine ⟨fun hg ↦ ?_, IsFrob.conjPlace_conjGal⟩
   have h_frob : IsFrob (conjPlace (conjPlace A)) 1 (conjGal (conjGal g)) :=
@@ -833,10 +916,13 @@ lemma conjGal_mem_inertiaGroup_iff :
   rwa [conjPlace_conjPlace, conjGal_conjGal] at h_frob
 
 omit [NumberField.IsCMField E] in
-/-- The `ℓ`-adic cyclotomic character is unramified outside `ℓ`: it is `1` at every `g` that lies
-in the inertia group of a place of `Ω` above a finite place of `E` not dividing `ℓ`. -/
+/--
+The `ℓ`-adic cyclotomic character is unramified outside `ℓ`: it is `1` at every `g` that lies
+in the inertia group of a place of `Ω` above a finite place of `E` not dividing `ℓ`.
+-/
 lemma Selmer.cyclotomicChar_eq_one_of_mem_inertiaAbove
-    (hg_inertia : g ∈ inertiaAbove (placesDividing E ℓ)ᶜ) : cyclotomicChar Ω ℓ g = 1 := by
+    (hg_inertia : g ∈ inertiaAbove (placesDividing E ℓ)ᶜ)
+    : cyclotomicChar Ω ℓ g = 1 := by
   -- `g` is in the inertia group of a place `B` above a place `u` that does not divide `ℓ`
   obtain ⟨u, hu_not_dvd, B, hB, hg⟩ := hg_inertia
   exact cyclotomicChar_eq_one_of_mem_inertiaGroup ℓ hg
@@ -846,12 +932,14 @@ lemma Selmer.cyclotomicChar_eq_one_of_mem_inertiaAbove
 
 variable {C : Type*} [CommMonoid C] {S I : Set (FinPlace E)} {χ : Gal(Ω/E) →* C}
 
-/-- Let `χ : Gal(Ω/E) →* C` come from the norm-one torus in the sense of `IsFromU1 S I χ`:
+/--
+Let `χ : Gal(Ω/E) →* C` come from the norm-one torus in the sense of `IsFromU1 S I χ`:
 `χ(Art x) = η(x / x̄)` for an idele class character `η` of modulus `I` that is trivial on the local
 components at the places of `S` and their conjugates. Then `χ(idOrConjInv b g) = χ(g)` for both
-values of the boolean `b`, and in particular `χ((c g c)⁻¹) = χ(g)`. -/
-lemma IsFromU1.apply_idOrConjInv (h : IsFromU1 S I χ) (g : Gal(Ω/E)) :
-    χ (idOrConjInv b g) = χ g := by
+values of the boolean `b`, and in particular `χ((c g c)⁻¹) = χ(g)`.
+-/
+lemma IsFromU1.apply_idOrConjInv (h : IsFromU1 S I χ) (g : Gal(Ω/E))
+    : χ (idOrConjInv b g) = χ g := by
   cases b
   · -- If `g = Art x` then `idOrConjInv false g = Art x̄⁻¹`, and both ideles have the same `x / x̄`.
     obtain ⟨η, -, -, hη⟩ := h.exists_ideleChar
@@ -861,21 +949,26 @@ lemma IsFromU1.apply_idOrConjInv (h : IsFromU1 S I χ) (g : Gal(Ω/E)) :
     simp [hη x g hx, hη _ _ hx_conj, inv_mul_eq_div]
   · rw [idOrConjInv_true]
 
-/-- Let `S` and `I` be sets of finite places of the CM field `E`, and let `χ` be a character of
+/--
+Let `S` and `I` be sets of finite places of the CM field `E`, and let `χ` be a character of
 `Gal(Ω/E)` with `IsFromU1 S I χ`. This means `χ(Art x) = η(x / x̄)` for an idele class character `η`
 of modulus `I` that is trivial on the local components at `S ∪ S̄`. Then `χ` kills the decomposition
 groups above `S`: if the place `A` of `Ω` lies over a place `v ∈ S` of `E` and `g` is in the
-decomposition group of `A`, then `χ g = 1`. -/
-lemma IsFromU1.eq_one_of_mem_decompGroup (h : IsFromU1 S I χ) (hv : v ∈ S)
-    (hA : IsPlaceOver A v) (hg : g ∈ decompGroup Gal(Ω/E) A) :
-    χ g = 1 := by
+decomposition group of `A`, then `χ g = 1`.
+-/
+lemma IsFromU1.eq_one_of_mem_decompGroup
+    (h : IsFromU1 S I χ) (hv : v ∈ S) (hA : IsPlaceOver A v) (hg : g ∈ decompGroup Gal(Ω/E) A)
+    : χ g = 1 := by
   obtain ⟨η, -, hη_one, hχ⟩ := h.exists_ideleChar
   -- The local Artin map has dense range and `χ` is locally constant, so `χ g = χ s` for some `s`
   -- in the decomposition group whose class is the local symbol of some `x`.
-  obtain ⟨x, s, hs, hx⟩ : ∃ (x : (LocField v)ˣ) (s : decompGroup Gal(Ω/E) A),
-      χ g = χ s ∧ ↑s = localArtin Gal(Ω/E) A v x := by
-    obtain ⟨x, s, hs, hx⟩ := hA.denseRange_localArtin.exists_mem_open
-      (QuotientGroup.isOpenMap_coe _ (h.isLocallyConstant {χ g}).preimage_val) ⟨_, ⟨g, hg⟩, rfl, rfl⟩
+  obtain ⟨x, s, hs, hx⟩
+      : ∃ (x : (LocField v)ˣ) (s : decompGroup Gal(Ω/E) A),
+        χ g = χ s ∧ ↑s = localArtin Gal(Ω/E) A v x := by
+    obtain ⟨x, s, hs, hx⟩ :=
+      hA.denseRange_localArtin.exists_mem_open
+        (QuotientGroup.isOpenMap_coe _ (h.isLocallyConstant {χ g}).preimage_val)
+        ⟨_, ⟨g, hg⟩, rfl, rfl⟩
     exact ⟨x, s, (by simpa using hs : χ s = χ g).symm, hx⟩
   have h_art : artinMap Gal(Ω/E) (locIdele v x) = (s : Gal(Ω/E)) := by
     simp [hA.artinAt_eq_of_localArtin_eq hx.symm]
@@ -884,8 +977,9 @@ lemma IsFromU1.eq_one_of_mem_decompGroup (h : IsFromU1 S I χ) (hv : v ∈ S)
   -- `S.conjClosure`, are `1`
   have hv_mem : v ∈ S.conjClosure := Or.inl hv
   have h_star_v_mem : star v ∈ S.conjClosure := Or.inr (by simpa using hv)
-  have h_at_one (a : (LocField v)ˣ) (a' : (LocField (star v))ˣ) (w : FinPlace E)
-      (hw : w ∉ S.conjClosure) : ideleAt w (locIdele v a / locIdele (star v) a') = 1 := by
+  have h_at_one
+      (a : (LocField v)ˣ) (a' : (LocField (star v))ˣ) (w : FinPlace E) (hw : w ∉ S.conjClosure)
+      : ideleAt w (locIdele v a / locIdele (star v) a') = 1 := by
     rw [map_div, ideleAt_locIdele_of_ne (ne_of_mem_of_not_mem hv_mem hw).symm,
       ideleAt_locIdele_of_ne (ne_of_mem_of_not_mem h_star_v_mem hw).symm, div_one]
   apply hη_one
@@ -893,13 +987,16 @@ lemma IsFromU1.eq_one_of_mem_decompGroup (h : IsFromU1 S I χ) (hv : v ∈ S)
   · intro w hw
     simp [h_at_one _ _ w (Set.notMem_of_mem_sdiff hw)]
 
-/-- Let `S` and `I` be sets of finite places of the CM field `E`, and let `χ` be a character of
+/--
+Let `S` and `I` be sets of finite places of the CM field `E`, and let `χ` be a character of
 `Gal(Ω/E)` with `IsFromU1 S I χ`. This means `χ(Art x) = η(x / x̄)` for an idele class character `η`
 of modulus `I` that is trivial on the local components at `S ∪ S̄`. Then `χ` kills inertia outside
 `I` and its conjugates: `χ g = 1` for `g` in the inertia group of a place of `Ω` above a place of
-`E` not in `I ∪ Ī`. -/
-lemma IsFromU1.eq_one_of_mem_inertiaAbove (h : IsFromU1 S I χ) (g : Gal(Ω/E))
-    (hg_inertia : g ∈ inertiaAbove I.conjClosureᶜ) : χ g = 1 := by
+`E` not in `I ∪ Ī`.
+-/
+lemma IsFromU1.eq_one_of_mem_inertiaAbove
+    (h : IsFromU1 S I χ) (g : Gal(Ω/E)) (hg_inertia : g ∈ inertiaAbove I.conjClosureᶜ)
+    : χ g = 1 := by
   obtain ⟨v, hv_not_mem, A, hA, hg⟩ := hg_inertia
   obtain ⟨η, -, hη_one, hχ⟩ := h.exists_ideleChar
   -- the class of an inertia element is the local Artin symbol of a unit `x`

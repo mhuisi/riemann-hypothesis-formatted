@@ -57,16 +57,19 @@ section TraceFormula
 
 open Function LinearMap New Finset Variety
 
-/-- Let `S g` be finite sets of elements of `Γ` with `γ ∈ S g ↔ g⁻¹ * (e γ * r) ∈ K`, empty for
+/--
+Let `S g` be finite sets of elements of `Γ` with `γ ∈ S g ↔ g⁻¹ * (e γ * r) ∈ K`, empty for
 `g ∈ D`. Then for every `v ∈ W` the function `g ↦ ∑ γ ∈ S g, ρ γ v` is equivariant along `e`
-(it lies in `ρ.coindV e`), vanishes on `D` and is right `K`-invariant. -/
-private lemma New.pi_sum_apply_mem_coindV_inf_levelSpace {A G Γ W : Type*} [Field A] [Group G]
-    [Group Γ] [AddCommGroup W] [Module A W] {e : Γ →* G} {ρ : Representation A Γ W}
-    {K : Subgroup G} {D : Set G} (r : G) (S : G → Finset Γ)
+(it lies in `ρ.coindV e`), vanishes on `D` and is right `K`-invariant.
+-/
+private lemma New.pi_sum_apply_mem_coindV_inf_levelSpace
+    {A G Γ W : Type*} [Field A] [Group G] [Group Γ] [AddCommGroup W] [Module A W]
+    {e : Γ →* G} {ρ : Representation A Γ W} {K : Subgroup G} {D : Set G}
+    (r : G) (S : G → Finset Γ)
     (h_mem_S : ∀ (g : G) (γ : Γ), γ ∈ S g ↔ g⁻¹ * (e γ * r) ∈ K) (h_empty : ∀ g ∈ D, S g = ∅)
-    (v : W) :
-    LinearMap.pi (fun g : G ↦ ∑ γ ∈ S g, ρ γ) v ∈
-      ρ.coindV e ⊓ Submodule.pi D ⊥ ⊓ levelSpace (rightRegular A G W) K := by
+    (v : W)
+    : LinearMap.pi (fun g : G ↦ ∑ γ ∈ S g, ρ γ) v
+      ∈ ρ.coindV e ⊓ Submodule.pi D ⊥ ⊓ levelSpace (rightRegular A G W) K := by
   -- equivariance: multiplication by `γ⁻¹` matches `S (e γ * g)` with `S g`
   have equivariant (γ : Γ) (g : G) : ∑ δ ∈ S (e γ * g), ρ δ v = ∑ δ ∈ S g, ρ γ (ρ δ v) :=
     Finset.sum_equiv (.mulLeft γ⁻¹) (by simp [h_mem_S, mul_assoc]) (by simp)
@@ -78,29 +81,31 @@ private lemma New.pi_sum_apply_mem_coindV_inf_levelSpace {A G Γ W : Type*} [Fie
   · simp [h_empty g hg]
   · simp [invariant]
 
-/-- The trace of one term of the trace formula `New.trace_eq_weighted_sum`. Let `J : W → M` be
+/--
+The trace of one term of the trace formula `New.trace_eq_weighted_sum`. Let `J : W → M` be
 linear with `ι (J v) g = ∑ γ ∈ S g, ρ γ v`, where `γ ∈ S g ↔ g⁻¹ * (e γ * r) ∈ K`; let `σ` be an
 automorphism of `G` preserving `K`, and let `T` send `F` to the right translate of `s ∘ F ∘ σ⁻¹` by
 the group ring element `a`. Then the trace of `T ∘ J ∘ (F ↦ F r) ∘ ι` on `M` is `∑ᶠ γ, cosetFn K a
 (r⁻¹ * σ (e γ) * σ r) * trace (s * ρ γ)`. Here `cosetFn K a x` is the sum of the coefficients `a g`
-over the `g` with `g K = x K`. -/
-private lemma New.trace_mul_comp_proj_comp_eq_finsum_cosetFn {A G Γ W M : Type*} [Field A]
-    [Group G] [Group Γ] [AddCommGroup W] [Module A W] [Module.Finite A W] [AddCommGroup M]
-    [Module A M] [Module.Finite A M] {e : Γ →* G} {ρ : Representation A Γ W} {K : Subgroup G}
-    (ι : M →ₗ[A] G → W) (r : G) (S : G → Finset Γ)
-    (h_mem_S : ∀ (g : G) (γ : Γ), γ ∈ S g ↔ g⁻¹ * (e γ * r) ∈ K)
+over the `g` with `g K = x K`.
+-/
+private lemma New.trace_mul_comp_proj_comp_eq_finsum_cosetFn
+    {A G Γ W M : Type*} [Field A] [Group G] [Group Γ] [AddCommGroup W] [Module A W]
+    [Module.Finite A W] [AddCommGroup M] [Module A M] [Module.Finite A M]
+    {e : Γ →* G} {ρ : Representation A Γ W} {K : Subgroup G}
+    (ι : M →ₗ[A] G → W)
+    (r : G) (S : G → Finset Γ) (h_mem_S : ∀ (g : G) (γ : Γ), γ ∈ S g ↔ g⁻¹ * (e γ * r) ∈ K)
     (σ : G ≃* G) (hσ : K.comap (σ : G →* G) = K)
     {s : Module.End A W} {a : MonoidAlgebra A G} {T : Module.End A M}
-    (hT : ∀ ψ : M,
-      ι (T ψ) = (rightRegular A G W).asAlgebraHom a fun g : G ↦ s (ι ψ (σ.symm g)))
-    (J : W →ₗ[A] M) (ι_J : ∀ (v : W) (g : G), ι (J v) g = ∑ γ ∈ S g, ρ γ v) :
-    trace A M (T * J ∘ₗ proj r ∘ₗ ι) =
-      ∑ᶠ γ : Γ, cosetFn K a (r⁻¹ * σ (e γ) * σ r) * trace A W (s * ρ γ) := by
+    (hT : ∀ ψ : M, ι (T ψ) = (rightRegular A G W).asAlgebraHom a fun g : G ↦ s (ι ψ (σ.symm g)))
+    (J : W →ₗ[A] M) (ι_J : ∀ (v : W) (g : G), ι (J v) g = ∑ γ ∈ S g, ρ γ v)
+    : trace A M (T * J ∘ₗ proj r ∘ₗ ι)
+      = ∑ᶠ γ : Γ, cosetFn K a (r⁻¹ * σ (e γ) * σ r) * trace A W (s * ρ γ) := by
   classical
   -- Moved over to `W`, the map is `v ↦ ι (T (J v)) r`, which `hT` computes.
   let S' (g : G) : Finset Γ := S (σ.symm (r * g))
-  have on_W :
-      (proj r ∘ₗ ι) ∘ₗ T ∘ₗ J = ∑ g ∈ a.coeff.support, ∑ γ ∈ S' g, a.coeff g • (s * ρ γ) := by
+  have on_W
+      : (proj r ∘ₗ ι) ∘ₗ T ∘ₗ J = ∑ g ∈ a.coeff.support, ∑ γ ∈ S' g, a.coeff g • (s * ρ γ) := by
     ext v
     simp [hT, ι_J, S', asAlgebraHom_eq_sum_support, smul_sum]
   -- `γ` occurs in `S' g` exactly for the `g` of one coset, as `σ` preserves `K`.
@@ -108,8 +113,8 @@ private lemma New.trace_mul_comp_proj_comp_eq_finsum_cosetFn {A G Γ W M : Type*
     rw [h_mem_S, ← hσ, Subgroup.mem_comap, hσ]
     simp [QuotientGroup.eq, mul_assoc]
   calc
-    trace A M ((T ∘ₗ J) ∘ₗ proj r ∘ₗ ι) = trace A W ((proj r ∘ₗ ι) ∘ₗ T ∘ₗ J) :=
-      trace_comp_comm' _ _
+    trace A M ((T ∘ₗ J) ∘ₗ proj r ∘ₗ ι)
+      = trace A W ((proj r ∘ₗ ι) ∘ₗ T ∘ₗ J) := trace_comp_comm' _ _
     _ = ∑ x ∈ a.coeff.support.sigma S', a.coeff x.fst * trace A W (s * ρ x.snd) := by
       simp [on_W, sum_sigma]
     _ = ∑ᶠ γ : Γ, cosetFn K a (r⁻¹ * σ (e γ) * σ r) * trace A W (s * ρ γ) := by
@@ -119,35 +124,36 @@ private lemma New.trace_mul_comp_proj_comp_eq_finsum_cosetFn {A G Γ W M : Type*
       simp +contextual [sum_filter, sum_sigma, mem_S', cosetFn, asAlgebraHom_eq_sum_support,
         sum_mul, Finsupp.single_apply]
 
-/-- Let `ι` identify `M` with the `F : G → W` with `F (e γ * g) = ρ γ (F g)`, zero on `D` and right
+/--
+Let `ι` identify `M` with the `F : G → W` with `F (e γ * g) = ρ γ (F g)`, zero on `D` and right
 `K`-invariant; `T` sends `F` to the right translate of `s ∘ F ∘ σ⁻¹` by `a`, and `σ` preserves `K`.
 For points `r i` of `G` and weights `w i` such that `S i g = {γ | e γ * r i ∈ g K}` is empty on `D`
 and `∑ i, w i * #(S i g) = 1` off `D`, `M` is finite-dimensional and `tr T` is the sum over `i` of
-`w i * ∑ᶠ γ, cosetFn K a ((r i)⁻¹ * σ (e γ) * σ (r i)) * tr (s * ρ γ)`; `cosetFn` = `∑ a_g [gK]`. -/
-lemma New.trace_eq_weighted_sum {A G Γ W M I : Type*} [Field A] [Group G] [Group Γ]
-    [AddCommGroup W] [Module A W] [Module.Finite A W] [AddCommGroup M] [Module A M] [Fintype I]
+`w i * ∑ᶠ γ, cosetFn K a ((r i)⁻¹ * σ (e γ) * σ (r i)) * tr (s * ρ γ)`; `cosetFn` = `∑ a_g [gK]`.
+-/
+lemma New.trace_eq_weighted_sum
+    {A G Γ W M I : Type*} [Field A] [Group G] [Group Γ] [AddCommGroup W] [Module A W]
+    [Module.Finite A W] [AddCommGroup M] [Module A M] [Fintype I]
     {e : Γ →* G} {ρ : Representation A Γ W} {K : Subgroup G} {D : Set G}
     (ι : M →ₗ[A] G → W) (hι_injective : Injective ι)
     (hι_range : ι.range = ρ.coindV e ⊓ Submodule.pi D ⊥ ⊓ levelSpace (rightRegular A G W) K)
     (r : I → G) (w : I → A) (S : I → G → Finset Γ)
     (h_mem_S : ∀ (i : I) (g : G) (γ : Γ), γ ∈ S i g ↔ g⁻¹ * (e γ * r i) ∈ K)
-    (h_empty : ∀ g ∈ D, ∀ i : I, S i g = ∅)
-    (h_count : ∀ g ∉ D, ∑ i : I, w i * #(S i g) = 1)
+    (h_empty : ∀ g ∈ D, ∀ i : I, S i g = ∅) (h_count : ∀ g ∉ D, ∑ i : I, w i * #(S i g) = 1)
     (σ : G ≃* G) (hσ : K.comap (σ : G →* G) = K)
     {s : Module.End A W} {a : MonoidAlgebra A G} {T : Module.End A M}
-    (hT : ∀ ψ : M,
-      ι (T ψ) = (rightRegular A G W).asAlgebraHom a fun g : G ↦ s (ι ψ (σ.symm g))) :
-    Module.Finite A M ∧
-    trace A M T =
-      ∑ i : I, w i *
-        ∑ᶠ γ : Γ, cosetFn K a ((r i)⁻¹ * σ (e γ) * σ (r i)) * trace A W (s * ρ γ) := by
+    (hT : ∀ ψ : M, ι (T ψ) = (rightRegular A G W).asAlgebraHom a fun g : G ↦ s (ι ψ (σ.symm g)))
+    : Module.Finite A M
+      ∧ trace A M T
+        = ∑ i : I, w i *
+            ∑ᶠ γ : Γ, cosetFn K a ((r i)⁻¹ * σ (e γ) * σ (r i)) * trace A W (s * ρ γ) := by
   classical
   -- For `v : W` the function `g ↦ ∑ γ ∈ S i g, ρ γ v` lies in `M`; call it `J i v`. The maps
   -- `ψ ↦ J i (ι ψ (r i))`, weighted by `w i`, add up to the identity of `M`. So `M` is a quotient
   -- of `I → W`, and the trace of `T` is a weighted sum of traces that can be moved over to `W`.
   have mem_range (i : I) (v : W) : pi (fun g ↦ ∑ γ ∈ S i g, ρ γ) v ∈ ι.range :=
-    hι_range.ge (pi_sum_apply_mem_coindV_inf_levelSpace (r i) (S i) (h_mem_S i)
-      (fun g hg ↦ h_empty g hg i) v)
+    hι_range.ge
+      (pi_sum_apply_mem_coindV_inf_levelSpace (r i) (S i) (h_mem_S i) (fun g hg ↦ h_empty g hg i) v)
   let J (i : I) : W →ₗ[A] M :=
     codRestrictOfInjective (pi fun g ↦ ∑ γ ∈ S i g, ρ γ) ι hι_injective (mem_range i)
   have ι_J (i : I) (v : W) (g : G) : ι (J i v) g = ∑ γ ∈ S i g, ρ γ v := by simp [J]
@@ -193,51 +199,64 @@ section FiniteClasses
 
 open Matrix ComplexOrder QuotientGroup Units DoubleCoset Set New.Core
 
-/-- An invertible self-adjoint complex matrix `B` is congruent to a unitary one: for
-`a = √|B⁻¹|`, built by the continuous functional calculus, the matrix `aᴴ B a` is unitary. -/
-lemma New.Variety.exists_star_mul_mul_mem_unitary {n : Type*} [Fintype n] [DecidableEq n]
-    (B : GL n ℂ) (hB : IsSelfAdjoint B.val) :
-    ∃ a : GL n ℂ, (star a * B * a).val ∈ unitary (Matrix n n ℂ) := by
+/--
+An invertible self-adjoint complex matrix `B` is congruent to a unitary one: for
+`a = √|B⁻¹|`, built by the continuous functional calculus, the matrix `aᴴ B a` is unitary.
+-/
+lemma New.Variety.exists_star_mul_mul_mem_unitary
+    {n : Type*} [Fintype n] [DecidableEq n] (B : GL n ℂ) (hB : IsSelfAdjoint B.val)
+    : ∃ a : GL n ℂ, (star a * B * a).val ∈ unitary (Matrix n n ℂ) := by
   -- The spectrum of `B` is finite, real and misses `0`, so every function on it is continuous, and
   -- `aᴴ B a` is the function `x / |x| = ±1` of `B`.
-  have h_sq_one : ∀ x ∈ spectrum ℝ B.val,
-      star (√|x⁻¹| * x * √|x⁻¹|) * (√|x⁻¹| * x * √|x⁻¹|) = 1 := by
+  have h_sq_one
+      : ∀ x ∈ spectrum ℝ B.val, star (√ |x⁻¹| * x * √ |x⁻¹|) * (√ |x⁻¹| * x * √ |x⁻¹|) = 1 := by
     grind [star_trivial, zero_notMem_spectrum]
-  have h_root_ne_zero : ∀ x ∈ spectrum ℝ B.val, √|x⁻¹| ≠ 0 := by grind [zero_notMem_spectrum]
-  let a : GL n ℂ := cfcUnits (fun x : ℝ ↦ √|x⁻¹|) B h_root_ne_zero
+  have h_root_ne_zero : ∀ x ∈ spectrum ℝ B.val, √ |x⁻¹| ≠ 0 := by grind [zero_notMem_spectrum]
+  let a : GL n ℂ := cfcUnits (fun x : ℝ ↦ √ |x⁻¹|) B h_root_ne_zero
   -- `a` is self-adjoint, so `aᴴ B a` is the function `√|x⁻¹| * x * √|x⁻¹|` of `B`.
-  have h_conj_eq : (star a * B * a).val = cfc (fun x : ℝ ↦ √|x⁻¹| * x * √|x⁻¹|) B.val := by
+  have h_conj_eq : (star a * B * a).val = cfc (fun x : ℝ ↦ √ |x⁻¹| * x * √ |x⁻¹|) B.val := by
     simp [a, star_trivial, cfc_mul, cfc_id', ← cfc_star, finite_real_spectrum.continuousOn, hB]
   exact ⟨a, by rwa [h_conj_eq, cfc_unitary_iff _ B.val]⟩
 
-/-- There is a compact set `B` of adelic matrices such that every frame `x` for an invertible
+/--
+There is a compact set `B` of adelic matrices such that every frame `x` for an invertible
 rational form `J` (that is, `xᴴ J x` is a unit of `Ẑ` times `1`) can be completed by archimedean
-components `a` to an adelic matrix `g = (a, x)` whose Gram matrix `gᴴ J g` lies in `B`. -/
-private lemma New.Variety.exists_isCompact_gram_mkAdelicGL_mem (E n : Type) [Field E] [CMBase E]
-    [Fintype n] [DecidableEq n] :
-    ∃ B : Set (GL n (𝔸 E)), IsCompact B ∧
-      ∀ (J : GL n E) (x : GL n (𝔸f E)), IsFrameFor J.val x →
-        ∃ a : NumberField.InfinitePlace E → GL n ℂ,
-          star (mkAdelicGL (a, x)) * .map toAdele J * mkAdelicGL (a, x) ∈ B := by
+components `a` to an adelic matrix `g = (a, x)` whose Gram matrix `gᴴ J g` lies in `B`.
+-/
+private lemma New.Variety.exists_isCompact_gram_mkAdelicGL_mem
+    (E n : Type) [Field E] [CMBase E] [Fintype n] [DecidableEq n]
+    : ∃ B : Set (GL n (𝔸 E)),
+      IsCompact B
+        ∧ ∀ (J : GL n E) (x : GL n (𝔸f E)),
+          IsFrameFor J.val x
+            → ∃ a : NumberField.InfinitePlace E → GL n ℂ,
+              star (mkAdelicGL (a, x)) * .map toAdele J * mkAdelicGL (a, x) ∈ B := by
   -- `B` consists of the `g` such that `g` and `g⁻¹` have entries that are integral and of norm at
   -- most `1` at infinity.
   let box : Set (Matrix n n (𝔸 E)) :=
     (Metric.closedBall (0 : NumberField.InfinitePlace E → ℂ) 1 ×ˢ (Ô E : Set (𝔸f E))).matrix
   have h_box : IsCompact box := isCompact_closedBall_prod_integral.matrix
-  refine ⟨embedProduct (Matrix n n (𝔸 E)) ⁻¹' (box ×ˢ (MulOpposite.op '' box)),
-    isClosedEmbedding_embedProduct.isCompact_preimage
-      (h_box.prod (h_box.image_of_continuous MulOpposite.op)), fun J x h_frame ↦ ?_⟩
+  refine ⟨
+    embedProduct (Matrix n n (𝔸 E)) ⁻¹' (box ×ˢ (MulOpposite.op '' box)),
+    isClosedEmbedding_embedProduct.isCompact_preimage (h_box.prod (h_box.image_of_continuous
+      MulOpposite.op)),
+    fun J x h_frame ↦ ?_
+  ⟩
   -- Choose `a` making `J` unitary. The Gram matrix is then unitary at infinity and a unit scalar
   -- at the finite places.
-  have h_unitary (w : NumberField.InfinitePlace E) :
-      ∃ a : GL n ℂ, star a.val * J.val.map (Φ w) * a.val ∈ unitary (Matrix n n ℂ) := by
+  have h_unitary (w : NumberField.InfinitePlace E)
+      : ∃ a : GL n ℂ, star a.val * J.val.map (Φ w) * a.val ∈ unitary (Matrix n n ℂ) := by
     simpa using exists_star_mul_mul_mem_unitary (.map (Φ w) J) h_frame.isHermitian_map
   choose a ha using h_unitary
-  obtain ⟨ν, hν⟩ : ∃ ν : (Ô ℚ)ˣ,
-      x.valᴴ * J.val.map (algebraMap E (𝔸f E)) * x.val = finAdeleIncl ℚ E ν • 1 := h_frame
-  have h_gram : star (mkAdelicGL (a, x)) * .map toAdele J * mkAdelicGL (a, x) =
-      mkAdelicGL (fun w ↦ Unitary.toUnits ⟨_, ha w⟩,
-        ν.map ((finAdeleIncl ℚ E).domRestrict (Ô ℚ)).toMonoidHom • 1) := by
+  obtain ⟨ν, hν⟩
+      : ∃ ν : (Ô ℚ)ˣ, x.valᴴ * J.val.map (algebraMap E (𝔸f E)) * x.val = finAdeleIncl ℚ E ν • 1 :=
+    h_frame
+  have h_gram
+      : star (mkAdelicGL (a, x)) * .map toAdele J * mkAdelicGL (a, x)
+        = mkAdelicGL (
+          fun w ↦ Unitary.toUnits ⟨_, ha w⟩,
+          ν.map ((finAdeleIncl ℚ E).domRestrict (Ô ℚ)).toMonoidHom • 1
+        ) := by
     refine ext (matrix_ext_𝔸 (fun w ↦ ?_) ?_)
     · push_cast [Matrix.map_mul]
       rfl
@@ -245,30 +264,36 @@ private lemma New.Variety.exists_isCompact_gram_mkAdelicGL_mem (E n : Type) [Fie
       exact hν
   use a
   rw [h_gram]
-  simp [box, matrix, ← map_inv, entry_norm_bound_of_unitary, ha, ite_mem,
-    pi_norm_le_iff_of_nonneg, smul_def, Matrix.one_apply]
+  simp [box, matrix, ← map_inv, entry_norm_bound_of_unitary, ha, ite_mem, pi_norm_le_iff_of_nonneg,
+    smul_def, Matrix.one_apply]
 
-/-- If `r` and `y` are frames for the same rational form `β` and lie in one coset of `V`, then
-`r` and `Y y`, for `Y` in `GL_n(E)`, lie in one double coset `GL_n(E) r (GU E n ⊓ V)`. -/
-private lemma New.Variety.doubleCoset_mk_eq_of_isFrameFor {E n : Type} [Field E] [CMBase E]
-    [Fintype n] [DecidableEq n] {V : Subgroup (GL n (𝔸f E))} {β : Matrix n n E}
-    {r y : GL n (𝔸f E)} (hr : IsFrameFor β r) (hy : IsFrameFor β y)
-    (h_coset : (r : GL n (𝔸f E) ⧸ V) = (y : GL n (𝔸f E) ⧸ V)) (Y : GL n E) :
-    DoubleCoset.mk toFinGL.range (GU E n ⊓ V) r =
-      DoubleCoset.mk toFinGL.range (GU E n ⊓ V) (toFinGL Y * y) := by
+/--
+If `r` and `y` are frames for the same rational form `β` and lie in one coset of `V`, then
+`r` and `Y y`, for `Y` in `GL_n(E)`, lie in one double coset `GL_n(E) r (GU E n ⊓ V)`.
+-/
+private lemma New.Variety.doubleCoset_mk_eq_of_isFrameFor
+    {E n : Type} [Field E] [CMBase E] [Fintype n] [DecidableEq n]
+    {V : Subgroup (GL n (𝔸f E))} {β : Matrix n n E} {r y : GL n (𝔸f E)} (hr : IsFrameFor β r)
+    (hy : IsFrameFor β y) (h_coset : (r : GL n (𝔸f E) ⧸ V) = (y : GL n (𝔸f E) ⧸ V))
+    (Y : GL n E)
+    : DoubleCoset.mk toFinGL.range (GU E n ⊓ V) r
+      = DoubleCoset.mk toFinGL.range (GU E n ⊓ V) (toFinGL Y * y) := by
   have h_GU : r⁻¹ * y ∈ GU E n := ⟨1, one_pos, hr.mul_iff.mp (by simpa using hy)⟩
   have h_V : r⁻¹ * y ∈ V := QuotientGroup.eq.mp h_coset
   exact (DoubleCoset.eq ..).mpr ⟨toFinGL Y, ⟨Y, rfl⟩, r⁻¹ * y, ⟨h_GU, h_V⟩, by simp [mul_assoc]⟩
 
-/-- Let `V` be an open subgroup of `GL_n(𝔸f E)`. The elements `x` that are signed frames for some
+/--
+Let `V` be an open subgroup of `GL_n(𝔸f E)`. The elements `x` that are signed frames for some
 complex matrix `ℓ` (`New.Variety.IsSignedFrame`: `x` is a frame for some form `β` over `E` with
 positivity conditions) lie in finitely many double cosets `GL_n(E) x (GU E n ⊓ V)`. Here `GU E n` is
 the unitary similitudes `g` with `gᴴ g` a scalar finite idele of `ℚ`, and `GL_n(E)` acts on the left
-through its diagonal embedding `toFinGL`. -/
-lemma New.Variety.finite_isSignedFrame_classes {E n : Type} [Field E] [CMBase E] [Fintype n]
-    [DecidableEq n] {V : Subgroup (GL n (𝔸f E))} (hV : V.IsOpen) :
-    (DoubleCoset.mk toFinGL.range (GU E n ⊓ V) ''
-      {x : GL n (𝔸f E) | ∃ ℓ : Matrix n n ℂ, IsSignedFrame x ℓ}).Finite := by
+through its diagonal embedding `toFinGL`.
+-/
+lemma New.Variety.finite_isSignedFrame_classes
+    {E n : Type} [Field E] [CMBase E] [Fintype n] [DecidableEq n]
+    {V : Subgroup (GL n (𝔸f E))} (hV : V.IsOpen)
+    : (DoubleCoset.mk toFinGL.range (GU E n ⊓ V)
+      '' {x : GL n (𝔸f E) | ∃ ℓ : Matrix n n ℂ, IsSignedFrame x ℓ}).Finite := by
   -- Mahler's criterion moves a frame by a rational matrix so that its form lies in a finite set
   -- `F`, and the frame lies in a compact set, which meets finitely many cosets of `V`. Two frames
   -- for one form in one coset of `V` differ by an element of `GU E n ⊓ V`. `rep β q` is a frame
@@ -306,8 +331,8 @@ lemma New.Variety.finite_isSignedFrame_classes {E n : Type} [Field E] [CMBase E]
     rw [← h_finite_part]
     exact hZ.finitePart_mem
   have hy : IsFrameFor β y := (IsFrameFor.conj_iff y Y).mpr (by simpa [y] using h_frame)
-  obtain ⟨hr, hr_coset⟩ :
-      IsFrameFor β (rep β y) ∧ (rep β y : GL n (𝔸f E) ⧸ V) = (y : GL n (𝔸f E) ⧸ V) :=
+  obtain ⟨hr, hr_coset⟩
+      : IsFrameFor β (rep β y) ∧ (rep β y : GL n (𝔸f E) ⧸ V) = (y : GL n (𝔸f E) ⧸ V) :=
     Classical.epsilon_spec (p := fun x ↦ IsFrameFor β x ∧ (x : GL n (𝔸f E) ⧸ V) = y) ⟨y, hy, rfl⟩
   -- `x = Y y`, so `x` and `r` lie in one double coset.
   refine ⟨β, hβ_mem, y, ⟨y, hy_mem, rfl⟩, ?_⟩
@@ -332,29 +357,38 @@ open scoped NumberField
 
 namespace New.Variety
 
-variable {E : Type} [Field E] [CMBase E] {n : Type} [Fintype n] [DecidableEq n] (𝔑 : 𝓞 E) {W : Type}
-  [AddCommGroup W] [Module ℂ W] (ξ : Representation ℂ (GL n E) W)
+variable
+  {E : Type} [Field E] [CMBase E]
+  {n : Type} [Fintype n] [DecidableEq n]
+  (𝔑 : 𝓞 E)
+  {W : Type} [AddCommGroup W] [Module ℂ W]
+  (ξ : Representation ℂ (GL n E) W)
 
-/-- Forms on the definite frames: the functions `φ` from `GL n` of the finite adeles to `W`
+/--
+Forms on the definite frames: the functions `φ` from `GL n` of the finite adeles to `W`
 such that `φ (y x) = ξ y (φ x)` for `y` in `GL n E`; `φ x = 0` unless
 `New.Variety.IsSignedFrame x 1` holds, that is, unless `x` is a frame for a totally positive
 definite rational form (the submodule `pi S ⊥` asks for vanishing on `S`); and `φ (x k) = φ x`
-for `k` in the principal level `levelGU n 𝔑`. -/
+for `k` in the principal level `levelGU n 𝔑`.
+-/
 abbrev definiteForms : Submodule ℂ (GL n (𝔸f E) → W) :=
   -- left equivariance under `GL n E`
-  ξ.coindV toFinGL ⊓
+  ξ.coindV toFinGL
     -- vanishing at every `x` that is not a definite frame
-    Submodule.pi {x : GL n (𝔸f E) | ¬IsSignedFrame x 1} ⊥ ⊓
+    ⊓ Submodule.pi {x : GL n (𝔸f E) | ¬IsSignedFrame x 1} ⊥
     -- right invariance under the level
-    levelSpace (rightRegular ℂ (GL n (𝔸f E)) W) (levelGU n 𝔑)
+    ⊓ levelSpace (rightRegular ℂ (GL n (𝔸f E)) W) (levelGU n 𝔑)
 
-/-- The action of the Hecke algebra of level `𝔑` on definite forms by right translation. Its
+/--
+The action of the Hecke algebra of level `𝔑` on definite forms by right translation. Its
 elements `a` are supported on `GUPlus E n`, and their coset function is left
-`levelGU n 𝔑`-invariant. -/
+`levelGU n 𝔑`-invariant.
+-/
 def definiteForms.rep : Representation ℂ (heckeAlgebra n ℂ 𝔑) (definiteForms 𝔑 ξ) :=
   Representation.subrepresentation
     ((rightRegular ℂ (GL n (𝔸f E)) W).asAlgebraHom.comp (heckeAlgebra n ℂ 𝔑).val).toMonoidHom
-    (definiteForms 𝔑 ξ) fun a φ hφ ↦ by
+    (definiteForms 𝔑 ξ)
+    fun a φ hφ ↦ by
       -- `a` is supported on `GUPlus E n` (`ha_span`) and its coset function is left
       -- `K`-invariant (`ha_fixed`).
       obtain ⟨ha_span, ha_fixed⟩ := a.prop
@@ -363,14 +397,16 @@ def definiteForms.rep : Representation ℂ (heckeAlgebra n ℂ 𝔑) (definiteFo
       -- Equivariance and support are preserved by each right translation by an element of `GUPlus`,
       -- hence by their linear combinations.
       refine (comap ((rightRegular ℂ (GL n (𝔸f E)) W).asAlgebraHom.toLinearMap.flip φ)
-        (ξ.coindV toFinGL ⊓ Submodule.pi {x : GL n (𝔸f E) | ¬IsSignedFrame x 1} ⊥)).span_le.mpr ?_
+          (ξ.coindV toFinGL ⊓ Submodule.pi {x : GL n (𝔸f E) | ¬IsSignedFrame x 1} ⊥)).span_le.mpr ?_
         ha_span
       -- `↓` rewrites the image inclusion first, before the rest unfolds.
-      simp_all [↓image_subset_iff, isSignedFrame_mul_iff 1, GUPlus, mul_assoc, subset_def, ratConj]
+      simp_all [↓ image_subset_iff, isSignedFrame_mul_iff 1, GUPlus, mul_assoc, subset_def, ratConj]
 
 variable (n) in
-/-- The definite classes: the double cosets `GL n E \ GL n (𝔸f E) / K`, with `K = levelGU n 𝔑`,
-whose chosen representative is a definite frame. -/
+/--
+The definite classes: the double cosets `GL n E \ GL n (𝔸f E) / K`, with `K = levelGU n 𝔑`,
+whose chosen representative is a definite frame.
+-/
 abbrev DefiniteClass : Type :=
   {c : DoubleCosets toFinGL.range (levelGU n 𝔑) // IsSignedFrame c.out 1}
 
@@ -378,8 +414,11 @@ end New.Variety
 
 namespace New.Variety
 
-variable {E : Type} [Field E] [CMBase E] {n : Type} [Fintype n] [DecidableEq n] {𝔑 : 𝓞 E} {W : Type}
-  [AddCommGroup W] [Module ℂ W] (ξ : Representation ℂ (GL n E) W)
+variable
+  {E : Type} [Field E] [CMBase E]
+  {n : Type} [Fintype n] [DecidableEq n]
+  {𝔑 : 𝓞 E} {W : Type} [AddCommGroup W] [Module ℂ W]
+  (ξ : Representation ℂ (GL n E) W)
 
 private lemma mem_GU_of_mem_levelGU {k : GL n (𝔸f E)} (hk : k ∈ levelGU n 𝔑) : k ∈ GU E n :=
   levelGU_le_GU hk
@@ -387,8 +426,9 @@ private lemma mem_GU_of_mem_levelGU {k : GL n (𝔸f E)} (hk : k ∈ levelGU n �
 /-- At a neat level `𝔑` there are only finitely many definite classes. -/
 lemma finite_definiteClass (hN : IsNeat n 𝔑) : Finite (DefiniteClass n 𝔑) := by
   -- The definite classes are among the classes of signed frames, which are finitely many.
-  have h_classes_finite : (DoubleCoset.mk toFinGL.range (levelGU n 𝔑) ''
-      {x : GL n (𝔸f E) | ∃ ℓ : Matrix n n ℂ, IsSignedFrame x ℓ}).Finite :=
+  have h_classes_finite
+      : (DoubleCoset.mk toFinGL.range (levelGU n 𝔑)
+        '' {x : GL n (𝔸f E) | ∃ ℓ : Matrix n n ℂ, IsSignedFrame x ℓ}).Finite :=
     finite_isSignedFrame_classes (isOpen_congruenceGL_span hN.ne_zero)
   have h_fin : {c : DoubleCosets toFinGL.range (levelGU n 𝔑) | IsSignedFrame c.out 1}.Finite :=
     h_classes_finite.subset fun c hc ↦ ⟨c.out, ⟨1, hc⟩, c.out_eq⟩
@@ -408,13 +448,14 @@ def coset (j : DefiniteClass n 𝔑) (y : GL n E) : GL n (𝔸f E) ⧸ levelGU n
   QuotientGroup.mk (toFinGL y * j.frame)
 
 /-- The coset `y x_j K` is `g K` if and only if `g⁻¹ y x_j` lies in `K = levelGU n 𝔑`. -/
-lemma coset_eq_mk_iff {j : DefiniteClass n 𝔑} {y : GL n E} {g : GL n (𝔸f E)} :
-    j.coset y = QuotientGroup.mk g ↔ g⁻¹ * (toFinGL y * j.frame) ∈ levelGU n 𝔑 :=
+lemma coset_eq_mk_iff {j : DefiniteClass n 𝔑} {y : GL n E} {g : GL n (𝔸f E)}
+    : j.coset y = QuotientGroup.mk g ↔ g⁻¹ * (toFinGL y * j.frame) ∈ levelGU n 𝔑 :=
   eq_comm.trans QuotientGroup.eq
 
 /-- At a neat level the coset `y x_j K` determines the class `j` and the rational matrix `y`. -/
-lemma eq_and_eq_of_coset_eq (hN : IsNeat n 𝔑) {i j : DefiniteClass n 𝔑} {y z : GL n E}
-    (h_coset : i.coset y = j.coset z) : i = j ∧ y = z := by
+lemma eq_and_eq_of_coset_eq
+    (hN : IsNeat n 𝔑) {i j : DefiniteClass n 𝔑} {y z : GL n E} (h_coset : i.coset y = j.coset z)
+    : i = j ∧ y = z := by
   have h_mem : i.frame⁻¹ * toFinGL (y⁻¹ * z) * j.frame ∈ levelGU n 𝔑 := by
     simpa [mul_assoc] using QuotientGroup.eq.mp h_coset
   -- By neatness only `1` fixes the coset of a definite frame.
@@ -425,9 +466,9 @@ lemma eq_and_eq_of_coset_eq (hN : IsNeat n 𝔑) {i j : DefiniteClass n 𝔑} {y
   exact ⟨Subtype.ext h_class, inv_mul_eq_one.mp h_one⟩
 
 /-- The definite frames are the elements of the cosets `y x_j K`. -/
-lemma isSignedFrame_one_iff (g : GL n (𝔸f E)) :
-    IsSignedFrame g 1 ↔
-      ∃ (j : DefiniteClass n 𝔑) (y : GL n E), j.coset y = QuotientGroup.mk g := by
+lemma isSignedFrame_one_iff (g : GL n (𝔸f E))
+    : IsSignedFrame g 1
+      ↔ ∃ (j : DefiniteClass n 𝔑) (y : GL n E), j.coset y = QuotientGroup.mk g := by
   refine ⟨fun hg ↦ ?_, ?_⟩
   · obtain ⟨c, y, k, rfl⟩ := exists_eq_map_mul_rep_mul toFinGL (levelGU n 𝔑) out_eq g
     -- Here `g = y x k` with `x = c.out`; moving it by `y⁻¹` and `k⁻¹` gives `x`.
@@ -440,12 +481,15 @@ lemma isSignedFrame_one_iff (g : GL n (𝔸f E)) :
     simpa [mul_assoc, ratConj] using
       j.isSignedFrame_frame.mul y (inv_mem (mem_GU_of_mem_levelGU h_mem))
 
-/-- The orbit under `GL n E` of the marked triple `(x_j K, y⁻¹, μ)`. A triple is a coset of
+/--
+The orbit under `GL n E` of the marked triple `(x_j K, y⁻¹, μ)`. A triple is a coset of
 `levelGU n 𝔑`, an element of `GL n E` and an index in `n`; `γ` sends `(x K, z, μ)` to
-`(γ x K, γ z γ⁻¹, μ)`. -/
-def orbit : DefiniteClass n 𝔑 × GL n E × n →
-    MulAction.orbitRel.Quotient (GL n E) (MarkedTriple (levelGU n 𝔑) n) :=
-  fun (j, y, μ) ↦ ⟦(QuotientGroup.mk j.frame, y⁻¹, μ)⟧
+`(γ x K, γ z γ⁻¹, μ)`.
+-/
+def orbit
+    : DefiniteClass n 𝔑 × GL n E × n
+      → MulAction.orbitRel.Quotient (GL n E) (MarkedTriple (levelGU n 𝔑) n) := fun (j, y, μ) ↦
+  ⟦(QuotientGroup.mk j.frame, y⁻¹, μ)⟧
 
 /-- At a neat level distinct triples `(j, y, μ)` give distinct orbits `orbit (j, y, μ)`. -/
 lemma orbit_injective (hN : IsNeat n 𝔑) : (orbit (n := n) (𝔑 := 𝔑)).Injective := by
@@ -461,11 +505,13 @@ lemma orbit_injective (hN : IsNeat n 𝔑) : (orbit (n := n) (𝔑 := 𝔑)).Inj
 
 variable (a : heckeAlgebra n ℂ 𝔑) (w : Polynomial E → n → ℂ)
 
-/-- The definite term of the orbit of `(x_j K, y⁻¹, μ)`: the coefficient of `a` at `x_j⁻¹ y x_j K`
-times the weight `w` at the characteristic polynomial of `y⁻¹` and `μ`. -/
-lemma countTerm_orbit (j : DefiniteClass n 𝔑) (y : GL n E) (μ : n) :
-    countTerm False a w (orbit (j, y, μ)) =
-      heckeCosetFn a (j.frame⁻¹ * toFinGL y * j.frame) * w (y⁻¹).val.charpoly μ := by
+/--
+The definite term of the orbit of `(x_j K, y⁻¹, μ)`: the coefficient of `a` at `x_j⁻¹ y x_j K`
+times the weight `w` at the characteristic polynomial of `y⁻¹` and `μ`.
+-/
+lemma countTerm_orbit (j : DefiniteClass n 𝔑) (y : GL n E) (μ : n)
+    : countTerm False a w (orbit (j, y, μ))
+      = heckeCosetFn a (j.frame⁻¹ * toFinGL y * j.frame) * w (y⁻¹).val.charpoly μ := by
   simp [orbit, countTerm_mk, eigenReflection, j.isSignedFrame_frame, mul_assoc]
 
 /-- An orbit with a nonzero definite term is the orbit of some `(x_j K, y⁻¹, μ)`. -/
@@ -484,15 +530,18 @@ end DefiniteClass
 
 open DefiniteClass
 
-/-- At a neat level only finitely many orbits of triples have a nonzero definite term
-`countTerm False a w` (the flag `False` selects the orbits whose frame is definite). -/
-lemma finite_support_countTerm_definite (hN : IsNeat n 𝔑) (a : heckeAlgebra n ℂ 𝔑)
-    (w : Polynomial E → n → ℂ) : (countTerm False a w).support.Finite := by
+/--
+At a neat level only finitely many orbits of triples have a nonzero definite term
+`countTerm False a w` (the flag `False` selects the orbits whose frame is definite).
+-/
+lemma finite_support_countTerm_definite
+    (hN : IsNeat n 𝔑) (a : heckeAlgebra n ℂ 𝔑) (w : Polynomial E → n → ℂ)
+    : (countTerm False a w).support.Finite := by
   have h_finite_classes : Finite (DefiniteClass n 𝔑) := finite_definiteClass hN
   -- For each `j` the cosets `x_j⁻¹ y x_j K` are distinct, so only finitely many of them lie in the
   -- finite support of `heckeCosetFn a`.
-  have h_fibre (j : DefiniteClass n 𝔑) :
-      {y : GL n E | heckeCosetFn a (j.frame⁻¹ * toFinGL y * j.frame) ≠ 0}.Finite := by
+  have h_fibre (j : DefiniteClass n 𝔑)
+      : {y : GL n E | heckeCosetFn a (j.frame⁻¹ * toFinGL y * j.frame) ≠ 0}.Finite := by
     refine (heckeCosetFn a).hasFiniteSupport.preimage fun y _ z _ hyz ↦ ?_
     have h_coset : j.coset y = j.coset z :=
       QuotientGroup.eq.mpr (by simpa [mul_assoc] using QuotientGroup.eq.mp hyz)
@@ -506,37 +555,39 @@ lemma finite_support_countTerm_definite (hN : IsNeat n 𝔑) (a : heckeAlgebra n
 
 variable [Module.Finite ℂ W]
 
-/-- Let `ξ` be a representation of `GL_n(E)` on a finite-dimensional complex space `W`, and let the
+/--
+Let `ξ` be a representation of `GL_n(E)` on a finite-dimensional complex space `W`, and let the
 level `𝔑` be neat (`hN`). The definite forms are the functions `φ : GL_n(𝔸f E) → W` with
 `φ(yx) = ξ(y) φ(x)` for `y ∈ GL_n(E)`, which vanish off definite frames and are right-invariant
 under `K = levelGU n 𝔑`. This space is finite-dimensional, and the trace on it of a Hecke element
 `a` acting by right translation equals `∑_j ∑_{y ∈ GL_n(E)} f_a(x_j⁻¹ y x_j) · tr ξ(y)`. In this sum
 `j` runs over the definite classes in `GL_n(E) \ GL_n(𝔸f E) / K` with chosen representatives
-`x_j = j.frame`, and `f_a = heckeCosetFn a` is the function `∑ a_g 1_{gK}` for `a = ∑ a_g [g]`. -/
-lemma finite_definiteForms_and_trace_eq_finsum_definiteClass (hN : IsNeat n 𝔑)
-    (a : heckeAlgebra n ℂ 𝔑) :
-    Module.Finite ℂ (definiteForms 𝔑 ξ) ∧
-    (definiteForms.rep 𝔑 ξ a).trace ℂ (definiteForms 𝔑 ξ) =
-      ∑ᶠ (j : DefiniteClass n 𝔑) (y : GL n E),
-        heckeCosetFn a (j.frame⁻¹ * toFinGL y * j.frame) * (ξ y).trace ℂ W := by
+`x_j = j.frame`, and `f_a = heckeCosetFn a` is the function `∑ a_g 1_{gK}` for `a = ∑ a_g [g]`.
+-/
+lemma finite_definiteForms_and_trace_eq_finsum_definiteClass
+    (hN : IsNeat n 𝔑) (a : heckeAlgebra n ℂ 𝔑)
+    : Module.Finite ℂ (definiteForms 𝔑 ξ)
+      ∧ (definiteForms.rep 𝔑 ξ a).trace ℂ (definiteForms 𝔑 ξ)
+        = ∑ᶠ (j : DefiniteClass n 𝔑) (y : GL n E),
+            heckeCosetFn a (j.frame⁻¹ * toFinGL y * j.frame) * (ξ y).trace ℂ W := by
   classical
   -- This is `trace_eq_weighted_sum` with all weights equal to `1`: a definite frame `g` lies in
   -- exactly one coset `y x_j K`, and any other `g` lies in none.
   have h_finite_classes : Finite (DefiniteClass n 𝔑) := finite_definiteClass hN
   have h_fintype_classes : Fintype (DefiniteClass n 𝔑) := .ofFinite _
-  have h_finite (j : DefiniteClass n 𝔑) (g : GL n (𝔸f E)) :
-      {y : GL n E | j.coset y = QuotientGroup.mk g}.Finite :=
+  have h_finite (j : DefiniteClass n 𝔑) (g : GL n (𝔸f E))
+      : {y : GL n E | j.coset y = QuotientGroup.mk g}.Finite :=
     Set.Subsingleton.finite fun y hy z hz ↦ (eq_and_eq_of_coset_eq hN (hy.trans hz.symm)).right
   let S (j : DefiniteClass n 𝔑) (g : GL n (𝔸f E)) : Finset (GL n E) := (h_finite j g).toFinset
-  have h_mem_S (j : DefiniteClass n 𝔑) (g : GL n (𝔸f E)) (y : GL n E) :
-      y ∈ S j g ↔ g⁻¹ * (toFinGL y * j.frame) ∈ levelGU n 𝔑 := by
+  have h_mem_S (j : DefiniteClass n 𝔑) (g : GL n (𝔸f E)) (y : GL n E)
+      : y ∈ S j g ↔ g⁻¹ * (toFinGL y * j.frame) ∈ levelGU n 𝔑 := by
     simp [S, coset_eq_mk_iff]
-  have h_S_eq_empty (g : GL n (𝔸f E)) (hg : ¬IsSignedFrame g 1) (j : DefiniteClass n 𝔑) :
-      S j g = ∅ := by
+  have h_S_eq_empty (g : GL n (𝔸f E)) (hg : ¬ IsSignedFrame g 1) (j : DefiniteClass n 𝔑)
+      : S j g = ∅ := by
     ext y
     simpa [S] using fun h_coset ↦ hg ((isSignedFrame_one_iff g).mpr ⟨j, y, h_coset⟩)
-  have h_count (g : GL n (𝔸f E)) (hg : IsSignedFrame g 1) :
-      ∑ j : DefiniteClass n 𝔑, (1 : ℂ) * (S j g).card = 1 := by
+  have h_count (g : GL n (𝔸f E)) (hg : IsSignedFrame g 1)
+      : ∑ j : DefiniteClass n 𝔑, (1 : ℂ) * (S j g).card = 1 := by
     obtain ⟨i, y, h_coset⟩ := (isSignedFrame_one_iff (𝔑 := 𝔑) g).mp hg
     have h_mem (j : DefiniteClass n 𝔑) (z : GL n E) : z ∈ S j g ↔ j = i ∧ z = y := by
       rw [Set.Finite.mem_toFinset, Set.mem_ofPred, ← h_coset]
@@ -547,12 +598,16 @@ lemma finite_definiteForms_and_trace_eq_finsum_definiteClass (hN : IsNeat n 𝔑
     simp [h_S, apply_ite Finset.card]
   -- The representatives are the frames `x_j`; the twists `σ` and `s` are identities.
   let σ : GL n (𝔸f E) ≃* GL n (𝔸f E) := 1
-  have h_weighted : Module.Finite ℂ (definiteForms 𝔑 ξ) ∧
-      (definiteForms.rep 𝔑 ξ a).trace ℂ (definiteForms 𝔑 ξ) =
-        ∑ j : DefiniteClass n 𝔑, 1 * ∑ᶠ y : GL n E, cosetFn (levelGU n 𝔑) a.val
-          (j.frame⁻¹ * σ (toFinGL y) * σ j.frame) * (1 * ξ y).trace ℂ W :=
-    trace_eq_weighted_sum (definiteForms 𝔑 ξ).subtype (subtype_injective _) (range_subtype _)
-      frame (fun _ ↦ 1) S h_mem_S h_S_eq_empty (fun g hg ↦ h_count g (not_not.mp hg)) σ rfl
+  have h_weighted
+      : Module.Finite ℂ (definiteForms 𝔑 ξ)
+        ∧ (definiteForms.rep 𝔑 ξ a).trace ℂ (definiteForms 𝔑 ξ)
+          = ∑ j : DefiniteClass n 𝔑, 1 * ∑ᶠ y : GL n E, cosetFn (levelGU n 𝔑) a.val
+              (j.frame⁻¹ * σ (toFinGL y) * σ j.frame) * (1 * ξ y).trace ℂ W :=
+    trace_eq_weighted_sum (definiteForms 𝔑 ξ).subtype (subtype_injective _) (range_subtype _) frame
+      (fun _ ↦ 1)
+      S h_mem_S h_S_eq_empty
+      (fun g hg ↦ h_count g (not_not.mp hg))
+      σ rfl
       fun _ ↦ rfl
   rw [finsum_eq_sum_of_fintype]
   simpa [σ] using h_weighted
@@ -561,39 +616,46 @@ lemma finite_definiteForms_and_trace_eq_finsum_definiteClass (hN : IsNeat n 𝔑
 lemma finite_definiteForms (hN : IsNeat n 𝔑) : Module.Finite ℂ (definiteForms 𝔑 ξ) :=
   (finite_definiteForms_and_trace_eq_finsum_definiteClass ξ hN 1).left
 
-/-- At a neat level the trace of a Hecke element `a` on the definite forms is the sum, over the
+/--
+At a neat level the trace of a Hecke element `a` on the definite forms is the sum, over the
 definite classes `j` and the rational matrices `y`, of `heckeCosetFn a` (the function `∑ a_g [gK]`
-of `a` on cosets) at `x_j⁻¹ y x_j`, where `x_j = j.frame` is the frame of `j`, times `tr (ξ y)`. -/
-lemma trace_definiteForms_eq_finsum_definiteClass (hN : IsNeat n 𝔑) (a : heckeAlgebra n ℂ 𝔑) :
-    (definiteForms.rep 𝔑 ξ a).trace ℂ (definiteForms 𝔑 ξ) =
-      ∑ᶠ (j : DefiniteClass n 𝔑) (y : GL n E),
-        heckeCosetFn a (j.frame⁻¹ * toFinGL y * j.frame) * (ξ y).trace ℂ W :=
+of `a` on cosets) at `x_j⁻¹ y x_j`, where `x_j = j.frame` is the frame of `j`, times `tr (ξ y)`.
+-/
+lemma trace_definiteForms_eq_finsum_definiteClass (hN : IsNeat n 𝔑) (a : heckeAlgebra n ℂ 𝔑)
+    : (definiteForms.rep 𝔑 ξ a).trace ℂ (definiteForms 𝔑 ξ)
+      = ∑ᶠ (j : DefiniteClass n 𝔑) (y : GL n E),
+          heckeCosetFn a (j.frame⁻¹ * toFinGL y * j.frame) * (ξ y).trace ℂ W :=
   (finite_definiteForms_and_trace_eq_finsum_definiteClass ξ hN a).right
 
-/-- The trace formula on the definite side. Let `W` be finite-dimensional, `𝔑` neat and `a` a
+/--
+The trace formula on the definite side. Let `W` be finite-dimensional, `𝔑` neat and `a` a
 regular Hecke element. Suppose `tr ξ(y⁻¹) = ∑ i, w P i` whenever the characteristic polynomial `P`
 of `y` is separable. Then the trace of `a` on definite forms is the sum, over all orbits of triples,
 of the definite terms `countTerm False a w` (the flag `False` selects definite frames). On the orbit
 of `(x_j K, y⁻¹, μ)` this term is `heckeCosetFn a (x_j⁻¹ y x_j) * w (y⁻¹).charpoly μ`
-(`countTerm_orbit`). -/
-lemma trace_definiteForms_eq_finsum_countTerm (hN : IsNeat n 𝔑) {a : heckeAlgebra n ℂ 𝔑}
-    {w : Polynomial E → n → ℂ} (ha : IsRegularHecke a)
-    (hw : ∀ y : GL n E, y.val.charpoly.Separable →
-      (ξ y⁻¹).trace ℂ W = ∑ i : n, w y.val.charpoly i) :
-    (definiteForms.rep 𝔑 ξ a).trace ℂ (definiteForms 𝔑 ξ) =
-      ∑ᶠ c : MulAction.orbitRel.Quotient (GL n E) (MarkedTriple (levelGU n 𝔑) n),
-        countTerm False a w c := by
+(`countTerm_orbit`).
+-/
+lemma trace_definiteForms_eq_finsum_countTerm
+    (hN : IsNeat n 𝔑)
+    {a : heckeAlgebra n ℂ 𝔑} {w : Polynomial E → n → ℂ} (ha : IsRegularHecke a)
+    (hw : ∀ y : GL n E, y.val.charpoly.Separable → (ξ y⁻¹).trace ℂ W = ∑ i : n, w y.val.charpoly i)
+    : (definiteForms.rep 𝔑 ξ a).trace ℂ (definiteForms 𝔑 ξ)
+      = ∑ᶠ c : MulAction.orbitRel.Quotient (GL n E) (MarkedTriple (levelGU n 𝔑) n),
+          countTerm False a w c := by
   -- Only the orbits of the triples `(x_j K, y⁻¹, μ)` count, and these orbits are distinct.
-  have h_orbits : ∑ᶠ c, countTerm False a w c =
-      ∑ᶠ (j : DefiniteClass n 𝔑) (y : GL n E) (μ : n), countTerm False a w (orbit (j, y, μ)) := by
-    rw [← finsum_curry₃ (fun p ↦ countTerm False a w (orbit p))
-        ((finite_support_countTerm_definite hN a w).preimage (orbit_injective hN).injOn),
-      ← finsum_mem_range (orbit_injective hN), finsum_mem_def,
-      indicator_eq_self.mpr (support_countTerm_subset_range_orbit a w)]
+  have h_orbits
+      : ∑ᶠ c, countTerm False a w c
+        = ∑ᶠ (j : DefiniteClass n 𝔑) (y : GL n E) (μ : n), countTerm False a w (orbit (j, y, μ)) :=
+    by
+      rw [← finsum_curry₃
+          (fun p ↦ countTerm False a w (orbit p))
+          ((finite_support_countTerm_definite hN a w).preimage (orbit_injective hN).injOn),
+        ← finsum_mem_range (orbit_injective hN), finsum_mem_def,
+        indicator_eq_self.mpr (support_countTerm_subset_range_orbit a w)]
   -- Either the coefficient of `a` vanishes, or `y` is regular and `hw` applies.
-  have h_term (j : DefiniteClass n 𝔑) (y : GL n E) :
-      heckeCosetFn a (j.frame⁻¹ * toFinGL y * j.frame) * (ξ y).trace ℂ W =
-        ∑ᶠ μ : n, countTerm False a w (orbit (j, y, μ)) := by
+  have h_term (j : DefiniteClass n 𝔑) (y : GL n E)
+      : heckeCosetFn a (j.frame⁻¹ * toFinGL y * j.frame) * (ξ y).trace ℂ W
+        = ∑ᶠ μ : n, countTerm False a w (orbit (j, y, μ)) := by
     simp_rw [finsum_eq_sum_of_fintype, countTerm_orbit, ← Finset.mul_sum]
     by_cases h_coeff : heckeCosetFn a (j.frame⁻¹ * toFinGL y * j.frame) = 0
     · rw [h_coeff, zero_mul, zero_mul]

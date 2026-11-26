@@ -40,179 +40,220 @@ GL(N), LNM 1041 (1983) for the inequality at the ends of segments.
 
 open ComplexOrder Finset Module New Pi Polynomial Valued Complex
 
-/-- P has the chain of roots d, dq, …, dq^{t−1}, and the other factor divides e after scaling:
-P(dX) equals (X − 1)(X − q)⋯(X − q^{t−1}) times a divisor of the polynomial e. -/
+/--
+P has the chain of roots d, dq, …, dq^{t−1}, and the other factor divides e after scaling:
+P(dX) equals (X − 1)(X − q)⋯(X − q^{t−1}) times a divisor of the polynomial e.
+-/
 def New.Patching.HasRootChain (P e : ℂ[X]) (q d : ℂ) (t : ℕ) : Prop :=
   ∃ S : ℂ[X], P.comp (C d * X) = (∏ i ∈ range t, (X - C (q ^ i))) * S ∧ S ∣ e
 
-variable {E : Type _} [Field E] [NumberField E] {w : FinPlace E} {N : ℕ} [NeZero N]
+variable
+  {E : Type _} [Field E] [NumberField E]
+  {w : FinPlace E} {N : ℕ} [NeZero N]
   {ρ : Rep ℂ (GL (Fin N) (LocField w))} [IsSmoothRep ρ.ρ]
   {B : ρ →ₗ⋆[ℂ] ρ →ₗ[ℂ] ℂ} {x : ρ} {P : ℂ[X]} {t : ℕ → ℂ}
 
 omit [NeZero N] [IsSmoothRep ρ.ρ] in
-/-- If `U'` is adjoint to `U` on a set `S` that `U` keeps, then on `S` the conjugate of `G`,
-evaluated at `U'`, is adjoint to `G (U)`. -/
-lemma New.Patching.adjoint_aeval_map_starRingEnd {U U' : End ℂ ρ} (S : Set ρ)
-    (adj : ∀ y ∈ S, U y ∈ S ∧ ∀ a : ρ, B (U' a) y = B a (U y)) (G : ℂ[X]) (a : ρ) :
-    ∀ y ∈ S, B (aeval U' (G.map (starRingEnd ℂ)) a) y = B a (aeval U G y) := by
+/--
+If `U'` is adjoint to `U` on a set `S` that `U` keeps, then on `S` the conjugate of `G`,
+evaluated at `U'`, is adjoint to `G (U)`.
+-/
+lemma New.Patching.adjoint_aeval_map_starRingEnd
+    {U U' : End ℂ ρ} (S : Set ρ) (adj : ∀ y ∈ S, U y ∈ S ∧ ∀ a : ρ, B (U' a) y = B a (U y))
+    (G : ℂ[X]) (a : ρ)
+    : ∀ y ∈ S, B (aeval U' (G.map (starRingEnd ℂ)) a) y = B a (aeval U G y) := by
   induction G using recOnHorner generalizing a with
   | M0 => simp
   | MC G c _ _ ih => simp_all
   | MX G _ ih => simp_all [mul_comm]
 
 omit [NeZero N] [IsSmoothRep ρ.ρ] in
-/-- Let `x` be fixed by `GL_N(O_w)` and `ϖ` a uniformiser. Then `x` is the translate by
-`diag(ϖ⁻¹, …, ϖ⁻¹)` of the top partial Hecke sum `partialHecke ρ 0 N x`. -/
+/--
+Let `x` be fixed by `GL_N(O_w)` and `ϖ` a uniformiser. Then `x` is the translate by
+`diag(ϖ⁻¹, …, ϖ⁻¹)` of the top partial Hecke sum `partialHecke ρ 0 N x`.
+-/
 private lemma New.Patching.eq_apply_partialHecke_zero_top
-    (hx : x ∈ levelSpace ρ.ρ (localIntGL (Fin N) w)) {ϖ : (LocField w)ˣ}
-    (hϖ : v ϖ.val = WithZero.exp (-1)) :
-    x = ρ.ρ (diagGL fun _ : Fin N ↦ ϖ⁻¹) (partialHecke ρ.ρ 0 N x) := by
+    (hx : x ∈ levelSpace ρ.ρ (localIntGL (Fin N) w))
+    {ϖ : (LocField w)ˣ} (hϖ : v ϖ.val = WithZero.exp (-1))
+    : x = ρ.ρ (diagGL fun _ : Fin N ↦ ϖ⁻¹) (partialHecke ρ.ρ 0 N x) := by
   let ρ' : Representation ℂ (GL (Fin N) (LocField w)) ρ := ρ.ρ.comp invTransposeGL.toMonoidHom
   have hx' : x ∈ levelSpace ρ' (localIntGL (Fin N) w) := by simp_all [ρ']
   have h_sum : 0 + (N + 0) = N := by simp
-  have h_dual :
-      partialHecke ρ' 0 0 x = ρ.ρ (diagGL fun _ : Fin N ↦ ϖ⁻¹) (partialHecke ρ.ρ 0 N x) := by
+  have h_dual
+      : partialHecke ρ' 0 0 x = ρ.ρ (diagGL fun _ : Fin N ↦ ϖ⁻¹) (partialHecke ρ.ρ 0 N x) := by
     simpa [ρ'] using partialHecke_dual hϖ hx N h_sum
   rw [← h_dual, partialHecke_zero_right hx']
 
 omit [IsSmoothRep ρ.ρ] in
-/-- Let `x` be fixed by `GL_N(O_w)` and `ϖ` a uniformiser. Then `x` is the translate by
-`diag(1, ϖ⁻¹, …, ϖ⁻¹)` of the top partial Hecke sum `partialHecke ρ 1 (N - 1) x`. -/
+/--
+Let `x` be fixed by `GL_N(O_w)` and `ϖ` a uniformiser. Then `x` is the translate by
+`diag(1, ϖ⁻¹, …, ϖ⁻¹)` of the top partial Hecke sum `partialHecke ρ 1 (N - 1) x`.
+-/
 private lemma New.Patching.eq_apply_partialHecke_one_top
-    (hx : x ∈ levelSpace ρ.ρ (localIntGL (Fin N) w)) {ϖ : (LocField w)ˣ}
-    (hϖ : v ϖ.val = WithZero.exp (-1)) :
-    x = ρ.ρ (diagGL fun i : Fin N ↦ if i = 0 then 1 else ϖ⁻¹)
-      (partialHecke ρ.ρ 1 (N - 1) x) := by
+    (hx : x ∈ levelSpace ρ.ρ (localIntGL (Fin N) w))
+    {ϖ : (LocField w)ˣ} (hϖ : v ϖ.val = WithZero.exp (-1))
+    : x = ρ.ρ (diagGL fun i : Fin N ↦ if i = 0 then 1 else ϖ⁻¹) (partialHecke ρ.ρ 1 (N - 1) x) := by
   let ρ' : Representation ℂ (GL (Fin N) (LocField w)) ρ := ρ.ρ.comp invTransposeGL.toMonoidHom
   have hx' : x ∈ levelSpace ρ' (localIntGL (Fin N) w) := by simp_all [ρ']
   have h_sum : 1 + (N - 1 + 0) = N := by grind [NeZero.ne N]
-  have h_dual : partialHecke ρ' 1 0 x =
-      ρ.ρ (diagGL fun i : Fin N ↦ if i = 0 then 1 else ϖ⁻¹) (partialHecke ρ.ρ 1 (N - 1) x) := by
+  have h_dual
+      : partialHecke ρ' 1 0 x
+        = ρ.ρ (diagGL fun i : Fin N ↦ if i = 0 then 1 else ϖ⁻¹) (partialHecke ρ.ρ 1 (N - 1) x) := by
     simpa [ρ', Nat.lt_one_iff, Fin.val_eq_zero_iff] using partialHecke_dual hϖ hx (N - 1) h_sum
   rw [← h_dual, partialHecke_zero_right hx']
 
-/-- Let `x` be fixed by `GL_N(O_w)`, let `ϖ` be a uniformiser (valuation `exp (-1)`), and let `a` be
+/--
+Let `x` be fixed by `GL_N(O_w)`, let `ϖ` be a uniformiser (valuation `exp (-1)`), and let `a` be
 the inverse of `ρ(diag(ϖ, 1, …, 1))`. Write `M(y)` for the mean of `ρ` over `proIwahori` applied to
 `y`, and let `partialHecke ρ r m x` be the partial Hecke sum of `ρ g x` over the cosets in
 `New.partialCosets r m`. If `1 + (i + 1 + j) = N`, the count of `New.partialHecke_hyperplane_count`,
 read in the dual representation, gives `q^(N-1) • M(a (partialHecke ρ 1 (i+1) x)) = q^j • (M(a
-(partialHecke ρ 0 (i+1) x)) - partialHecke ρ 1 i x)`, where `q = w.q`. -/
+(partialHecke ρ 0 (i+1) x)) - partialHecke ρ 1 i x)`, where `q = w.q`.
+-/
 lemma New.Patching.compactMean_apply_inv_partialHecke_one_succ
-    (hx : x ∈ levelSpace ρ.ρ (localIntGL (Fin N) w)) {ϖ : (LocField w)ˣ}
-    (hϖ : v ϖ.val = WithZero.exp (-1)) {i j : ℕ} (h_sum : 1 + (i + 1 + j) = N) :
-    (w.q ^ (N - 1) : ℂ) • compactMean ρ.ρ proIwahori
-        (ρ.ρ (diagGL (mulSingle 0 ϖ))⁻¹ (partialHecke ρ.ρ 1 (i + 1) x)) =
-      (w.q ^ j : ℂ) • (compactMean ρ.ρ proIwahori
-          (ρ.ρ (diagGL (mulSingle 0 ϖ))⁻¹ (partialHecke ρ.ρ 0 (i + 1) x)) -
-        partialHecke ρ.ρ 1 i x) := by
+    (hx : x ∈ levelSpace ρ.ρ (localIntGL (Fin N) w))
+    {ϖ : (LocField w)ˣ} (hϖ : v ϖ.val = WithZero.exp (-1))
+    {i j : ℕ} (h_sum : 1 + (i + 1 + j) = N)
+    : (w.q ^ (N - 1) : ℂ)
+        • compactMean ρ.ρ proIwahori (ρ.ρ (diagGL (mulSingle 0 ϖ))⁻¹ (partialHecke ρ.ρ 1 (i + 1) x))
+      = (w.q ^ j : ℂ)
+        • (compactMean ρ.ρ proIwahori
+            (ρ.ρ (diagGL (mulSingle 0 ϖ))⁻¹ (partialHecke ρ.ρ 0 (i + 1) x))
+          - partialHecke ρ.ρ 1 i x) := by
   let ρ' : Representation ℂ (GL (Fin N) (LocField w)) ρ := ρ.ρ.comp invTransposeGL.toMonoidHom
   have hx' : x ∈ levelSpace ρ' (localIntGL (Fin N) w) := by simp_all [ρ']
   -- `diagGL c₀` and `diagGL c₁` are the matrices of `partialHecke_dual` for `m = 0` and `m = 1`
   let c₀ (_ : Fin N) : (LocField w)ˣ := ϖ⁻¹
   let c₁ (i : Fin N) : (LocField w)ˣ := if i = 0 then 1 else ϖ⁻¹
   have single_eq : mulSingle 0 ϖ = c₀⁻¹ * c₁ := by aesop
-  have dual₀ (i : ℕ) {j : ℕ} (h_sum : 0 + (i + j) = N) :
-      partialHecke ρ' 0 j x = ρ.ρ (diagGL c₀) (partialHecke ρ.ρ 0 i x) := by
+  have dual₀ (i : ℕ) {j : ℕ} (h_sum : 0 + (i + j) = N)
+      : partialHecke ρ' 0 j x = ρ.ρ (diagGL c₀) (partialHecke ρ.ρ 0 i x) := by
     simpa [ρ', c₀] using partialHecke_dual hϖ hx i h_sum
-  have dual₁ (i : ℕ) {j : ℕ} (h_sum : 1 + (i + j) = N) :
-      partialHecke ρ' 1 j x = ρ.ρ (diagGL c₁) (partialHecke ρ.ρ 1 i x) := by
+  have dual₁ (i : ℕ) {j : ℕ} (h_sum : 1 + (i + j) = N)
+      : partialHecke ρ' 1 j x = ρ.ρ (diagGL c₁) (partialHecke ρ.ρ 1 i x) := by
     simpa [ρ', c₁, Nat.lt_one_iff, Fin.val_eq_zero_iff] using partialHecke_dual hϖ hx i h_sum
   -- the map `φ` is admissible because `diagGL c₁` conjugates `invTransposeGL k⁻¹` into
   -- `proIwahori`
   let φ : End ℂ ρ := compactMean ρ.ρ proIwahori * ρ.ρ (diagGL c₁⁻¹)
-  have hφ (k : GL (Fin N) (LocField w)) (h_row : ∀ i ≠ (0 : Fin N), ∀ l ≠ i, k.val i l = 0)
-      (hk : k⁻¹ ∈ proIwahori) (z : ρ) : φ (ρ' k⁻¹ z) = φ z := by
-    have conj_mem :
-        (permGL 1 * diagGL c₁)⁻¹ * invTransposeGL k⁻¹ * (permGL 1 * diagGL c₁) ∈ proIwahori := by
+  have hφ
+      (k : GL (Fin N) (LocField w))
+      (h_row : ∀ i ≠ (0 : Fin N), ∀ l ≠ i, k.val i l = 0) (hk : k⁻¹ ∈ proIwahori)
+      (z : ρ)
+      : φ (ρ' k⁻¹ z) = φ z := by
+    have conj_mem
+        : (permGL 1 * diagGL c₁)⁻¹ * invTransposeGL k⁻¹ * (permGL 1 * diagGL c₁) ∈ proIwahori := by
       obtain ⟨-, -, hk_diag⟩ := mem_proIwahori.mp (inv_mem hk)
       obtain ⟨hk_int, -⟩ := hk
       have hk_dual : invTransposeGL k⁻¹ ∈ localIntGL (Fin N) w :=
         (invTransposeGL_mem_intGL _).mpr hk_int
-      refine mem_proIwahori_iff_blockParahoric.mpr
-        (conj_monomial_mem_blockParahoric c₁ 1 _ (d := 0) ⟨⟨hk_dual, nofun⟩, hk_diag⟩ ?_)
+      refine mem_proIwahori_iff_blockParahoric.mpr (conj_monomial_mem_blockParahoric c₁ 1 _ (d := 0)
+        ⟨⟨hk_dual, nofun⟩, hk_diag⟩ ?_)
       -- the valuation condition on the entries, row by row
-      suffices h_log : ∀ a b : Fin N, k.val b a = 0 ∨
-          ((if b = 0 then (0 : ℤ) else 1) + if b < a then 1 else 0) ≤ if a = 0 then 0 else 1 by
+      suffices h_log
+          : ∀ a b : Fin N,
+            k.val b a = 0
+              ∨ ((if b = 0 then (0 : ℤ) else 1) + if b < a then 1 else 0)
+                ≤ if a = 0 then 0 else 1 by
         simpa [c₁, invTransposeGL, transposeGL,
-          apply_ite fun u : (LocField w)ˣ ↦ WithZero.log (v u.val), hϖ] using h_log
+            apply_ite fun u : (LocField w)ˣ ↦ WithZero.log (v u.val), hϖ]
+          using h_log
       grind
     simpa [φ, ρ'] using compactMean_apply (ρ := ρ.ρ) conj_mem (ρ.ρ (diagGL c₁⁻¹) z)
-  have h_count : (w.q : ℂ) ^ (Fin.rev (0 : Fin N)).val •
-        φ (ρ' (diagGL (mulSingle 0 ϖ)) (partialHecke ρ' ((0 : Fin N).val + 1) j x)) =
-      φ ((w.q : ℂ) ^ j • (partialHecke ρ' (0 : Fin N).val (j + 1) x -
-        partialHecke ρ' ((0 : Fin N).val + 1) (j + 1) x)) :=
+  have h_count
+      : (w.q : ℂ) ^ (Fin.rev (0 : Fin N)).val
+          • φ (ρ' (diagGL (mulSingle 0 ϖ)) (partialHecke ρ' ((0 : Fin N).val + 1) j x))
+        = φ
+          ((w.q : ℂ) ^ j
+            • (partialHecke ρ' (0 : Fin N).val (j + 1) x
+              - partialHecke ρ' ((0 : Fin N).val + 1) (j + 1) x)) :=
     partialHecke_hyperplane_count hϖ hx' 0 hφ j
   rw [Fin.val_zero, dual₁ _ h_sum, dual₀ (i + 1) (by lia : 0 + (i + 1 + (j + 1)) = N),
-    dual₁ i (by lia : 1 + (i + (j + 1)) = N)] at h_count
-  have inv_diag (t : Fin N → (LocField w)ˣ) :
-      invTransposeGL (diagGL t) = diagGL (t⁻¹ : Fin N → (LocField w)ˣ) :=
+      dual₁ i (by lia : 1 + (i + (j + 1)) = N)]
+    at h_count
+  have inv_diag (t : Fin N → (LocField w)ˣ)
+      : invTransposeGL (diagGL t) = diagGL (t⁻¹ : Fin N → (LocField w)ˣ) :=
     Units.ext (Matrix.diagonal_transpose _)
   -- `partialHecke ρ.ρ 1 i x` is fixed by `proIwahori`, so the mean leaves it unchanged
   have h_fixed : compactMean ρ.ρ proIwahori (partialHecke ρ.ρ 1 i x) = partialHecke ρ.ρ 1 i x :=
-    compactMean_eq_self _ (levelSpace_anti (proIwahori_le_blockParahoric fun _ _ h ↦ by omega)
-      (partialHecke_mem_levelSpace hx))
+    compactMean_eq_self _
+      (levelSpace_anti (proIwahori_le_blockParahoric fun _ _ h ↦ by omega)
+        (partialHecke_mem_levelSpace hx))
   simpa [φ, ρ', single_eq, inv_diag, h_fixed] using h_count
 
 omit [IsSmoothRep ρ.ρ] in
-/-- Let `x` be fixed by `GL_N(O_w)` and `ϖ` a uniformiser. The inverse of `ρ(diag(ϖ, 1, …, 1))`
-carries the top partial Hecke sum `partialHecke ρ 0 N x` to `partialHecke ρ 1 (N - 1) x`. -/
+/--
+Let `x` be fixed by `GL_N(O_w)` and `ϖ` a uniformiser. The inverse of `ρ(diag(ϖ, 1, …, 1))`
+carries the top partial Hecke sum `partialHecke ρ 0 N x` to `partialHecke ρ 1 (N - 1) x`.
+-/
 lemma New.Patching.apply_inv_partialHecke_zero_top
-    (hx : x ∈ levelSpace ρ.ρ (localIntGL (Fin N) w)) {ϖ : (LocField w)ˣ}
-    (hϖ : v ϖ.val = WithZero.exp (-1)) :
-    ρ.ρ (diagGL (mulSingle 0 ϖ))⁻¹ (partialHecke ρ.ρ 0 N x) = partialHecke ρ.ρ 1 (N - 1) x := by
+    (hx : x ∈ levelSpace ρ.ρ (localIntGL (Fin N) w))
+    {ϖ : (LocField w)ˣ} (hϖ : v ϖ.val = WithZero.exp (-1))
+    : ρ.ρ (diagGL (mulSingle 0 ϖ))⁻¹ (partialHecke ρ.ρ 0 N x) = partialHecke ρ.ρ 1 (N - 1) x := by
   -- both sides are translates of `x`
   let c₀ (_ : Fin N) : (LocField w)ˣ := ϖ⁻¹
   let c₁ (i : Fin N) : (LocField w)ˣ := if i = 0 then 1 else ϖ⁻¹
   have single_eq : mulSingle 0 ϖ = c₀⁻¹ * c₁ := by aesop
-  have h_top : ρ.ρ (diagGL c₀) (partialHecke ρ.ρ 0 N x) =
-      ρ.ρ (diagGL c₁) (partialHecke ρ.ρ 1 (N - 1) x) :=
+  have h_top
+      : ρ.ρ (diagGL c₀) (partialHecke ρ.ρ 0 N x) = ρ.ρ (diagGL c₁) (partialHecke ρ.ρ 1 (N - 1) x) :=
     (eq_apply_partialHecke_zero_top hx hϖ).symm.trans (eq_apply_partialHecke_one_top hx hϖ)
   simpa [single_eq, ρ.ρ.inv_apply_eq_iff] using h_top
 
 omit [NeZero N] [IsSmoothRep ρ.ρ] in
-/-- Let `x` be fixed by `GL_N(O_w)` and `ϖ` a uniformiser. The top partial Hecke sum
-`partialHecke ρ 0 N x` vanishes only for `x = 0`. -/
+/--
+Let `x` be fixed by `GL_N(O_w)` and `ϖ` a uniformiser. The top partial Hecke sum
+`partialHecke ρ 0 N x` vanishes only for `x = 0`.
+-/
 lemma New.Patching.eq_zero_of_partialHecke_zero_top
-    (hx : x ∈ levelSpace ρ.ρ (localIntGL (Fin N) w)) {ϖ : (LocField w)ˣ}
-    (hϖ : v ϖ.val = WithZero.exp (-1))
-    (h_top : partialHecke ρ.ρ 0 N x = 0) : x = 0 := by
+    (hx : x ∈ levelSpace ρ.ρ (localIntGL (Fin N) w))
+    {ϖ : (LocField w)ˣ} (hϖ : v ϖ.val = WithZero.exp (-1))
+    (h_top : partialHecke ρ.ρ 0 N x = 0)
+    : x = 0 := by
   rw [eq_apply_partialHecke_zero_top hx hϖ, h_top, map_zero]
 
 variable (hx : x ∈ levelSpace ρ.ρ (localIntGL (Fin N) w)) in
 include hx in
-/-- Let x be fixed by GL_N(O_w) (`hx`) and ϖ a uniformiser, and let a be the inverse of ρ(diag(ϖ, 1,
+/--
+Let x be fixed by GL_N(O_w) (`hx`) and ϖ a uniformiser, and let a be the inverse of ρ(diag(ϖ, 1,
 …, 1)). Then (a) the count of `New.partialHecke_hyperplane_count`, read in the dual representation,
 gives, for i + 1 + j = N − 1, a recursion between the mean over `proIwahori` of a applied to the
 partial Hecke sums `partialHecke ρ 0` and `partialHecke ρ 1`; (b) a carries `partialHecke ρ 0 N x`
-to `partialHecke ρ 1 (N - 1) x`; (c) `partialHecke ρ 0 N x` vanishes only for x = 0. -/
-lemma New.Patching.partialHecke_hyperplane_count_dual {ϖ : (LocField w)ˣ}
-    (hϖ : v ϖ.val = WithZero.exp (-1)) :
-    let a : ρ →ₗ[ℂ] ρ := ρ.ρ (diagGL (mulSingle 0 ϖ))⁻¹
-    -- (a)
-    (∀ i j : ℕ, 1 + (i + 1 + j) = N →
-      (w.q ^ (N - 1) : ℂ) • compactMean ρ.ρ proIwahori (a (partialHecke ρ.ρ 1 (i + 1) x)) =
-        (w.q ^ j : ℂ) •
-          (compactMean ρ.ρ proIwahori (a (partialHecke ρ.ρ 0 (i + 1) x)) -
-            partialHecke ρ.ρ 1 i x)) ∧
-    -- (b)
-    a (partialHecke ρ.ρ 0 N x) = partialHecke ρ.ρ 1 (N - 1) x ∧
-    -- (c)
-    (partialHecke ρ.ρ 0 N x = 0 → x = 0) := by
+to `partialHecke ρ 1 (N - 1) x`; (c) `partialHecke ρ 0 N x` vanishes only for x = 0.
+-/
+lemma New.Patching.partialHecke_hyperplane_count_dual
+    {ϖ : (LocField w)ˣ} (hϖ : v ϖ.val = WithZero.exp (-1))
+    : let a : ρ →ₗ[ℂ] ρ := ρ.ρ (diagGL (mulSingle 0 ϖ))⁻¹
+      -- (a)
+      (∀ i j : ℕ,
+          1 + (i + 1 + j) = N
+            → (w.q ^ (N - 1) : ℂ) • compactMean ρ.ρ proIwahori (a (partialHecke ρ.ρ 1 (i + 1) x))
+              = (w.q ^ j : ℂ)
+                • (compactMean ρ.ρ proIwahori (a (partialHecke ρ.ρ 0 (i + 1) x))
+                  - partialHecke ρ.ρ 1 i x))
+        -- (b)
+        ∧ a (partialHecke ρ.ρ 0 N x) = partialHecke ρ.ρ 1 (N - 1) x
+        -- (c)
+        ∧ (partialHecke ρ.ρ 0 N x = 0 → x = 0) := by
   intro a
-  exact ⟨fun i j h_sum ↦ compactMean_apply_inv_partialHecke_one_succ hx hϖ h_sum,
-    apply_inv_partialHecke_zero_top hx hϖ, eq_zero_of_partialHecke_zero_top hx hϖ⟩
+  exact ⟨
+    fun i j h_sum ↦ compactMean_apply_inv_partialHecke_one_succ hx hϖ h_sum,
+    apply_inv_partialHecke_zero_top hx hϖ,
+    eq_zero_of_partialHecke_zero_top hx hϖ
+  ⟩
 
 omit [NeZero N] [IsSmoothRep ρ.ρ] in
-/-- Suppose that `P (U)` kills `y`, and that `(P / (X - c)) (U)` still kills `y` for every root
+/--
+Suppose that `P (U)` kills `y`, and that `(P / (X - c)) (U)` still kills `y` for every root
 `c ≠ 0` of `P` for which `q * c` is also a root. Let `P = (∏ i < k, (d X - q ^ i)) * R`. If
-`q ^ k / d` is a root of `P`, then `R (U)` kills `y`: the chain `q ^ i / d`, `i < k`, cancels. -/
-lemma New.Patching.aeval_cofactor_eq_zero {U : End ℂ ρ} {y : ρ} {P : ℂ[X]} {q d : ℂ} (hq : 1 < q)
-    (aeval_P : aeval U P y = 0)
-    (two_roots :
-      ∀ {c : ℂ} (F : ℂ[X]), (X - C c) * F = P → P.IsRoot (q * c) → c ≠ 0 → aeval U F y = 0)
-    (hd : d ≠ 0) (k : ℕ) (R : ℂ[X]) (hroot : P.IsRoot (q ^ k / d))
-    (hP : P = (∏ i ∈ range k, (C d * X - C (q ^ i))) * R) :
-    aeval U R y = 0 := by
+`q ^ k / d` is a root of `P`, then `R (U)` kills `y`: the chain `q ^ i / d`, `i < k`, cancels.
+-/
+lemma New.Patching.aeval_cofactor_eq_zero
+    {U : End ℂ ρ} {y : ρ} {P : ℂ[X]} {q d : ℂ} (hq : 1 < q) (aeval_P : aeval U P y = 0)
+    (two_roots
+      : ∀ {c : ℂ} (F : ℂ[X]), (X - C c) * F = P → P.IsRoot (q * c) → c ≠ 0 → aeval U F y = 0)
+    (hd : d ≠ 0)
+    (k : ℕ) (R : ℂ[X])
+    (hroot : P.IsRoot (q ^ k / d)) (hP : P = (∏ i ∈ range k, (C d * X - C (q ^ i))) * R)
+    : aeval U R y = 0 := by
   induction k generalizing R with
   | zero => simpa [hP] using aeval_P
   | succ k ih =>
@@ -234,13 +275,16 @@ lemma New.Patching.aeval_cofactor_eq_zero {U : End ℂ ρ} {y : ρ} {P : ℂ[X]}
     rwa [End.aeval_apply_of_mem_apply_eq_smul eigen_R, smul_eq_zero_iff_right eval_ne] at killed
 
 omit [NeZero N] [IsSmoothRep ρ.ρ] in
-/-- If `R (U)` kills every `T j` and the adjoint `U'` of `U` keeps the span of `T 0, …, T n`, then
-the conjugate of `R`, evaluated at `U'`, kills `T 0`. -/
-lemma New.Patching.aeval_conj_eq_zero {U U' : End ℂ ρ} {T : ℕ → ρ} {R : ℂ[X]} {n : ℕ} {a : ℂ}
-    {b c : ℕ → ℂ} (hB : ∀ f ≠ (0 : ρ), 0 < B f f) (adj : ∀ y z : ρ, B (U' y) z = B y (U z))
+/--
+If `R (U)` kills every `T j` and the adjoint `U'` of `U` keeps the span of `T 0, …, T n`, then
+the conjugate of `R`, evaluated at `U'`, kills `T 0`.
+-/
+lemma New.Patching.aeval_conj_eq_zero
+    {U U' : End ℂ ρ} {T : ℕ → ρ} {R : ℂ[X]} {n : ℕ} {a : ℂ} {b c : ℕ → ℂ}
+    (hB : ∀ f ≠ (0 : ρ), 0 < B f f) (adj : ∀ y z : ρ, B (U' y) z = B y (U z))
     (kills_T : ∀ j : ℕ, aeval U R (T j) = 0) (U'_first : U' (T 0) = a • T n)
-    (rec_U' : ∀ i < n, U' (T i.succ) = b i • (c i • U' (T 0) - T i)) :
-    aeval U' (R.map (starRingEnd ℂ)) (T 0) = 0 := by
+    (rec_U' : ∀ i < n, U' (T i.succ) = b i • (c i • U' (T 0) - T i))
+    : aeval U' (R.map (starRingEnd ℂ)) (T 0) = 0 := by
   have kills_span (F : ℂ[X]) : ∀ j ≤ n, aeval U R (aeval U' F (T j)) = 0 := by
     induction F using recOnHorner with
     | M0 => simp
@@ -254,61 +298,73 @@ lemma New.Patching.aeval_conj_eq_zero {U U' : End ℂ ρ} {T : ℕ → ρ} {R : 
   rw [adjoint_aeval_map_starRingEnd ⊤ (fun y _ ↦ ⟨trivial, fun z ↦ adj z y⟩) R _ _ trivial,
     kills_span _ 0 (Nat.zero_le n), map_zero]
 
-/-- The Hecke polynomial of degree `m + 1` is `X` times that of degree `m`, plus the constant
-`(-1) ^ (m + 1) * q ^ ((m + 1).choose 2) * t (m + 1)`. -/
-private lemma New.Patching.heckePoly_succ (q m : ℕ) :
-    heckePoly q (m + 1) t =
-      X * heckePoly q m t + ((-1) ^ (m + 1) * q ^ (m + 1).choose 2 * t (m + 1)) • 1 := by
+/--
+The Hecke polynomial of degree `m + 1` is `X` times that of degree `m`, plus the constant
+`(-1) ^ (m + 1) * q ^ ((m + 1).choose 2) * t (m + 1)`.
+-/
+private lemma New.Patching.heckePoly_succ (q m : ℕ)
+    : heckePoly q (m + 1) t
+      = X * heckePoly q m t + ((-1) ^ (m + 1) * q ^ (m + 1).choose 2 * t (m + 1)) • 1 := by
   ext k
   cases k with
   | zero => simp [coeff_one]
   | succ k => simp [coeff_one]
 
 omit [NeZero N] [IsSmoothRep ρ.ρ] in
-/-- Let `U (T j) = q ^ j • (t (j + 1) • T 0 - T (j + 1))` for all `j`, and `t 0 • T 0 = T 0`. Then
+/--
+Let `U (T j) = q ^ j • (t (j + 1) • T 0 - T (j + 1))` for all `j`, and `t 0 • T 0 = T 0`. Then
 the Hecke polynomial of degree `m`, evaluated at `U`, sends `T 0` to
-`(-1) ^ m * q ^ (m.choose 2)` times `T m`. -/
-private lemma New.Patching.aeval_heckePoly_apply (U : End ℂ ρ) (T : ℕ → ρ) {q : ℕ}
+`(-1) ^ m * q ^ (m.choose 2)` times `T m`.
+-/
+private lemma New.Patching.aeval_heckePoly_apply
+    (U : End ℂ ρ) (T : ℕ → ρ)
+    {q : ℕ}
     (ht_zero : t 0 • T 0 = T 0)
-    (rec_U : ∀ j : ℕ, U (T j) = (q : ℂ) ^ j • (t j.succ • T 0 - T j.succ)) (m : ℕ) :
-    aeval U (heckePoly q m t) (T 0) = ((-1) ^ m * q ^ m.choose 2 : ℂ) • T m := by
+    (rec_U : ∀ j : ℕ, U (T j) = (q : ℂ) ^ j • (t j.succ • T 0 - T j.succ)) (m : ℕ)
+    : aeval U (heckePoly q m t) (T 0) = ((-1) ^ m * q ^ m.choose 2 : ℂ) • T m := by
   induction m with
   | zero => simpa [heckePoly] using ht_zero
   | succ m ih =>
     -- write the next polynomial by `heckePoly_succ`; `U (T m)` is given by `rec_U`
-    suffices h_lin :
-        ((-1) ^ m * (q : ℂ) ^ m.choose 2) • (q : ℂ) ^ m • (t (m + 1) • T 0 - T (m + 1)) +
-        ((-1) ^ (m + 1) * (q : ℂ) ^ (m + m.choose 2) * t (m + 1)) • T 0 =
-        ((-1) ^ (m + 1) * (q : ℂ) ^ (m + m.choose 2)) • T (m + 1) by
+    suffices h_lin
+        : ((-1) ^ m * (q : ℂ) ^ m.choose 2) • (q : ℂ) ^ m • (t (m + 1) • T 0 - T (m + 1))
+            + ((-1) ^ (m + 1) * (q : ℂ) ^ (m + m.choose 2) * t (m + 1)) • T 0
+          = ((-1) ^ (m + 1) * (q : ℂ) ^ (m + m.choose 2)) • T (m + 1) by
       simpa [heckePoly_succ, ih, rec_U, Nat.choose] using h_lin
     module
 
 omit [NeZero N] [IsSmoothRep ρ.ρ] in
-/-- The action of `U'` on the quotient of a Hecke polynomial by `X - c`. Let `p m` be the Hecke
+/--
+The action of `U'` on the quotient of a Hecke polynomial by `X - c`. Let `p m` be the Hecke
 polynomial of degree `m`, with `p m (U) (T 0) = (-1) ^ m * q ^ (m.choose 2) • T m`, let
 `T (n + 1) = 0`, and let `U' (T (i + 1)) = q ^ (n - i - 1) • ((t (i + 1) / q ^ n) • U' (T 0) - T i)`
 for `i < n` and `U' (T 0) = q ^ n • (t (n + 1))⁻¹ • T n`, as in
 `New.Patching.chain_lemma_of_adjoint`. For `m ≤ n + 1` and `c : ℂ` there is a polynomial `D` with
 `(X - c) * D = p m - p m (c)` and `U' ((c • D + p m) (U) (T 0)) = (p m (q * c) / q ^ m) • U' (T 0) +
-(q ^ n / q) • D (U) (T 0)`. -/
-private lemma New.Patching.exists_mul_eq_sub_eval_and_apply (U U' : End ℂ ρ) (T : ℕ → ρ) {q n : ℕ}
-    (q_ne : (q : ℂ) ≠ 0) (ht_last : t n.succ ≠ 0) (T_last : T (n + 1) = 0)
-    (rec_U' : ∀ i < n,
-      U' (T i.succ) = (q : ℂ) ^ (n - i.succ) • ((t i.succ / q ^ n) • U' (T 0) - T i))
+(q ^ n / q) • D (U) (T 0)`.
+-/
+private lemma New.Patching.exists_mul_eq_sub_eval_and_apply
+    (U U' : End ℂ ρ) (T : ℕ → ρ)
+    {q n : ℕ} (q_ne : (q : ℂ) ≠ 0) (ht_last : t n.succ ≠ 0) (T_last : T (n + 1) = 0)
+    (rec_U'
+      : ∀ i < n, U' (T i.succ) = (q : ℂ) ^ (n - i.succ) • ((t i.succ / q ^ n) • U' (T 0) - T i))
     (U'_first : U' (T 0) = (q : ℂ) ^ n • (t n.succ)⁻¹ • T n)
     (aeval_p : ∀ m : ℕ, aeval U (heckePoly q m t) (T 0) = ((-1) ^ m * q ^ m.choose 2 : ℂ) • T m)
-    (m : ℕ) (hm : m ≤ n.succ) (c : ℂ) :
-    ∃ D : ℂ[X], (X - C c) * D = heckePoly q m t - C ((heckePoly q m t).eval c) ∧
-      U' (aeval U (c • D + heckePoly q m t) (T 0)) =
-        ((heckePoly q m t).eval (q * c) / q ^ m) • U' (T 0) +
-          (q ^ n / q : ℂ) • aeval U D (T 0) := by
+    (m : ℕ) (hm : m ≤ n.succ)
+    (c : ℂ)
+    : ∃ D : ℂ[X],
+      (X - C c) * D = heckePoly q m t - C ((heckePoly q m t).eval c)
+        ∧ U' (aeval U (c • D + heckePoly q m t) (T 0))
+          = ((heckePoly q m t).eval (q * c) / q ^ m) • U' (T 0)
+            + (q ^ n / q : ℂ) • aeval U D (T 0) := by
   induction m with
   | zero => exact ⟨0, by simp [heckePoly]⟩
   | succ m ih =>
     obtain ⟨D, hD, hU'⟩ := ih (Nat.lt_of_succ_le hm).le
     refine ⟨c • D + heckePoly q m t, ?_, ?_⟩
-    · suffices h_poly : (X - C c) * (C c * D + heckePoly q m t) =
-          X * heckePoly q m t - C c * C (eval c (heckePoly q m t)) by
+    · suffices h_poly
+          : (X - C c) * (C c * D + heckePoly q m t)
+            = X * heckePoly q m t - C c * C (eval c (heckePoly q m t)) by
         simpa [heckePoly_succ, smul_eq_C_mul] using h_poly
       linear_combination C c * hD
     · -- express everything by the `T j` and use the recursion for `U'`, or its end if `m = n`
@@ -320,28 +376,33 @@ private lemma New.Patching.exists_mul_eq_sub_eval_and_apply (U U' : End ℂ ρ) 
         linear_combination (norm := match_scalars <;> field) c • hU'
 
 omit [NeZero N] [IsSmoothRep ρ.ρ] in
-/-- The root bound behind `New.Patching.chain_lemma_of_adjoint`. Let `B` be positive definite, `U'`
+/--
+The root bound behind `New.Patching.chain_lemma_of_adjoint`. Let `B` be positive definite, `U'`
 adjoint to `U`, `x ≠ 0`, `1 < q` and `a ≠ 0`. Let `z` be an eigenvector of `U` for `c` with
 `c • U' z = (a / q ^ (n + 1)) • U' x + (q ^ n / q) • z` and
-`c * B x z * (q ^ (n + 1) - 1) = a * B x x`. Then `q ^ (n + 1) / q ^ 2 ≤ ‖c‖ ^ 2`. -/
-private lemma New.Patching.le_norm_sq_of_pairing {U U' : End ℂ ρ} {x z : ρ} {c a : ℂ} {q n : ℕ}
+`c * B x z * (q ^ (n + 1) - 1) = a * B x x`. Then `q ^ (n + 1) / q ^ 2 ≤ ‖c‖ ^ 2`.
+-/
+private lemma New.Patching.le_norm_sq_of_pairing
+    {U U' : End ℂ ρ} {x z : ρ} {c a : ℂ} {q n : ℕ}
     (hB : ∀ f ≠ (0 : ρ), 0 < B f f) (adj : ∀ a y : ρ, B (U' a) y = B a (U y)) (hq : 1 < (q : ℂ))
     (hx_ne : x ≠ 0) (ha : a ≠ 0) (U_z : U z = c • z)
     (U'_z : c • U' z = (a / q ^ (n + 1)) • U' x + (q ^ n / q : ℂ) • z)
-    (pair_x : c * B x z * (q ^ (n + 1) - 1) = a * B x x) :
-    (q : ℝ) ^ n.succ / q ^ 2 ≤ ‖c‖ ^ 2 := by
+    (pair_x : c * B x z * (q ^ (n + 1) - 1) = a * B x x)
+    : (q : ℝ) ^ n.succ / q ^ 2 ≤ ‖c‖ ^ 2 := by
   have pow_sub_pos : 0 < (q : ℂ) ^ (n + 1) - 1 := sub_pos.mpr (one_lt_pow₀ hq n.succ_ne_zero)
   have x_pos : 0 < B x x := hB x hx_ne
   -- `z ≠ 0`, as `a ≠ 0`
   have z_pos : 0 < B z z := hB z fun hz ↦ ha (by simpa [hz, x_pos.ne'] using pair_x)
   -- Pair the formula for `U' z` with `z`.
   have pair_z : (‖c‖ ^ 2 - q ^ n / q) * B z z = starRingEnd ℂ a / q ^ (n + 1) * (c * B x z) := by
-    have paired : starRingEnd ℂ c * (c * B z z) =
-        starRingEnd ℂ a / q ^ (n + 1) * (c * B x z) + q ^ n / q * B z z := by
+    have paired
+        : starRingEnd ℂ c * (c * B z z)
+          = starRingEnd ℂ a / q ^ (n + 1) * (c * B x z) + q ^ n / q * B z z := by
       simpa [adj, U_z] using congrArg (fun y : ρ ↦ B y z) U'_z
     linear_combination paired - B z z * mul_conj' c
-  have gap : (‖c‖ ^ 2 - q ^ (n + 1) / q ^ 2 : ℂ) =
-      ‖a‖ ^ 2 * B x x / q ^ (n + 1) / ((q ^ (n + 1) - 1) * B z z) := by
+  have gap
+      : (‖c‖ ^ 2 - q ^ (n + 1) / q ^ 2 : ℂ)
+        = ‖a‖ ^ 2 * B x x / q ^ (n + 1) / ((q ^ (n + 1) - 1) * B z z) := by
     rw [eq_div_iff (mul_pos pow_sub_pos z_pos).ne', ← mul_conj' a]
     linear_combination (norm := field) (q ^ (n + 1) - 1) * pair_z +
       starRingEnd ℂ a / q ^ (n + 1) * pair_x
@@ -349,30 +410,34 @@ private lemma New.Patching.le_norm_sq_of_pairing {U U' : End ℂ ρ} {x z : ρ} 
   exact real_le_real.mp (by simpa using gap_nonneg)
 
 omit [NeZero N] [IsSmoothRep ρ.ρ] in
-/-- The linear algebra of the chain lemma. Let `B` be a positive definite sesquilinear form, and let
+/--
+The linear algebra of the chain lemma. Let `B` be a positive definite sesquilinear form, and let
 `U`, `U'` be mutually adjoint for `B`. Let `P = heckePoly q (n+1) t` with `1 < q`, `T 0 ≠ 0`,
 `t 0 • T 0 = T 0` and `t (n+1) ≠ 0`, and suppose `U (T j) = q^j • (t (j+1) • T 0 - T (j+1))`, `U' (T
 (i+1)) = q^(n-i-1) • ((t (i+1) / q^n) • U' (T 0) - T i)` for `i < n`,
 `U' (T 0) = q^n • t (n+1)⁻¹ • T n` and `U (T n) = q^n • t (n+1) • T 0`. Then (a) every root `c` of
 `P` such that `q * c` is not a root satisfies `q^(n+1) / q^2 ≤ ‖c‖^2`; and (b) if `d ≠ 0`, `q^k / d`
 is a root of `P`, and `P = (∏_{i<k} (d X - q^i)) * R`, then `R` with complex-conjugated
-coefficients, evaluated at `U'`, kills `T 0`. -/
-lemma New.Patching.chain_lemma_of_adjoint (U U' : End ℂ ρ) (T : ℕ → ρ)
-    (hB : ∀ f ≠ (0 : ρ), 0 < B f f)
-    (adj : ∀ a y : ρ, B (U' a) y = B a (U y)) (adj' : ∀ a y : ρ, B (U a) y = B a (U' y)) {q n : ℕ}
-    (hP_def : P = heckePoly q n.succ t) (hq : 1 < (q : ℂ)) (hT_ne : T 0 ≠ 0)
-    (ht_zero : t 0 • T 0 = T 0) (ht_last : t n.succ ≠ 0)
+coefficients, evaluated at `U'`, kills `T 0`.
+-/
+lemma New.Patching.chain_lemma_of_adjoint
+    (U U' : End ℂ ρ)
+    (T : ℕ → ρ)
+    (hB : ∀ f ≠ (0 : ρ), 0 < B f f) (adj : ∀ a y : ρ, B (U' a) y = B a (U y))
+    (adj' : ∀ a y : ρ, B (U a) y = B a (U' y))
+    {q n : ℕ} (hP_def : P = heckePoly q n.succ t) (hq : 1 < (q : ℂ))
+    (hT_ne : T 0 ≠ 0) (ht_zero : t 0 • T 0 = T 0) (ht_last : t n.succ ≠ 0)
     (rec_U : ∀ j : ℕ, U (T j) = (q : ℂ) ^ j • (t j.succ • T 0 - T j.succ))
-    (rec_U' : ∀ i < n,
-      U' (T i.succ) = (q : ℂ) ^ (n - i.succ) • ((t i.succ / q ^ n) • U' (T 0) - T i))
+    (rec_U'
+      : ∀ i < n, U' (T i.succ) = (q : ℂ) ^ (n - i.succ) • ((t i.succ / q ^ n) • U' (T 0) - T i))
     (U'_first : U' (T 0) = (q : ℂ) ^ n • (t n.succ)⁻¹ • T n)
-    (U_last : U (T n) = (q : ℂ) ^ n • t n.succ • T 0) :
+    (U_last : U (T n) = (q : ℂ) ^ n • t n.succ • T 0)
     -- the top root of a chain is large
-    (∀ c : ℂ, P.IsRoot c → ¬P.IsRoot (q * c) → q ^ n.succ / q ^ 2 ≤ ‖c‖ ^ 2) ∧
-    -- a chain that goes on by one more root can be cancelled
-    ∀ d ≠ (0 : ℂ), ∀ (k : ℕ) (R : ℂ[X]), P.IsRoot (q ^ k / d) →
-      P = (∏ i ∈ range k, (C d * X - C (q ^ i : ℂ))) * R →
-      aeval U' (R.map (starRingEnd ℂ)) (T 0) = 0 := by
+    : (∀ c : ℂ, P.IsRoot c → ¬ P.IsRoot (q * c) → q ^ n.succ / q ^ 2 ≤ ‖c‖ ^ 2)
+      -- a chain that goes on by one more root can be cancelled
+      ∧ ∀ d ≠ (0 : ℂ), ∀ (k : ℕ) (R : ℂ[X]),
+        P.IsRoot (q ^ k / d) → P = (∏ i ∈ range k, (C d * X - C (q ^ i : ℂ))) * R
+          → aeval U' (R.map (starRingEnd ℂ)) (T 0) = 0 := by
   -- Write `x = T 0` and `p m` for the Hecke polynomial cut at degree `m`. Each `p m (U) x` is a
   -- multiple of `T m`. For a root `c` of `P`, the vector `z c = (P / (X - c))(U) x` satisfies
   -- `U (z c) = c • z c`, and the recursion for `U'` computes `U' (z c)`; pairing it with `U' x` and
@@ -385,15 +450,18 @@ lemma New.Patching.chain_lemma_of_adjoint (U U' : End ℂ ρ) (T : ℕ → ρ)
     aeval_heckePoly_apply U T ht_zero rec_U m
   have aeval_P : aeval U P x = 0 := by simpa [← hP_def, T_last] using aeval_p n.succ
   -- The formula for `U'` on the quotient `D c` of `P - P (c)` by `X - c`.
-  have quot (c : ℂ) : ∃ D : ℂ[X], (X - C c) * D = P - C (P.eval c) ∧
-      U' (aeval U (c • D + P) x) =
-        (P.eval (q * c) / q ^ n.succ) • U' x + (q ^ n / q : ℂ) • aeval U D x := by
-    simpa only [← hP_def] using exists_mul_eq_sub_eval_and_apply U U' T q_ne ht_last T_last rec_U'
-      U'_first aeval_p n.succ le_rfl c
+  have quot (c : ℂ)
+      : ∃ D : ℂ[X],
+        (X - C c) * D = P - C (P.eval c)
+          ∧ U' (aeval U (c • D + P) x)
+            = (P.eval (q * c) / q ^ n.succ) • U' x + (q ^ n / q : ℂ) • aeval U D x := by
+    simpa only [← hP_def] using
+      exists_mul_eq_sub_eval_and_apply U U' T q_ne ht_last T_last rec_U' U'_first aeval_p n.succ
+        le_rfl c
   choose D hD hU' using quot
   let z (c : ℂ) : ρ := aeval U (D c) x
-  have U'_z (c : ℂ) :
-      c • U' (z c) = (P.eval (q * c) / q ^ (n + 1)) • U' x + (q ^ n / q : ℂ) • z c := by
+  have U'_z (c : ℂ)
+      : c • U' (z c) = (P.eval (q * c) / q ^ (n + 1)) • U' x + (q ^ n / q : ℂ) • z c := by
     simpa [aeval_P] using hU' c
   have U_z (c : ℂ) (hc : P.IsRoot c) : U (z c) = c • z c := by
     simpa [aeval_P, hc.eq_zero, sub_eq_zero] using congrArg (aeval U · x) (hD c)
@@ -401,22 +469,26 @@ lemma New.Patching.chain_lemma_of_adjoint (U U' : End ℂ ρ) (T : ℕ → ρ)
   have pair_U' (y : ρ) : B (U' x) (U' y) = q ^ n * q ^ n * B x y := by
     simp [← adj', U'_first, U_last]
     field_simp [ht_last]
-  have pair_x (c : ℂ) (hc : P.IsRoot c) :
-      c * B x (z c) * (q ^ (n + 1) - 1) = P.eval (q * c) * B x x := by
-    have paired : B (U' x) (c • U' (z c)) =
-        B (U' x) ((P.eval (q * c) / q ^ (n + 1)) • U' x + (q ^ n / q : ℂ) • z c) := by rw [U'_z c]
+  have pair_x (c : ℂ) (hc : P.IsRoot c)
+      : c * B x (z c) * (q ^ (n + 1) - 1) = P.eval (q * c) * B x x := by
+    have paired
+        : B (U' x) (c • U' (z c))
+          = B (U' x) ((P.eval (q * c) / q ^ (n + 1)) • U' x + (q ^ n / q : ℂ) • z c) := by
+      rw [U'_z c]
     simp only [map_add, map_smul, pair_U', adj _ (z c), U_z c hc, smul_eq_mul] at paired
     linear_combination (norm := field) q / q ^ n * paired
-  refine ⟨fun c hc hqc ↦
-    -- Pair the formula for `U' (z c)` with `z c`, which is not `0` as `P (q c) ≠ 0`.
-    le_norm_sq_of_pairing hB adj hq hT_ne hqc (U_z c hc) (U'_z c) (pair_x c hc), ?_⟩
+  refine ⟨
+    fun c hc hqc ↦
+      -- Pair the formula for `U' (z c)` with `z c`, which is not `0` as `P (q c) ≠ 0`.
+      le_norm_sq_of_pairing hB adj hq hT_ne hqc (U_z c hc) (U'_z c) (pair_x c hc),
+    ?_
+  ⟩
   -- If `c ≠ 0` and `q c` are roots, then `U' (z c)` is a multiple of `z c`, and `z c` is
   -- orthogonal to `x`, hence to every `G (U) x`, itself included.
-  have two_roots {c : ℂ} (F : ℂ[X]) (hF : (X - C c) * F = P) (hqc : P.IsRoot (q * c)) (hc : c ≠ 0) :
-      aeval U F x = 0 := by
+  have two_roots {c : ℂ} (F : ℂ[X]) (hF : (X - C c) * F = P) (hqc : P.IsRoot (q * c)) (hc : c ≠ 0)
+      : aeval U F x = 0 := by
     have root : P.IsRoot c := by simp [← hF]
-    obtain rfl : F = D c :=
-      mul_left_cancel₀ (X_sub_C_ne_zero c) (by simp [hF, hD, root.eq_zero])
+    obtain rfl : F = D c := mul_left_cancel₀ (X_sub_C_ne_zero c) (by simp [hF, hD, root.eq_zero])
     have eigen_z : U' (z c) = c⁻¹ • (q ^ n / q : ℂ) • z c := by
       simpa [eq_inv_smul_iff₀ hc, hqc.eq_zero] using U'_z c
     have orth_x : B x (z c) = 0 := by simpa [hqc.eq_zero, hc, pow_sub_pos.ne'] using pair_x c root
@@ -433,7 +505,8 @@ lemma New.Patching.chain_lemma_of_adjoint (U U' : End ℂ ρ) (T : ℕ → ρ)
   -- commutes with `p j (U)`.
   simpa [aeval_p, kills_x, q_ne] using congrArg (aeval U · x) (mul_comm R (heckePoly q j t))
 
-/-- Let x ≠ 0 be a spherical eigenvector with Hecke polynomial P in a smooth unitary representation
+/--
+Let x ≠ 0 be a spherical eigenvector with Hecke polynomial P in a smooth unitary representation
 of GL_N(E_w), q the norm of w, ϖ a uniformiser.
 * Root bound: if P(c) = 0 and P(qc) ≠ 0, then |c|² ≥ q^(N−2), written q^N / q² to avoid subtraction.
 * Orthogonality: let U be the Hecke operator of diag(ϖ, 1, …, 1) for the group `proIwahori`. If
@@ -441,26 +514,28 @@ d ≠ 0 and P(X/d) = ∏_{i ≤ k} (X − q^i) · S with S dividing R, so that c
 c = 1/d, then x is orthogonal to ((dX − q^k) · R(dX))(U) y for every y fixed by `proIwahori`.
 
 The root bound also follows from Tadić's classification of unitary spherical representations of
-GL_N; the proof here is direct and does not use the classification. -/
-lemma New.Patching.chain_lemma (hB : IsUnitary ρ.ρ B)
-    (hx : x ∈ levelSpace ρ.ρ (localIntGL (Fin N) w))
-    (hx_ne : x ≠ 0) (hP_eq : P = heckePoly w.q N t) (ht : ∀ j : ℕ, heckeGL ρ.ρ j x = t j • x)
-    {ϖ : (LocField w)ˣ} (hϖ : v ϖ.val = WithZero.exp (-1)) :
+GL_N; the proof here is direct and does not use the classification.
+-/
+lemma New.Patching.chain_lemma
+    (hB : IsUnitary ρ.ρ B) (hx : x ∈ levelSpace ρ.ρ (localIntGL (Fin N) w)) (hx_ne : x ≠ 0)
+    (hP_eq : P = heckePoly w.q N t) (ht : ∀ j : ℕ, heckeGL ρ.ρ j x = t j • x)
+    {ϖ : (LocField w)ˣ} (hϖ : v ϖ.val = WithZero.exp (-1))
     -- root bound: the top root of a chain is large
-    (∀ c : ℂ, P.IsRoot c → ¬P.IsRoot (w.q * c) → w.q ^ N / w.q ^ 2 ≤ ‖c‖ ^ 2) ∧
-    -- orthogonality to `x`, once all roots but the top one of a chain of `k + 1` are cancelled
-    ∀ d ≠ (0 : ℂ), ∀ (k : ℕ) (R : ℂ[X]),
-      HasRootChain P R w.q d⁻¹ (k + 1) →
-      ∀ y ∈ levelSpace ρ.ρ proIwahori,
-        B x
-          (aeval (heckeCoset ρ.ρ proIwahori (diagGL (mulSingle 0 ϖ)))
-            (((X - C (w.q ^ k : ℂ)) * R).comp (C d * X)) y) = 0 := by
+    : (∀ c : ℂ, P.IsRoot c → ¬ P.IsRoot (w.q * c) → w.q ^ N / w.q ^ 2 ≤ ‖c‖ ^ 2)
+      -- orthogonality to `x`, once all roots but the top one of a chain of `k + 1` are cancelled
+      ∧ ∀ d ≠ (0 : ℂ), ∀ (k : ℕ) (R : ℂ[X]),
+        HasRootChain P R w.q d⁻¹ (k + 1)
+          → ∀ y ∈ levelSpace ρ.ρ proIwahori,
+            B x
+                (aeval (heckeCoset ρ.ρ proIwahori (diagGL (mulSingle 0 ϖ)))
+                  (((X - C (w.q ^ k : ℂ)) * R).comp (C d * X)) y)
+              = 0 := by
   -- Apply `chain_lemma_of_adjoint` to `T j = partialHecke ρ.ρ 1 j x`, `U = u ϖ` and `U' = u ϖ⁻¹`,
   -- where `u g` is `q ^ (N - 1)` times `ρ (diag (g, 1, …, 1))` between two means over `proIwahori`.
   obtain ⟨n, rfl⟩ : ∃ n : ℕ, N = n + 1 := Nat.exists_eq_succ_of_ne_zero (NeZero.ne N)
   let u (g : (LocField w)ˣ) : End ℂ ρ :=
-    (w.q : ℂ) ^ n •
-      (compactMean ρ.ρ proIwahori * ρ.ρ (diagGL (mulSingle 0 g)) * compactMean ρ.ρ proIwahori)
+    (w.q : ℂ) ^ n
+      • (compactMean ρ.ρ proIwahori * ρ.ρ (diagGL (mulSingle 0 g)) * compactMean ρ.ρ proIwahori)
   let T (j : ℕ) : ρ := partialHecke ρ.ρ 1 j x
   have avg_T (j : ℕ) : compactMean ρ.ρ proIwahori (T j) = T j :=
     compactMean_eq_self _
@@ -479,12 +554,12 @@ lemma New.Patching.chain_lemma (hB : IsUnitary ρ.ρ B)
   have t_last : t n.succ ≠ 0 := by simpa [partialHecke_zero_eq_heckeGL, ht, hx_ne] using dual_ne
   replace dual_last : t n.succ • ρ.ρ (diagGL (mulSingle 0 ϖ))⁻¹ x = T n := by
     simpa [partialHecke_zero_eq_heckeGL, ht] using dual_last
-  have rec_U' (i : ℕ) (hi : i < n) :
-      u ϖ⁻¹ (T i.succ) = (w.q : ℂ) ^ (n - i.succ) • ((t i.succ / w.q ^ n) • u ϖ⁻¹ x - T i) := by
+  have rec_U' (i : ℕ) (hi : i < n)
+      : u ϖ⁻¹ (T i.succ) = (w.q : ℂ) ^ (n - i.succ) • ((t i.succ / w.q ^ n) • u ϖ⁻¹ x - T i) := by
     simpa [u, T, mulSingle_inv, partialHecke_zero_eq_heckeGL, ht, avg_T, avg_x, smul_smul,
-      div_mul_cancel₀ _
-        (pow_ne_zero n ((Nat.cast_ne_zero (R := ℂ)).2 (zero_lt_one.trans w.one_lt_q).ne'))] using
-      dual i (n - i.succ) (by lia)
+        div_mul_cancel₀ _
+          (pow_ne_zero n ((Nat.cast_ne_zero (R := ℂ)).2 (zero_lt_one.trans w.one_lt_q).ne'))]
+      using dual i (n - i.succ) (by lia)
   have U'_x : u ϖ⁻¹ x = (w.q : ℂ) ^ n • (t n.succ)⁻¹ • T n := by
     rw [← avg_T, ← dual_last]
     simp [u, mulSingle_inv, avg_x, t_last]
@@ -501,10 +576,9 @@ lemma New.Patching.chain_lemma (hB : IsUnitary ρ.ρ B)
     Polynomial.funext fun a ↦ by simpa [hd, eval_prod] using congrArg (eval (d * a)) hS
   -- On `proIwahori`-fixed vectors the Hecke operator `H` is `U`, so its adjoint is `U'`.
   set H : End ℂ ρ := heckeCoset ρ.ρ proIwahori (diagGL (mulSingle 0 ϖ))
-  have hecke_adj (z : ρ) (hz : z ∈ levelSpace ρ.ρ proIwahori) :
-      H z ∈ levelSpace ρ.ρ proIwahori ∧ ∀ a, B (u ϖ⁻¹ a) z = B a (H z) := by
-    have hecke_z : H z = u ϖ z := by
-      simp [H, u, (heckeCoset_mulSingle_zero_eq hϖ hz).right, hz]
+  have hecke_adj (z : ρ) (hz : z ∈ levelSpace ρ.ρ proIwahori)
+      : H z ∈ levelSpace ρ.ρ proIwahori ∧ ∀ a, B (u ϖ⁻¹ a) z = B a (H z) := by
+    have hecke_z : H z = u ϖ z := by simp [H, u, (heckeCoset_mulSingle_zero_eq hϖ hz).right, hz]
     rw [hecke_z]
     exact ⟨by simp [u], fun a ↦ adj ϖ a z⟩
   -- The cofactor of the first `k` roots, conjugated and evaluated at `U'`, kills `x`.
@@ -519,28 +593,33 @@ lemma New.Patching.chain_lemma (hB : IsUnitary ρ.ρ B)
   rw [factor, ← adjoint_aeval_map_starRingEnd _ hecke_adj _ x y hy]
   simp [killed]
 
-/-- The top root of a chain is large. Let x ≠ 0 be a spherical Hecke eigenvector in a smooth unitary
+/--
+The top root of a chain is large. Let x ≠ 0 be a spherical Hecke eigenvector in a smooth unitary
 representation of GL_N(E_w), with Hecke polynomial P. If P(c) = 0 and P(qc) ≠ 0, then
-|c|² ≥ q^(N−2), written q^N / q² to avoid subtraction. -/
-lemma New.Patching.le_norm_sq_of_isRoot_of_not_isRoot_mul (hB : IsUnitary ρ.ρ B)
-    (hx : x ∈ levelSpace ρ.ρ (localIntGL (Fin N) w)) (hx_ne : x ≠ 0) (hP_eq : P = heckePoly w.q N t)
-    (ht : ∀ j : ℕ, heckeGL ρ.ρ j x = t j • x) {c : ℂ} (hc : P.IsRoot c)
-    (hqc : ¬P.IsRoot (w.q * c)) :
-    (w.q : ℝ) ^ N / w.q ^ 2 ≤ ‖c‖ ^ 2 := by
+|c|² ≥ q^(N−2), written q^N / q² to avoid subtraction.
+-/
+lemma New.Patching.le_norm_sq_of_isRoot_of_not_isRoot_mul
+    (hB : IsUnitary ρ.ρ B) (hx : x ∈ levelSpace ρ.ρ (localIntGL (Fin N) w)) (hx_ne : x ≠ 0)
+    (hP_eq : P = heckePoly w.q N t) (ht : ∀ j : ℕ, heckeGL ρ.ρ j x = t j • x)
+    {c : ℂ} (hc : P.IsRoot c) (hqc : ¬ P.IsRoot (w.q * c))
+    : (w.q : ℝ) ^ N / w.q ^ 2 ≤ ‖c‖ ^ 2 := by
   obtain ⟨h_bound, -⟩ := chain_lemma hB hx hx_ne hP_eq ht (v_uniformizer w)
   exact h_bound c hc hqc
 
-/-- Let x ≠ 0 be a spherical Hecke eigenvector in a smooth unitary representation of GL_N(E_w), with
+/--
+Let x ≠ 0 be a spherical Hecke eigenvector in a smooth unitary representation of GL_N(E_w), with
 Hecke polynomial P. If P(c) = 0 and |c|² q^k = q^N, then c, cq, …, cq^(k−1) are all roots of P.
 
 This also follows from Tadić's classification of the unitary spherical representations of GL_N; the
 proof here is direct, from `le_norm_sq_of_isRoot_of_not_isRoot_mul` and the symmetry y ↦ q^(N−1)/ȳ
-of the roots of P. -/
-lemma New.Patching.isRoot_chain_of_norm (hB : IsUnitary ρ.ρ B)
-    (hx : x ∈ levelSpace ρ.ρ (localIntGL (Fin N) w)) (hx_ne : x ≠ 0) (hP_eq : P = heckePoly w.q N t)
-    (ht : ∀ j : ℕ, heckeGL ρ.ρ j x = t j • x) {c : ℂ} {k : ℕ} (hc : P.IsRoot c)
-    (h_norm : ‖c‖ ^ 2 * w.q ^ k = w.q ^ N) {i : ℕ} (hi : i < k) :
-    P.IsRoot (c * w.q ^ i) := by
+of the roots of P.
+-/
+lemma New.Patching.isRoot_chain_of_norm
+    (hB : IsUnitary ρ.ρ B) (hx : x ∈ levelSpace ρ.ρ (localIntGL (Fin N) w)) (hx_ne : x ≠ 0)
+    (hP_eq : P = heckePoly w.q N t) (ht : ∀ j : ℕ, heckeGL ρ.ρ j x = t j • x)
+    {c : ℂ} {k : ℕ} (hc : P.IsRoot c) (h_norm : ‖c‖ ^ 2 * w.q ^ k = w.q ^ N)
+    {i : ℕ} (hi : i < k)
+    : P.IsRoot (c * w.q ^ i) := by
   -- The roots of `P` are symmetric under `y ↦ q ^ (N - 1) / star y`, which exchanges `c * q ^ i`
   -- and `c * q ^ (k - 1 - i)`. The lower half of the chain comes from
   -- `le_norm_sq_of_isRoot_of_not_isRoot_mul` by induction.
@@ -550,19 +629,20 @@ lemma New.Patching.isRoot_chain_of_norm (hB : IsUnitary ρ.ρ B)
   have h_dual (d b : ℕ) (hN : N = d + b) : star (t d) * B x x = t b * z :=
     calc
       _ = B (heckeGL ρ.ρ d x) x := by simp [ht]
-      _ =
-        B x (heckeFun ρ.ρ (localIntGL (Fin N) w)
-          (fun g ↦ (basicDoubleCoset (Fin N) w d).indicator 1 g⁻¹) x) := by
+      _ = B x
+          (heckeFun ρ.ρ (localIntGL (Fin N) w)
+            (fun g ↦ (basicDoubleCoset (Fin N) w d).indicator 1 g⁻¹)
+            x) := by
         simpa [Set.indicator, heckeGL] using
           ((isHeckeFunction_basicDoubleCoset d).heckeFun_adjoint B hx hB.map_map_eq hx).right
       _ = B (ρ (.scalar _ (uniformizer w)) x) (heckeGL ρ.ρ b x) := by
         rw [← heckeGL_dual hx (v_uniformizer w) (by simpa using hN), hB.map_map_eq]
       _ = t b * z := by simp [ht, z]
   -- The symmetry of the roots: compare `star (P y)` with `P y'` term by term.
-  have h_reflect (y y' : ℂ) (hy : star y * y' * w.q = w.q ^ N)
-      (hy' : P.IsRoot y') : P.IsRoot y := by
-    have h_star_eval :
-        star (P.eval y) * (B x x * w.q ^ N.choose 2) = (-star y) ^ N * z * P.eval y' := by
+  have h_reflect (y y' : ℂ) (hy : star y * y' * w.q = w.q ^ N) (hy' : P.IsRoot y')
+      : P.IsRoot y := by
+    have h_star_eval
+        : star (P.eval y) * (B x x * w.q ^ N.choose 2) = (- star y) ^ N * z * P.eval y' := by
       simp only [hP_eq, heckePoly, eval_finsetSum, mul_sum, star_sum, sum_mul]
       -- Term `d` on the left is term `b = N - d` on the right: multiply by `q ^ d`, use `h_dual`.
       conv_rhs => rw [← sum_flip]
@@ -585,7 +665,8 @@ lemma New.Patching.isRoot_chain_of_norm (hB : IsUnitary ρ.ρ B)
           linear_combination -((-1) ^ d * star y ^ (b + d) * t b * z * (w.q : ℂ) ^ b.choose 2 *
             y' ^ d * (w.q : ℂ) ^ d) * h_sign
     simpa [hy'.eq_zero, hq0, (hB.pos x hx_ne).ne'] using h_star_eval
-  induction i using Nat.strongRec with | ind i ih => ?_
+  induction i using Nat.strongRec with
+  | ind i ih => ?_
   obtain ⟨j, rfl⟩ : ∃ j : ℕ, i + 1 + j = k := Nat.le.dest hi
   -- If `j < i`, then `c * q ^ j` is a root by induction, and so is its mirror image `c * q ^ i`.
   obtain hji | hij : j < i ∨ i ≤ j := lt_or_ge j i
@@ -599,7 +680,7 @@ lemma New.Patching.isRoot_chain_of_norm (hB : IsUnitary ρ.ρ B)
   obtain _ | i := i
   · simpa using hc
   by_contra h_not
-  have h_not' : ¬P.IsRoot (w.q * (c * w.q ^ i)) := by grind
+  have h_not' : ¬ P.IsRoot (w.q * (c * w.q ^ i)) := by grind
   have h_prev : P.IsRoot (c * w.q ^ i) := ih i (Nat.lt_succ_self i) (by lia)
   have h_big : (w.q : ℝ) ^ N / w.q ^ 2 ≤ ‖c * w.q ^ i‖ ^ 2 :=
     le_norm_sq_of_isRoot_of_not_isRoot_mul hB hx hx_ne hP_eq ht h_prev h_not'
@@ -609,21 +690,28 @@ lemma New.Patching.isRoot_chain_of_norm (hB : IsUnitary ρ.ρ B)
     grw [h_big, ← h_norm]
     exact le_of_eq (by ring)
   have hji : j < i + 1 := by
-    have h_exp : i + 1 + 1 + j ≤ 2 * i + 2 := (pow_le_pow_iff_right₀ (mod_cast w.one_lt_q)).mp
-      (le_of_mul_le_mul_left h_pow (by simp [pow_pos, w.q_bounds]))
+    have h_exp : i + 1 + 1 + j ≤ 2 * i + 2 :=
+      (pow_le_pow_iff_right₀ (mod_cast w.one_lt_q)).mp
+        (le_of_mul_le_mul_left h_pow (by simp [pow_pos, w.q_bounds]))
     lia
   lia
 
-/-- Of a chain of roots, U sees only the top root. Let x ≠ 0 be a spherical Hecke eigenvector in a
+/--
+Of a chain of roots, U sees only the top root. Let x ≠ 0 be a spherical Hecke eigenvector in a
 smooth unitary representation of GL_N(E_w), with Hecke polynomial P, and let U be the Hecke operator
 of diag(ϖ, 1, …, 1) for the group `proIwahori`. If d ≠ 0 and P(X/d) = ∏_{i ≤ k} (X − q^i) · S with S
-dividing R, then x is orthogonal to ((dX − q^k) · R(dX))(U) y for every y fixed by `proIwahori`. -/
-lemma New.Patching.pairing_aeval_heckeCoset_eq_zero (hB : IsUnitary ρ.ρ B)
-    (hx : x ∈ levelSpace ρ.ρ (localIntGL (Fin N) w)) (hx_ne : x ≠ 0) (hP_eq : P = heckePoly w.q N t)
-    (ht : ∀ j : ℕ, heckeGL ρ.ρ j x = t j • x) {ϖ : (LocField w)ˣ}
-    (hϖ : v ϖ.val = WithZero.exp (-1)) {d : ℂ} (hd : d ≠ 0) {k : ℕ} {R : ℂ[X]}
-    (h_chain : HasRootChain P R w.q d⁻¹ (k + 1)) {y : ρ} (hy : y ∈ levelSpace ρ.ρ proIwahori) :
-    B x (aeval (heckeCoset ρ.ρ proIwahori (diagGL (mulSingle 0 ϖ)))
-      (((X - C (w.q ^ k : ℂ)) * R).comp (C d * X)) y) = 0 := by
+dividing R, then x is orthogonal to ((dX − q^k) · R(dX))(U) y for every y fixed by `proIwahori`.
+-/
+lemma New.Patching.pairing_aeval_heckeCoset_eq_zero
+    (hB : IsUnitary ρ.ρ B) (hx : x ∈ levelSpace ρ.ρ (localIntGL (Fin N) w)) (hx_ne : x ≠ 0)
+    (hP_eq : P = heckePoly w.q N t) (ht : ∀ j : ℕ, heckeGL ρ.ρ j x = t j • x)
+    {ϖ : (LocField w)ˣ} (hϖ : v ϖ.val = WithZero.exp (-1))
+    {d : ℂ} (hd : d ≠ 0)
+    {k : ℕ} {R : ℂ[X]} (h_chain : HasRootChain P R w.q d⁻¹ (k + 1))
+    {y : ρ} (hy : y ∈ levelSpace ρ.ρ proIwahori)
+    : B x
+        (aeval (heckeCoset ρ.ρ proIwahori (diagGL (mulSingle 0 ϖ)))
+          (((X - C (w.q ^ k : ℂ)) * R).comp (C d * X)) y)
+      = 0 := by
   obtain ⟨-, orthogonal⟩ := chain_lemma hB hx hx_ne hP_eq ht hϖ
   exact orthogonal d hd k R h_chain y hy

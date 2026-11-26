@@ -63,17 +63,23 @@ abbrev principalIdele : Kˣ →* (𝔸f K)ˣ := map (algebraMap K (𝔸f K)).toM
 
 variable (S : Set (FinPlace K)) (a : (𝔸f K)ˣ) (v : FinPlace K)
 
-/-- The homomorphism sending x ∈ K_v^× to the finite idele with component x at v and 1
-elsewhere. -/
+/--
+The homomorphism sending x ∈ K_v^× to the finite idele with component x at v and 1
+elsewhere.
+-/
 def locIdele : (LocField v)ˣ →* (𝔸f K)ˣ := unitsMapNonUnital (singleAdele v)
 
-/-- The homomorphism from the finite ideles of K to the units of `New.𝔸 K` sending a to (1, a), with
-component 1 at every infinite place. -/
+/--
+The homomorphism from the finite ideles of K to the units of `New.𝔸 K` sending a to (1, a), with
+component 1 at every infinite place.
+-/
 abbrev finIdeleIncl : (𝔸f K)ˣ →* (𝔸 K)ˣ :=
   map (MonoidHom.inr (NumberField.InfinitePlace K → ℂ) (𝔸f K))
 
-/-- For a finite place v, the homomorphism from K_v^× to the units of `New.𝔸 K` placing the element
-at v and 1 at all other places, finite and infinite. -/
+/--
+For a finite place v, the homomorphism from K_v^× to the units of `New.𝔸 K` placing the element
+at v and 1 at all other places, finite and infinite.
+-/
 def locFullIdele : (LocField v)ˣ →* (𝔸 K)ˣ := finIdeleIncl.comp (unitsMapNonUnital (singleAdele v))
 
 /-- The homomorphism sending a finite idele to its component in K_v^×. -/
@@ -121,12 +127,12 @@ lemma ideleAt_locIdele_of_ne (h_ne : w ≠ v) (x : (LocField v)ˣ) : ideleAt w (
   ext (locIdele_apply_of_ne h_ne x)
 
 @[simp]
-lemma mem_idelesUnitOff :
-    a ∈ idelesUnitOff S ↔ ∀ v : FinPlace K, v ∉ S → Valued.v (a.val v) = 1 := by
+lemma mem_idelesUnitOff
+    : a ∈ idelesUnitOff S ↔ ∀ v : FinPlace K, v ∉ S → Valued.v (a.val v) = 1 := by
   simp [idelesUnitOff, ← val_inj, ideleAt]
 
-lemma idelesUnitOff_mono {T : Set (FinPlace K)} (h_sub : S ⊆ T) :
-    idelesUnitOff S ≤ idelesUnitOff T :=
+lemma idelesUnitOff_mono {T : Set (FinPlace K)} (h_sub : S ⊆ T)
+    : idelesUnitOff S ≤ idelesUnitOff T :=
   biInf_mono fun _ hv ↦ Set.notMem_subset h_sub hv
 
 lemma isCompact_idelesUnitOff_empty : IsCompact (idelesUnitOff (K := K) ∅ : Set (𝔸f K)ˣ) := by
@@ -134,37 +140,45 @@ lemma isCompact_idelesUnitOff_empty : IsCompact (idelesUnitOff (K := K) ∅ : Se
   exact (Ô K).units_isCompact isCompact_Ô
 
 /-- The principal idele of `x` is a unit outside `S` exactly when `x` is an `S`-unit. -/
-lemma principalIdele_mem_idelesUnitOff {x : Kˣ} :
-    principalIdele x ∈ idelesUnitOff S ↔ x ∈ S.unit K := by
+lemma principalIdele_mem_idelesUnitOff {x : Kˣ}
+    : principalIdele x ∈ idelesUnitOff S ↔ x ∈ S.unit K := by
   aesop
 
 /-! ### Approximating an idele by finitely many components -/
 
-/-- For an open neighbourhood `U` of `1` there is a finite set `T` of places such that an idele
+/--
+For an open neighbourhood `U` of `1` there is a finite set `T` of places such that an idele
 that is a unit everywhere and lies outside `U` has a component `≠ 1` at some place of `T`.
-Equivalently, the ideles that are units everywhere and `1` on `T` lie in `U`. -/
-lemma exists_finset_cover_mulSupport_ideleAt {U : Set (𝔸f K)ˣ} (hU : IsOpen U) (h_one : 1 ∈ U) :
-    ∃ T : Finset (FinPlace K),
+Equivalently, the ideles that are units everywhere and `1` on `T` lie in `U`.
+-/
+lemma exists_finset_cover_mulSupport_ideleAt {U : Set (𝔸f K)ˣ} (hU : IsOpen U) (h_one : 1 ∈ U)
+    : ∃ T : Finset (FinPlace K),
       (idelesUnitOff ∅).carrier \ U ⊆ ⋃ v ∈ T, (ideleAt v).ker.carrierᶜ := by
   -- the complement of `U` in the units is compact and avoids `1`, so finitely many of the open
   -- sets `{a | ideleAt v a ≠ 1}` cover it
   refine (isCompact_idelesUnitOff_empty.diff hU).elim_finite_subcover _
-    (fun v ↦ (continuous_ideleAt v).isOpen_mulSupport) fun a ⟨_, ha_notMem⟩ ↦ ?_
+    (fun v ↦ (continuous_ideleAt v).isOpen_mulSupport)
+    fun a ⟨_, ha_notMem⟩ ↦ ?_
   have ha_ne : a ≠ 1 := (ne_of_mem_of_not_mem h_one ha_notMem).symm
   simpa [ideleAt, ← val_inj, DFunLike.ext_iff] using ha_ne
 
-/-- A closed subgroup H of the finite ideles contains a as soon as it contains, for every place
-v, the idele with component a_v at v and 1 elsewhere. -/
-lemma mem_of_locIdele_mem {H : Subgroup (𝔸f K)ˣ} (hH : IsClosed H.carrier)
-    (ha : ∀ v : FinPlace K, locIdele v (ideleAt v a) ∈ H) : a ∈ H := by
+/--
+A closed subgroup H of the finite ideles contains a as soon as it contains, for every place
+v, the idele with component a_v at v and 1 elsewhere.
+-/
+lemma mem_of_locIdele_mem
+    {H : Subgroup (𝔸f K)ˣ}
+    (hH : IsClosed H.carrier) (ha : ∀ v : FinPlace K, locIdele v (ideleAt v a) ∈ H)
+    : a ∈ H := by
   classical
   -- If `a ∉ H`, the set `a⁻¹ Hᶜ` is an open neighbourhood of `1`. It contains `a⁻¹ b`, where
   -- `b ∈ H` is the product of the components of `a` at enough places; this says `b ∉ H`.
   by_contra ha_notMem
   -- An idele that is a unit everywhere and `1` at the places of `T` lies in `a⁻¹ Hᶜ`.
-  obtain ⟨T, hT⟩ : ∃ T : Finset (FinPlace K),
-      (idelesUnitOff ∅).carrier \ (fun x ↦ a⁻¹ * x) '' H.carrierᶜ ⊆
-        ⋃ v ∈ T, (⇑(ideleAt v)).mulSupport :=
+  obtain ⟨T, hT⟩
+      : ∃ T : Finset (FinPlace K),
+        (idelesUnitOff ∅).carrier \ (fun x ↦ a⁻¹ * x) '' H.carrierᶜ
+          ⊆ ⋃ v ∈ T, (⇑(ideleAt v)).mulSupport :=
     exists_finset_cover_mulSupport_ideleAt (isOpenMap_mul_left a⁻¹ _ hH.isOpen_compl)
       ⟨a, ha_notMem, inv_mul_cancel a⟩
   -- Enlarge `T` by the places where `a` is not a unit.
@@ -181,17 +195,22 @@ lemma mem_of_locIdele_mem {H : Subgroup (𝔸f K)ˣ} (hH : IsClosed H.carrier)
   have h_one : ideleAt v (a⁻¹ * b) = 1 := by simp [hb_at, hT', hv]
   exact hv_ne h_one
 
-/-- The idele with component `x` at `v` and `1` elsewhere is a unit outside any `S` when `x` is a
-unit of the integers at `v`. -/
-lemma locIdele_mem_idelesUnitOff {x : (LocField v)ˣ} (hx_unit : Valued.v x.val = 1)
-    {S : Set (FinPlace K)} : locIdele v x ∈ idelesUnitOff S := by
+/--
+The idele with component `x` at `v` and `1` elsewhere is a unit outside any `S` when `x` is a
+unit of the integers at `v`.
+-/
+lemma locIdele_mem_idelesUnitOff
+    {x : (LocField v)ˣ} (hx_unit : Valued.v x.val = 1) {S : Set (FinPlace K)}
+    : locIdele v x ∈ idelesUnitOff S := by
   simp_all [← and_forall_ne v]
 
-/-- A homomorphism ψ with open kernel from the finite ideles of K to a commutative group is
-trivial on the local units at all but finitely many finite places. -/
-lemma eventually_unramified {C : Type*} [CommGroup C] (ψ : (𝔸f K)ˣ →* C) (h_open : ψ.ker.IsOpen) :
-    ∀ᶠ v : FinPlace K in Filter.cofinite,
-      ∀ x : (LocField v)ˣ, Valued.v x.val = 1 → ψ (locIdele v x) = 1 := by
+/--
+A homomorphism ψ with open kernel from the finite ideles of K to a commutative group is
+trivial on the local units at all but finitely many finite places.
+-/
+lemma eventually_unramified {C : Type*} [CommGroup C] (ψ : (𝔸f K)ˣ →* C) (h_open : ψ.ker.IsOpen)
+    : ∀ᶠ v : FinPlace K in Filter.cofinite,
+        ∀ x : (LocField v)ˣ, Valued.v x.val = 1 → ψ (locIdele v x) = 1 := by
   -- a unit idele outside the kernel has a component `≠ 1` in the finite set `T`; for `v ∉ T` the
   -- idele `locIdele v x` has none
   obtain ⟨T, hT⟩ := exists_finset_cover_mulSupport_ideleAt h_open ψ.map_one
@@ -231,36 +250,41 @@ attribute [local simp] WithZero.exp_neg
 
 /-- Two nonzero fractional ideals with the same exponent at every prime are equal. -/
 @[ext]
-lemma fractionalIdeal_count_ext {I J : (FractionalIdeal (nonZeroDivisors (𝓞 K)) K)ˣ}
-    (h_count : ∀ v : FinPlace K, count K v I.val = count K v J) :
-    I = J := by
+lemma fractionalIdeal_count_ext
+    {I J : (FractionalIdeal (nonZeroDivisors (𝓞 K)) K)ˣ}
+    (h_count : ∀ v : FinPlace K, count K v I.val = count K v J)
+    : I = J := by
   -- A nonzero fractional ideal is the product of the primes raised to its exponents.
   rw [Units.ext_iff, ← finprod_heightOneSpectrum_factorization' K I.ne_zero,
     ← finprod_heightOneSpectrum_factorization' K J.ne_zero]
   simp only [h_count]
 
-/-- The divisor map: a homomorphism `d` from the finite ideles to the nonzero fractional ideals such
+/--
+The divisor map: a homomorphism `d` from the finite ideles to the nonzero fractional ideals such
 that (a) an idele `a` is integral at `w` exactly when the exponent of `w` in `d a` is nonnegative,
 (b) the kernel is the group of ideles that are units everywhere, (c) the chosen uniformiser at `w`
 goes to the prime `w`, and (d) the idele of `x ∈ Kˣ` goes to the principal fractional ideal
-`(x)`. -/
-lemma exists_idele_divisor_hom :
-    ∃ d : (𝔸f K)ˣ →* (FractionalIdeal (nonZeroDivisors (𝓞 K)) K)ˣ,
+`(x)`.
+-/
+lemma exists_idele_divisor_hom
+    : ∃ d : (𝔸f K)ˣ →* (FractionalIdeal (nonZeroDivisors (𝓞 K)) K)ˣ,
       -- (a)
-      (∀ (a : (𝔸f K)ˣ) (w : FinPlace K), v (a.val w) ≤ 1 ↔ 0 ≤ count K w (d a).val) ∧
-      -- (b)
-      d.ker = idelesUnitOff ∅ ∧
-      -- (c)
-      (∀ w : FinPlace K, d (locIdele w (uniformizer w)) =
-        FractionalIdeal.mk0 K ⟨w.asIdeal, mem_nonZeroDivisors_of_ne_zero w.ne_bot⟩) ∧
-      -- (d)
-      ∀ x : Kˣ, d (principalIdele x) = toPrincipalIdeal (𝓞 K) K x := by
+      (∀ (a : (𝔸f K)ˣ) (w : FinPlace K), v (a.val w) ≤ 1 ↔ 0 ≤ count K w (d a).val)
+        -- (b)
+        ∧ d.ker = idelesUnitOff ∅
+        -- (c)
+        ∧ (∀ w : FinPlace K,
+          d (locIdele w (uniformizer w))
+            = FractionalIdeal.mk0 K ⟨w.asIdeal, mem_nonZeroDivisors_of_ne_zero w.ne_bot⟩)
+        -- (d)
+        ∧ ∀ x : Kˣ, d (principalIdele x) = toPrincipalIdeal (𝓞 K) K x := by
   classical
   -- The divisor of an idele `a` is the fractional ideal `∏ w ^ ord_w(a)`. The claims are
   -- checked exponent by exponent, since the exponents determine a nonzero fractional ideal
   -- (`fractionalIdeal_count_ext`).
-  have h_exists_divisor (a : (𝔸f K)ˣ) : ∃ I : (FractionalIdeal (nonZeroDivisors (𝓞 K)) K)ˣ,
-      ∀ w : FinPlace K, count K w I.val = -log (v (a.val w)) := by
+  have h_exists_divisor (a : (𝔸f K)ˣ)
+      : ∃ I : (FractionalIdeal (nonZeroDivisors (𝓞 K)) K)ˣ, ∀ w : FinPlace K,
+        count K w I.val = - log (v (a.val w)) := by
     refine ⟨.mk0 _ ?_, fun w ↦ count_finprod K w _ ?_⟩
     · -- a finite product of powers of nonzero primes is nonzero
       exact finprod_ne_zero fun w ↦ zpow_ne_zero _ (by simp [ne_bot])
@@ -268,29 +292,29 @@ lemma exists_idele_divisor_hom :
       exact .mono (finite_setOf_valued_val_ne_one a) fun w' (h_unit : v (a.val w') = 1) ↦ by
         simp [h_unit]
   choose d hd using h_exists_divisor
-  have hd_eq (a : (𝔸f K)ˣ) (I : (FractionalIdeal (nonZeroDivisors (𝓞 K)) K)ˣ) :
-      d a = I ↔ ∀ w : FinPlace K, (v (a.val w))⁻¹ = exp (count K w I.val) := by
+  have hd_eq (a : (𝔸f K)ˣ) (I : (FractionalIdeal (nonZeroDivisors (𝓞 K)) K)ˣ)
+      : d a = I ↔ ∀ w : FinPlace K, (v (a.val w))⁻¹ = exp (count K w I.val) := by
     simp [New.fractionalIdeal_count_ext_iff, hd, isUnit_iff.mp, ← exp_inj (M := ℤ)]
   have hd_mul (a b : (𝔸f K)ˣ) : d (a * b) = d a * d b := by
     simp [hd_eq, hd, count_mul, isUnit_iff.mp, mul_comm]
   -- For `x = a / b` the order of `x` at `w` is the exponent of `w` in `(x) = (a) / (b)`.
-  have h_val_principal (x : K) (hx : x ≠ 0) (w : FinPlace K) :
-      (w.valuation K x)⁻¹ = exp (count K w (spanSingleton (nonZeroDivisors (𝓞 K)) x)) := by
+  have h_val_principal (x : K) (hx : x ≠ 0) (w : FinPlace K)
+      : (w.valuation K x)⁻¹ = exp (count K w (spanSingleton (nonZeroDivisors (𝓞 K)) x)) := by
     obtain ⟨a, b, -, rfl⟩ := IsFractionRing.div_surjective (𝓞 K) x
     obtain ⟨ha_ne, hb_ne⟩ : a ≠ 0 ∧ b ≠ 0 := by simpa using hx
     -- `(a / b) = (b)⁻¹ (a)`
-    have h_span_eq : spanSingleton (nonZeroDivisors (𝓞 K))
-        (algebraMap (𝓞 K) K a / algebraMap (𝓞 K) K b) =
-        spanSingleton (nonZeroDivisors (𝓞 K)) (algebraMap (𝓞 K) K b)⁻¹ *
-          (Ideal.span {a} : Ideal (𝓞 K)) := by
+    have h_span_eq
+        : spanSingleton (nonZeroDivisors (𝓞 K)) (algebraMap (𝓞 K) K a / algebraMap (𝓞 K) K b)
+          = spanSingleton (nonZeroDivisors (𝓞 K)) (algebraMap (𝓞 K) K b)⁻¹
+            * (Ideal.span {a} : Ideal (𝓞 K)) := by
       rw [coeIdeal_span_singleton, ← div_spanSingleton, spanSingleton_div_spanSingleton]
     -- the order of `a / b` is the order of `a` minus the order of `b`
     rw [count_well_defined K w (spanSingleton_ne_zero_iff.2 hx) h_span_eq, map_div₀,
       valuation_of_algebraMap, valuation_of_algebraMap, intValuation_if_neg w ha_ne,
       intValuation_if_neg w hb_ne, ← exp_sub, ← exp_neg, neg_sub_neg, neg_sub]
   -- A uniformiser at `p` gives an idele of order one at `p` and zero elsewhere.
-  have h_val_uniformizer (p w : FinPlace K) :
-      (v ((locIdele p (uniformizer p)).val w))⁻¹ = exp (if p = w then 1 else 0) := by
+  have h_val_uniformizer (p w : FinPlace K)
+      : (v ((locIdele p (uniformizer p)).val w))⁻¹ = exp (if p = w then 1 else 0) := by
     obtain rfl | h_eq := eq_or_ne p w
     · simp [v_uniformizer]
     · simp [locIdele_apply_of_ne h_eq.symm, h_eq]
@@ -304,48 +328,56 @@ lemma exists_idele_divisor_hom :
   · -- (d) the orders of `x` are the exponents of the principal ideal `(x)`
     simpa [hd_eq, principalIdele] using h_val_principal x x.ne_zero
 
-/-- There is a homomorphism from the finite ideles to the class group whose kernel is generated by
-the principal ideles and the ideles that are units everywhere. -/
-lemma exists_idele_classGroup_hom :
-    ∃ c : (𝔸f K)ˣ →* ClassGroup (𝓞 K), c.ker = principalIdele.range ⊔ idelesUnitOff ∅ := by
+/--
+There is a homomorphism from the finite ideles to the class group whose kernel is generated by
+the principal ideles and the ideles that are units everywhere.
+-/
+lemma exists_idele_classGroup_hom
+    : ∃ c : (𝔸f K)ˣ →* ClassGroup (𝓞 K), c.ker = principalIdele.range ⊔ idelesUnitOff ∅ := by
   -- Send an idele to the class of its divisor. The class is trivial iff the divisor is principal,
   -- that is, iff it is the divisor of a principal idele.
   obtain ⟨d, -, hd_ker, -, hd_principal⟩ := exists_idele_divisor_hom (K := K)
   refine ⟨(ClassGroup.mk K).comp d, ext fun a ↦ ?_⟩
   simp [← hd_ker, ← (equiv K).map_eq_one_iff, ← comap_map_eq, hd_principal]
 
-/-- For every finite idele a of K, the power a^h, with h the class number of K, is a principal
-idele times an idele that is a unit at every prime. -/
-lemma pow_classNumber_mem_principal_sup (a : (𝔸f K)ˣ) :
-    a ^ classNumber K ∈ principalIdele.range ⊔ idelesUnitOff ∅ := by
+/--
+For every finite idele a of K, the power a^h, with h the class number of K, is a principal
+idele times an idele that is a unit at every prime.
+-/
+lemma pow_classNumber_mem_principal_sup (a : (𝔸f K)ˣ)
+    : a ^ classNumber K ∈ principalIdele.range ⊔ idelesUnitOff ∅ := by
   -- The class of `a` has order dividing the class number.
   obtain ⟨c, hc⟩ := exists_idele_classGroup_hom (K := K)
   rw [← hc, MonoidHom.mem_ker, map_pow]
   exact pow_card_eq_one
 
-/-- A principal idele times a unit outside `S` has, at the places outside `S`, the valuations of an
-element of `Kˣ`. -/
-lemma exists_valuation_eq_of_mem_sup {a : (𝔸f K)ˣ}
-    (ha : a ∈ principalIdele.range ⊔ idelesUnitOff S) :
-    ∃ x : Kˣ, ∀ w : FinPlace K, w ∉ S → w.valuation K x.val = v (a.val w) := by
+/--
+A principal idele times a unit outside `S` has, at the places outside `S`, the valuations of an
+element of `Kˣ`.
+-/
+lemma exists_valuation_eq_of_mem_sup {a : (𝔸f K)ˣ} (ha : a ∈ principalIdele.range ⊔ idelesUnitOff S)
+    : ∃ x : Kˣ, ∀ w : FinPlace K, w ∉ S → w.valuation K x.val = v (a.val w) := by
   -- `a` is the principal idele of some `x` times an idele `u` that is a unit outside `S`
   obtain ⟨_, ⟨x, rfl⟩, u, hu, rfl⟩ := mem_sup.mp ha
   exact ⟨x, fun w hw ↦ by simp [mem_idelesUnitOff.mp hu w hw, principalIdele]⟩
 
-/-- For finite sets `R`, `R'` of finite places there is a finite set `T` that contains `R`, meets
+/--
+For finite sets `R`, `R'` of finite places there is a finite set `T` that contains `R`, meets
 `R'` only inside `R`, and is such that every finite idele is a principal idele times an idele
-that is a unit outside `T`. -/
-lemma exists_sup_idelesUnitOff_eq_top (hR : R.Finite) (R' : Set (FinPlace K)) (hR' : R'.Finite) :
-    ∃ T : Set (FinPlace K), T.Finite ∧ R ⊆ T ∧ (∀ v ∈ R', v ∈ T → v ∈ R) ∧
-      principalIdele.range ⊔ idelesUnitOff T = ⊤ := by
+that is a unit outside `T`.
+-/
+lemma exists_sup_idelesUnitOff_eq_top (hR : R.Finite) (R' : Set (FinPlace K)) (hR' : R'.Finite)
+    : ∃ T : Set (FinPlace K),
+      T.Finite ∧ R ⊆ T ∧ (∀ v ∈ R', v ∈ T → v ∈ R)
+        ∧ principalIdele.range ⊔ idelesUnitOff T = ⊤ := by
   -- Take a representative idele `r y` of each of the finitely many ideal classes `y`, divide it
   -- by an element of `K` so that it becomes a unit on `R'`, and let `T` consist of `R` and
   -- the places where one of these quotients is not a unit.
   obtain ⟨c, hc⟩ := exists_idele_classGroup_hom (K := K)
   let r : ClassGroup (𝓞 K) → (𝔸f K)ˣ := invFun c
   -- By density of `K` in the finite adeles, `r y` has the same valuations on `R'` as some `x y`.
-  have h_approx (y : ClassGroup (𝓞 K)) :
-      ∃ x : Kˣ, ∀ w ∈ R', w.valuation K x.val = v ((r y).val w) := by
+  have h_approx (y : ClassGroup (𝓞 K))
+      : ∃ x : Kˣ, ∀ w ∈ R', w.valuation K x.val = v ((r y).val w) := by
     have h_near : ∀ᶠ z in nhds (r y).val, z ≠ 0 ∧ ∀ w ∈ R', v (z w) = v ((r y).val w) := by
       refine (eventually_ne_nhds (r y).ne_zero).and (hR'.eventually_all.mpr fun w _ ↦ ?_)
       -- the valuation at `w` is locally constant away from `0`
@@ -354,8 +386,13 @@ lemma exists_sup_idelesUnitOff_eq_top (hR : R.Finite) (R' : Set (FinPlace K)) (h
   choose x hx using h_approx
   let q (y : ClassGroup (𝓞 K)) : (𝔸f K)ˣ := (principalIdele (x y))⁻¹ * r y
   let T : Set (FinPlace K) := R ∪ ⋃ y, {w | v ((q y).val w) ≠ 1}
-  refine ⟨T, hR.union (Set.finite_iUnion fun y ↦ finite_setOf_valued_val_ne_one (q y)),
-    Set.subset_union_left, ?_, top_unique fun a _ ↦ ?_⟩
+  refine ⟨
+    T,
+    hR.union (Set.finite_iUnion fun y ↦ finite_setOf_valued_val_ne_one (q y)),
+    Set.subset_union_left,
+    ?_,
+    top_unique fun a _ ↦ ?_
+  ⟩
   · -- On `R'` each quotient is a unit, so `T` meets `R'` only inside `R`.
     simp +contextual [T, q, principalIdele, hx, isUnit_iff.mp]
   -- The subgroup contains the kernel of `c` and the representative of the class of `a`, hence `a`.
@@ -371,17 +408,23 @@ lemma exists_sup_idelesUnitOff_eq_top (hR : R.Finite) (R' : Set (FinPlace K)) (h
   rw [← comap_map_eq_self h_ker_le]
   exact h_mem_map
 
-/-- Every finite set of places `R` lies in a finite set `S` such that every finite idele is a
-principal idele times an idele that is a unit outside `S`. -/
-lemma exists_superset_sup_idelesUnitOff_eq_top (hR : R.Finite) :
-    ∃ S : Set (FinPlace K), S.Finite ∧ R ⊆ S ∧ principalIdele.range ⊔ idelesUnitOff S = ⊤ := by
+/--
+Every finite set of places `R` lies in a finite set `S` such that every finite idele is a
+principal idele times an idele that is a unit outside `S`.
+-/
+lemma exists_superset_sup_idelesUnitOff_eq_top (hR : R.Finite)
+    : ∃ S : Set (FinPlace K), S.Finite ∧ R ⊆ S ∧ principalIdele.range ⊔ idelesUnitOff S = ⊤ := by
   obtain ⟨S, hS, hRS, -, h_sup⟩ := exists_sup_idelesUnitOff_eq_top hR ∅ Set.finite_empty
   exact ⟨S, hS, hRS, h_sup⟩
 
-/-- An open subgroup `H` of the finite ideles that contains the principal ideles of the totally
-positive elements of `Kˣ` has finite index. -/
-lemma finiteIndex_idele_subgroup_of_isOpen (H : Subgroup (𝔸f K)ˣ) (h_open : H.IsOpen)
-    (h_pos : ∀ x : Kˣ, IsTotallyPositive x.val → principalIdele x ∈ H) : H.FiniteIndex := by
+/--
+An open subgroup `H` of the finite ideles that contains the principal ideles of the totally
+positive elements of `Kˣ` has finite index.
+-/
+lemma finiteIndex_idele_subgroup_of_isOpen
+    (H : Subgroup (𝔸f K)ˣ)
+    (h_open : H.IsOpen) (h_pos : ∀ x : Kˣ, IsTotallyPositive x.val → principalIdele x ∈ H)
+    : H.FiniteIndex := by
   -- Climb from `H` to `H ⊔ P` to `H ⊔ P ⊔ idelesUnitOff ∅` to `⊤`, `P` the principal ideles: each
   -- step has finite (that is, nonzero) index.
   set P : Subgroup (𝔸f K)ˣ := principalIdele.range
@@ -393,8 +436,7 @@ lemma finiteIndex_idele_subgroup_of_isOpen (H : Subgroup (𝔸f K)ˣ) (h_open : 
     -- an element with sign `1` at every real embedding is totally positive
     have h_ker_le : sgn.ker ≤ H.comap principalIdele := by
       intro x hx
-      have h_sign (φ : K →+* ℝ) : SignType.sign (φ x.val) = 1 :=
-        congrFun (congrArg Units.val hx) φ
+      have h_sign (φ : K →+* ℝ) : SignType.sign (φ x.val) = 1 := congrFun (congrArg Units.val hx) φ
       exact h_pos x fun φ ↦ sign_eq_one_iff.mp (h_sign φ)
     exact (sgn.ker.finiteIndex_of_le h_ker_le).index_ne_zero
   -- An open subgroup meets the compact group `idelesUnitOff ∅` in a subgroup of finite index.
@@ -412,8 +454,10 @@ lemma finiteIndex_idele_subgroup_of_isOpen (H : Subgroup (𝔸f K)ˣ) (h_open : 
   · simpa [P, ← index_comap] using h_index_comap_ne
   · simpa using h_relIndex_ne
 
-/-- The finite ideles form a nonarchimedean group: they have the compact open subgroup
-`idelesUnitOff ∅`. -/
+/--
+The finite ideles form a nonarchimedean group: they have the compact open subgroup
+`idelesUnitOff ∅`.
+-/
 instance : NonarchimedeanGroup (𝔸f K)ˣ :=
   -- The open subgroup `idelesUnitOff ∅` is compact and totally disconnected, hence nonarchimedean.
   -- The ideles map continuously and injectively to the product of the completions, which is

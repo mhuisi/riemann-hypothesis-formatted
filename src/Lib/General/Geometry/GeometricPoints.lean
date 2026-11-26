@@ -51,51 +51,70 @@ open CategoryTheory AlgebraicGeometry MonoidalCategory Scheme Over Limits.pullba
 
 namespace New
 
-/-- A nonempty locally closed subset of a scheme `X` locally of finite type over an algebraically
+/--
+A nonempty locally closed subset of a scheme `X` locally of finite type over an algebraically
 closed field `k` contains the image of a `k`-point, that is, of a section `x : Spec k ⟶ X` of the
-structure morphism `s`. -/
-lemma exists_section_mem {k : Type*} {X : Scheme} [Field k] [IsAlgClosed k]
-    (s : X ⟶ Spec (.of k)) [LocallyOfFiniteType s] {S : Set X} (hS : IsLocallyClosed S)
-    (hS_ne : S.Nonempty) :
-    ∃ x : Spec (.of k) ⟶ X, x ≫ s = 𝟙 (Spec (.of k)) ∧ x (default : Spec (.of k)) ∈ S := by
+structure morphism `s`.
+-/
+lemma exists_section_mem
+    {k : Type*} {X : Scheme} [Field k] [IsAlgClosed k]
+    (s : X ⟶ Spec (.of k)) [LocallyOfFiniteType s]
+    {S : Set X} (hS : IsLocallyClosed S) (hS_ne : S.Nonempty)
+    : ∃ x : Spec (.of k) ⟶ X, x ≫ s = 𝟙 (Spec (.of k)) ∧ x (default : Spec (.of k)) ∈ S := by
   -- `X` is a Jacobson space, so `S` contains a closed point; over `k` a closed point is a
   -- `k`-point.
   have : JacobsonSpace X := LocallyOfFiniteType.jacobsonSpace s
   obtain ⟨x, hxS, hx : IsClosed {x}⟩ := nonempty_inter_closedPoints hS_ne hS
-  exact ⟨pointOfClosedPoint s x hx, pointOfClosedPoint_comp s x hx,
-    by simpa [pointOfClosedPoint] using hxS⟩
+  exact ⟨
+    pointOfClosedPoint s x hx,
+    pointOfClosedPoint_comp s x hx,
+    by simpa [pointOfClosedPoint] using hxS
+  ⟩
 
-/-- Let `X` be a scheme over `Spec k`, locally of finite type, with `k` an algebraically closed
+/--
+Let `X` be a scheme over `Spec k`, locally of finite type, with `k` an algebraically closed
 field. A nonempty locally closed subset `S` of `X` contains the image of a `k`-point, that is, of a
 morphism over `Spec k` from the unit object `𝟙_` (`Spec k` over itself) to `X`. This is
-`New.exists_section_mem` in the category of schemes over `Spec k`. -/
-lemma exists_point_mem {k : Type*} [Field k] [IsAlgClosed k] (X : Over (Spec (.of k)))
-    [LocallyOfFiniteType X.hom] {S : Set X.left} (hS : IsLocallyClosed S) (hS_ne : S.Nonempty) :
-    ∃ x : 𝟙_ (Over (Spec (.of k))) ⟶ X, x.left (default : Spec (.of k)) ∈ S := by
+`New.exists_section_mem` in the category of schemes over `Spec k`.
+-/
+lemma exists_point_mem
+    {k : Type*} [Field k] [IsAlgClosed k]
+    (X : Over (Spec (.of k))) [LocallyOfFiniteType X.hom]
+    {S : Set X.left} (hS : IsLocallyClosed S) (hS_ne : S.Nonempty)
+    : ∃ x : 𝟙_ (Over (Spec (.of k))) ⟶ X, x.left (default : Spec (.of k)) ∈ S := by
   obtain ⟨x, hx_section, hx_mem⟩ := exists_section_mem X.hom hS hS_ne
   exact ⟨homMk x hx_section, hx_mem⟩
 
-/-- Let f : X → S be locally of finite type, k algebraically closed and t a k-point of S. If the
-image of t lies in the image of f, then there is a k-point y of X over t, that is, y ≫ f = t. -/
-lemma exists_point_over {k : Type*} {X : Scheme} [Field k] [IsAlgClosed k] {S : Scheme}
-    (f : X ⟶ S) [LocallyOfFiniteType f] {t : Spec (.of k) ⟶ S}
-    (ht : t (IsLocalRing.closedPoint k) ∈ range f) : ∃ y : Spec (.of k) ⟶ X, y ≫ f = t := by
+/--
+Let f : X → S be locally of finite type, k algebraically closed and t a k-point of S. If the
+image of t lies in the image of f, then there is a k-point y of X over t, that is, y ≫ f = t.
+-/
+lemma exists_point_over
+    {k : Type*} {X : Scheme} [Field k] [IsAlgClosed k]
+    {S : Scheme} (f : X ⟶ S) [LocallyOfFiniteType f]
+    {t : Spec (.of k) ⟶ S} (ht : t (IsLocalRing.closedPoint k) ∈ range f)
+    : ∃ y : Spec (.of k) ⟶ X, y ≫ f = t := by
   -- The fibre of `f` over `t` is nonempty and locally of finite type over `k`, so it has a
   -- `k`-point.
   obtain ⟨q, -⟩ : IsLocalRing.closedPoint k ∈ range (snd f t) := by rwa [range_snd]
   obtain ⟨x, hx, -⟩ := exists_section_mem (snd f t) isOpen_univ.isLocallyClosed ⟨q, mem_univ q⟩
   exact ⟨x ≫ fst f t, by rw [Category.assoc, condition, reassoc_of% hx]⟩
 
-/-- Let `f : A ⟶ S` be smooth and `η i` complex points with dense images in `S`
+/--
+Let `f : A ⟶ S` be smooth and `η i` complex points with dense images in `S`
 (`New.IsDenseFamily`). If every complex point of `A` over some `η i` is one of the points `ξ z`,
-then the `ξ z` have dense images in `A`. -/
-lemma IsDenseFamily.of_fibres {A S : Scheme} {κ Z : Type} {η : κ → (Spec (.of ℂ) ⟶ S)}
-    (hη : IsDenseFamily η) (f : A ⟶ S) [s : Smooth f] {ξ : Z → (Spec (.of ℂ) ⟶ A)}
-    (h_all : ∀ (i : κ) (y : Spec (.of ℂ) ⟶ A), y ≫ f = η i → ∃ z : Z, ξ z = y) :
-    IsDenseFamily ξ := by
+then the `ξ z` have dense images in `A`.
+-/
+lemma IsDenseFamily.of_fibres
+    {A S : Scheme} {κ Z : Type} {η : κ → (Spec (.of ℂ) ⟶ S)} (hη : IsDenseFamily η) (f : A ⟶ S)
+    [s : Smooth f]
+    {ξ : Z → (Spec (.of ℂ) ⟶ A)}
+    (h_all : ∀ (i : κ) (y : Spec (.of ℂ) ⟶ A), y ≫ f = η i → ∃ z : Z, ξ z = y)
+    : IsDenseFamily ξ := by
   -- As `f` is open, the points of `A` over the `η i` are dense; so it suffices to see that each
   -- of them lies in the closure of the `ξ z`.
-  refine (hη.preimage f.isOpenMap).induction (fun x ⟨i, hx⟩ ↦ mem_closure_iff.2 fun U hU hxU ↦ ?_)
+  refine (hη.preimage f.isOpenMap).induction
+    (fun x ⟨i, hx⟩ ↦ mem_closure_iff.2 fun U hU hxU ↦ ?_)
     isClosed_closure
   -- An open neighbourhood `U` of `x` contains a complex point over `η i`, which is some `ξ z`.
   let V : A.Opens := ⟨U, hU⟩
@@ -104,15 +123,21 @@ lemma IsDenseFamily.of_fibres {A S : Scheme} {κ Z : Type} {η : κ → (Spec (.
   obtain ⟨z, hz⟩ := h_all i (y ≫ V.ι) hy
   exact ⟨(y ≫ V.ι) (IsLocalRing.closedPoint ℂ), (y _).2, z, by simp only [hz]⟩
 
-/-- Let `X` be a commutative group scheme (`grp`, a `New.AddObj` structure) locally of finite type
+/--
+Let `X` be a commutative group scheme (`grp`, a `New.AddObj` structure) locally of finite type
 over an algebraically closed field `k`, with structure morphism `s`, and let `P` be a property of
 morphisms of schemes induced by a property `Q` of ring maps. If a nonempty open subscheme
-`i : Y ⟶ X` has `P` over `k`, so does `X`. -/
-lemma AddObj.property_of_isOpenImmersion {k : Type} {X : Scheme} [Field k] [IsAlgClosed k]
-    (s : X ⟶ Spec (.of k)) [LocallyOfFiniteType s] {P : MorphismProperty Scheme}
+`i : Y ⟶ X` has `P` over `k`, so does `X`.
+-/
+lemma AddObj.property_of_isOpenImmersion
+    {k : Type} {X : Scheme} [Field k] [IsAlgClosed k]
+    (s : X ⟶ Spec (.of k)) [LocallyOfFiniteType s]
+    {P : MorphismProperty Scheme}
     {Q : {R S : Type} → [CommRing R] → [CommRing S] → (R →+* S) → Prop} [HasRingHomProperty P Q]
-    (grp : AddObj (Over.mk s)) {Y : Scheme} (i : Y ⟶ X) [IsOpenImmersion i] (hY : Nonempty Y)
-    (hP : P (i ≫ s)) : P s := by
+    (grp : AddObj (Over.mk s))
+    {Y : Scheme} (i : Y ⟶ X) [IsOpenImmersion i]
+    (hY : Nonempty Y) (hP : P (i ≫ s))
+    : P s := by
   -- The translates of `i` (for the group structure `grp`) cover `X`, each has `P` over `k`, and
   -- `P` is local on the source.
   let Pt : Type := 𝟙_ (Over (Spec (.of k))) ⟶ Over.mk s
@@ -139,33 +164,41 @@ lemma AddObj.property_of_isOpenImmersion {k : Type} {X : Scheme} [Field k] [IsAl
   rwa [Category.assoc, (translation z).w]
 
 /-- A standard smooth ring map is standard smooth of some relative dimension. -/
-lemma exists_isStandardSmoothOfRelativeDimension {R T : Type} [CommRing R] [CommRing T]
-    {φ : R →+* T} (hφ : φ.IsStandardSmooth) : ∃ n : ℕ, φ.IsStandardSmoothOfRelativeDimension n := by
+lemma exists_isStandardSmoothOfRelativeDimension
+    {R T : Type} [CommRing R] [CommRing T] {φ : R →+* T} (hφ : φ.IsStandardSmooth)
+    : ∃ n : ℕ, φ.IsStandardSmoothOfRelativeDimension n := by
   algebraize [φ]
   obtain ⟨ι, σ, hσ, hι, ⟨P⟩⟩ := hφ
   exact ⟨P.dimension, ι, σ, hσ, hι, P, rfl⟩
 
-/-- Let `f : X ⟶ S` map the affine open `V` into the affine open `U`. If the ring map
+/--
+Let `f : X ⟶ S` map the affine open `V` into the affine open `U`. If the ring map
 `Γ(S, U) ⟶ Γ(X, V)` is standard smooth of relative dimension `n`, then `Spec Γ(X, V) ⟶ S` is smooth
-of relative dimension `n`. -/
-lemma smoothOfRelativeDimension_fromSpec_comp {X S : Scheme} {f : X ⟶ S} {U : S.Opens}
-    {V : X.Opens} (hU : IsAffineOpen U) (hV : IsAffineOpen V) (hVU : V ≤ f ⁻¹ᵁ U) {n : ℕ}
-    (hn : (f.appLE U V hVU).hom.IsStandardSmoothOfRelativeDimension n) :
-    SmoothOfRelativeDimension n (hV.fromSpec ≫ f) := by
+of relative dimension `n`.
+-/
+lemma smoothOfRelativeDimension_fromSpec_comp
+    {X S : Scheme} {f : X ⟶ S} {U : S.Opens} {V : X.Opens}
+    (hU : IsAffineOpen U) (hV : IsAffineOpen V) (hVU : V ≤ f ⁻¹ᵁ U)
+    {n : ℕ} (hn : (f.appLE U V hVU).hom.IsStandardSmoothOfRelativeDimension n)
+    : SmoothOfRelativeDimension n (hV.fromSpec ≫ f) := by
   rw [← hU.SpecMap_appLE_fromSpec f hV hVU]
-  have : SmoothOfRelativeDimension n (Spec.map (f.appLE U V hVU)) := HasRingHomProperty.Spec_iff.2
-    (RingHom.locally_of RingHom.isStandardSmoothOfRelativeDimension_respectsIso _ hn)
+  have : SmoothOfRelativeDimension n (Spec.map (f.appLE U V hVU)) :=
+    HasRingHomProperty.Spec_iff.2 (RingHom.locally_of
+      RingHom.isStandardSmoothOfRelativeDimension_respectsIso _ hn)
   -- The open immersion `hU.fromSpec` has relative dimension `0`.
   exact smoothOfRelativeDimension_comp n 0 (Spec.map (f.appLE U V hVU)) hU.fromSpec
 
-/-- Let `A` be an abelian scheme over `S` (`New.IsAbelianScheme`) with complex points `y i` over
+/--
+Let `A` be an abelian scheme over `S` (`New.IsAbelianScheme`) with complex points `y i` over
 `η i` whose images are dense in `A`. If `g` is the only possible relative dimension of each fibre
-over `η i`, then `A` is smooth of relative dimension `g` over `S`. -/
-lemma AddObj.smoothOfRelativeDimension_of_fibres {S : Scheme} {κ : Type} {g : ℕ} {A : Over S}
-    [IsAbelianScheme A] {η : κ → (Spec (.of ℂ) ⟶ S)} {y : ∀ i : κ, Over.mk (η i) ⟶ A}
+over `η i`, then `A` is smooth of relative dimension `g` over `S`.
+-/
+lemma AddObj.smoothOfRelativeDimension_of_fibres
+    {S : Scheme} {κ : Type} {g : ℕ} {A : Over S} [IsAbelianScheme A]
+    {η : κ → (Spec (.of ℂ) ⟶ S)} {y : ∀ i : κ, Over.mk (η i) ⟶ A}
     (hy : IsDenseFamily fun i : κ ↦ (y i).left)
-    (h_dim : ∀ (i : κ) (n : ℕ), SmoothOfRelativeDimension n (snd A.hom (η i)) → n = g) :
-    SmoothOfRelativeDimension g A.hom := by
+    (h_dim : ∀ (i : κ) (n : ℕ), SmoothOfRelativeDimension n (snd A.hom (η i)) → n = g)
+    : SmoothOfRelativeDimension g A.hom := by
   -- Around each `x` there is an affine chart `V`, standard smooth of some relative dimension `n`.
   -- It contains some `y i`, so it gives a nonempty open part of the fibre over `η i` that has
   -- dimension `n`; by `property_of_isOpenImmersion` the whole fibre has dimension `n`, and `n = g`
@@ -215,17 +248,23 @@ open CategoryTheory AlgebraicGeometry Algebra MorphismProperty TensorProduct Set
 namespace New.Variety
 
 /-- An étale algebra over an integral domain is reduced. -/
-lemma isReduced_of_algebra_etale (A B : Type*) [CommRing A] [CommRing B] [IsDomain A]
-    [Algebra A B] [Algebra.Etale A B] : IsReduced B := by
+lemma isReduced_of_algebra_etale
+    (A B : Type*) [CommRing A] [CommRing B] [IsDomain A] [Algebra A B] [Algebra.Etale A B]
+    : IsReduced B := by
   -- `B` is flat over `A`, so it embeds in `K ⊗[A] B`, which is unramified over the field `K`.
   let K : Type _ := FractionRing A
   have : IsReduced (K ⊗[A] B) := FormallyUnramified.isReduced_of_field K _
   exact isReduced_of_injective _ (includeRight_injective (IsFractionRing.injective A K))
 
-/-- The form of `New.Variety.isReduced_of_algebra_etale` in which étaleness of `B` over the domain
-`A` is an explicit hypothesis, from which the algebra structure is inferred. -/
-lemma isReduced_of_etale {A B : Type*} [CommRing A] [CommRing B] [IsDomain A] {alg : Algebra A B}
-    (h_etale : Algebra.Etale A B) : IsReduced B :=
+/--
+The form of `New.Variety.isReduced_of_algebra_etale` in which étaleness of `B` over the domain
+`A` is an explicit hypothesis, from which the algebra structure is inferred.
+-/
+lemma isReduced_of_etale
+    {A B : Type*} [CommRing A] [CommRing B] [IsDomain A]
+    {alg : Algebra A B}
+    (h_etale : Algebra.Etale A B)
+    : IsReduced B :=
   isReduced_of_algebra_etale A B
 
 /-- A smooth morphism of schemes is geometrically reduced. -/
@@ -245,25 +284,33 @@ instance {X Y : Scheme.{0}} (s : X ⟶ Y) [hs : Smooth s] : GeometricallyReduced
   have := hV.isLocalization_stalk ⟨x, hx⟩
   exact isReduced_localizationPreserves (hV.primeIdealOf ⟨x, hx⟩).asIdeal.primeCompl _ h_red
 
-/-- An abelian scheme (`New.IsAbelianScheme`: smooth, proper and divisible) over an algebraically
-closed field is integral. -/
-instance {k : Type} [Field k] [IsAlgClosed k] (A : Over (Spec ⟨k⟩)) [hA : IsAbelianScheme A] :
-    AlgebraicGeometry.IsIntegral A.left := by
+/--
+An abelian scheme (`New.IsAbelianScheme`: smooth, proper and divisible) over an algebraically
+closed field is integral.
+-/
+instance {k : Type} [Field k] [IsAlgClosed k] (A : Over (Spec ⟨k⟩)) [hA : IsAbelianScheme A]
+    : AlgebraicGeometry.IsIntegral A.left := by
   -- The `k`-points act by translation on the finite set of irreducible components, so `n • x` fixes
   -- every component, where `n = G.index` is the index of the kernel. As multiplication by `n` is
   -- onto, the component of the origin is everything.
   have : IsReduced A.left := GeometricallyReduced.isReduced_of_flat_of_isLocallyNoetherian A.hom
-  have : IsNoetherian A.left :=
-    { isLocallyNoetherian A.hom, compactSpace_of_universallyClosed A.hom with }
+  have : IsNoetherian A.left := {
+    isLocallyNoetherian A.hom, compactSpace_of_universallyClosed A.hom with
+  }
   have := (finite_irreducibleComponents_of_isNoetherian (X := A.left)).to_subtype
   -- Translation by a `k`-point is a homeomorphism, so it acts on the irreducible components.
   let P : Type := MonoidalCategoryStruct.tensorUnit (Over (Spec ⟨k⟩)) ⟶ A
-  let act : AddAction P (irreducibleComponents A.left) :=
-    { vadd g C := ⟨(translation g).left ⁻¹' C, preimage_mem_irreducibleComponents C.prop
-        (translation g).left.isOpenEmbedding (by simp [C.prop.1.nonempty, Set.inter_univ])⟩
-      zero_vadd := by simp [HVAdd.hVAdd, preimage]
-      add_vadd := by simp [P, HVAdd.hVAdd, preimage, ← Scheme.Hom.comp_apply, ← Over.comp_left,
-        add_assoc, comp_add] }
+  let act : AddAction P (irreducibleComponents A.left) := {
+    vadd g C := ⟨
+      (translation g).left ⁻¹' C,
+      preimage_mem_irreducibleComponents C.prop (translation g).left.isOpenEmbedding
+        (by simp [C.prop.1.nonempty, Set.inter_univ])
+    ⟩
+    zero_vadd := by simp [HVAdd.hVAdd, preimage]
+    add_vadd := by
+      simp [P, HVAdd.hVAdd, preimage, ← Scheme.Hom.comp_apply, ← Over.comp_left, add_assoc,
+        comp_add]
+  }
   let G : AddSubgroup P := (AddAction.toPermHom P (irreducibleComponents A.left)).ker
   let pt : Spec ⟨k⟩ := default
   let C : irreducibleComponents A.left :=
@@ -272,9 +319,10 @@ instance {k : Type} [Field k] [IsAlgClosed k] (A : Over (Spec ⟨k⟩)) [hA : Is
     by_contra h_ne
     -- Otherwise some `k`-point `x` has `n • x` outside `C`.
     have h_onto : Surjective (G.index • 𝟙 A).left := hA.nsmul_surjective _ G.index_ne_zero_of_finite
-    obtain ⟨x, hx⟩ : ∃ x : P, x.left pt ∈ (G.index • 𝟙 A).left ⁻¹' C.valᶜ := exists_point_mem A
-      (isClosed_irreducibleComponent.isOpen_compl.preimage (by fun_prop)).isLocallyClosed
-      ((nonempty_compl.mpr h_ne).preimage h_onto.surj)
+    obtain ⟨x, hx⟩ : ∃ x : P, x.left pt ∈ (G.index • 𝟙 A).left ⁻¹' C.valᶜ :=
+      exists_point_mem A
+        (isClosed_irreducibleComponent.isOpen_compl.preimage (by fun_prop)).isLocallyClosed
+        ((nonempty_compl.mpr h_ne).preimage h_onto.surj)
     -- But `n • x` is the translate of the origin by `n • x`, which preserves `C`.
     have h_ker : AddAction.toPermHom P _ (G.index • x) = 0 := G.nsmul_index_mem x
     have h_fix : (translation (G.index • x)).left ⁻¹' C.val = C.val :=
@@ -303,15 +351,19 @@ section Specialisation
 
 open AlgebraicGeometry Scheme RingHom.FaithfullyFlat Flat
 
-/-- Every point of `S` specialises to the image of the closed point under some `t : Spec k ⟶ S` with
-`k` algebraically closed and `Q t`. -/
-def New.Variety.AllSpecializeTo (S : Scheme)
-    (Q : ∀ {k : Type} [Field k], (Spec ⟨k⟩ ⟶ S) → Prop) : Prop :=
+/--
+Every point of `S` specialises to the image of the closed point under some `t : Spec k ⟶ S` with
+`k` algebraically closed and `Q t`.
+-/
+def New.Variety.AllSpecializeTo (S : Scheme) (Q : ∀ {k : Type} [Field k], (Spec ⟨k⟩ ⟶ S) → Prop)
+    : Prop :=
   ∀ s : S, ∃ (k : Type) (_ : Field k) (_ : IsAlgClosed k) (t : Spec ⟨k⟩ ⟶ S),
     s ⤳ t (IsLocalRing.closedPoint k) ∧ Q t
 
-/-- For a point `s` of a scheme `Z`, the morphism from the spectrum of the stalk at `s` to `Z` is
-flat. -/
+/--
+For a point `s` of a scheme `Z`, the morphism from the spectrum of the stalk at `s` to `Z` is
+flat.
+-/
 instance {Z : Scheme} (s : Z) : Flat (fromSpecStalk Z s) := by
   -- The stalk is a localization of the ring of an affine open `U` around `s`, and `U ⊆ Z` is open.
   obtain ⟨U, hU, hs, -⟩ := exists_isAffineOpen_mem_and_subset (x := s) (U := ⊤) trivial
@@ -323,8 +375,8 @@ instance {Z : Scheme} (s : Z) : Flat (fromSpecStalk Z s) := by
   infer_instance
 
 /-- A flat morphism of schemes is injective on stalks. -/
-lemma New.stalkMap_injective_of_flat {X Y : Scheme} (q : X ⟶ Y) [Flat q] (x : X) :
-    Function.Injective (q.stalkMap x) := by
+lemma New.stalkMap_injective_of_flat {X Y : Scheme} (q : X ⟶ Y) [Flat q] (x : X)
+    : Function.Injective (q.stalkMap x) := by
   -- The map of stalks is flat and local, hence faithfully flat, hence injective.
   have h_flat : (q.stalkMap x).hom.Flat := Flat.stalkMap q x
   algebraize [(q.stalkMap x).hom]
@@ -347,32 +399,37 @@ namespace New
 open CategoryTheory AlgebraicGeometry Limits pullback Set Scheme Spec Pullback Over PointFn Filter
 
 /-- The points of a finite set `C` that lie near `s` specialise to `s`. -/
-lemma eventually_specializes_of_finite {T : Type*} [TopologicalSpace T] {C : Set T}
-    (hC : C.Finite) (s : T) : ∀ᶠ t in nhds s, t ∈ C → t ⤳ s := by
+lemma eventually_specializes_of_finite
+    {T : Type*} [TopologicalSpace T] {C : Set T} (hC : C.Finite) (s : T)
+    : ∀ᶠ t in nhds s, t ∈ C → t ⤳ s := by
   suffices h : ∀ᶠ t in nhds s, ∀ c ∈ C, t = c → c ⤳ s from h.mono fun t ht htC ↦ ht t htC rfl
   refine hC.eventually_all.2 fun c _ ↦ eventually_imp_distrib_right.2 fun h_freq ↦ ?_
   exact specializes_iff_mem_closure.2 h_freq.mem_closure
 
-/-- Let `S` and `A` be reduced, `z : A ⟶ S`, `s` a point of `S`, and `x w` complex points of `A`
+/--
+Let `S` and `A` be reduced, `z : A ⟶ S`, `s` a point of `S`, and `x w` complex points of `A`
 with dense images and with finitely many composites `x w ≫ z`. Consider the pairs of an index `w`
 and a map `ψ` from the stalk `𝒪_{S,s}` to `ℂ` such that `x w ≫ z` factors through `Spec 𝒪_{S,s}`
 via `Spec.map ψ`. The points `(x w, Spec.map ψ)` of `A ×_S Spec 𝒪_{S,s}` form a separating family:
-this scheme is reduced and the images of these points are dense. -/
-lemma isSeparatingFamily_stalk {S : Scheme} [IsReduced S] {W : Type} {A : Scheme} {z : A ⟶ S}
-    {x : W → (Spec (.of ℂ) ⟶ A)} [IsReduced A] (h_dense : IsDenseFamily x)
-    (h_finite : (range fun w : W ↦ x w ≫ z).Finite) (s : S) :
-    IsSeparatingFamily
+this scheme is reduced and the images of these points are dense.
+-/
+lemma isSeparatingFamily_stalk
+    {S : Scheme} [IsReduced S]
+    {W : Type} {A : Scheme} {z : A ⟶ S} {x : W → (Spec (.of ℂ) ⟶ A)} [IsReduced A]
+    (h_dense : IsDenseFamily x) (h_finite : (range fun w : W ↦ x w ≫ z).Finite) (s : S)
+    : IsSeparatingFamily
       (Z := Σ' (w : W) (ψ : S.presheaf.stalk s ⟶ .of ℂ), Spec.map ψ ≫ S.fromSpecStalk s = x w ≫ z)
-      fun ⟨w, ψ, h_factor⟩ ↦ (pullback.lift (x w) (Spec.map ψ) h_factor.symm :
-        Spec (.of ℂ) ⟶ pullback z (S.fromSpecStalk s)) := by
+      fun ⟨w, ψ, h_factor⟩ ↦
+        (pullback.lift (x w) (Spec.map ψ) h_factor.symm
+          : Spec (.of ℂ) ⟶ pullback z (S.fromSpecStalk s)) := by
   let P : Scheme := pullback z (S.fromSpecStalk s)
   let π : P ⟶ A := fst z (S.fromSpecStalk s)
   refine ⟨?_, π.isEmbedding.dense_iff.2 fun y ↦ ?_⟩
   · -- The stalk maps of `π` are bijective, and the stalks of `A` are reduced.
     suffices ∀ y : P, _root_.IsReduced (P.presheaf.stalk y) from isReduced_of_isReduced_stalk P
     intro y
-    let e : A.presheaf.stalk (π y) ≃+* P.presheaf.stalk y := .ofBijective (π.stalkMap y).hom
-      ⟨stalkMap_injective_of_flat π y, π.stalkMap_surjective y⟩
+    let e : A.presheaf.stalk (π y) ≃+* P.presheaf.stalk y :=
+      .ofBijective (π.stalkMap y).hom ⟨stalkMap_injective_of_flat π y, π.stalkMap_surjective y⟩
     exact isReduced_of_injective e.symm e.symm.injective
   -- Of the finitely many images in `S`, only those that specialise to `s` lie near `s`, and so
   -- near `z (π y)`, which specialises to `s`.
@@ -381,8 +438,9 @@ lemma isSeparatingFamily_stalk {S : Scheme} [IsReduced S] {W : Type} {A : Scheme
   have hC : C.Finite := (h_finite.image fun p ↦ p c).subset (by simp [C, ← range_comp'])
   have h_spec : z (π y) ⤳ s := by
     simpa [range_fromSpecStalk] using (range_fst z (S.fromSpecStalk s)).subset (mem_range_self y)
-  have h_near : ∀ᶠ a in nhds (π y), z a ∈ C → z a ⤳ s := (z.continuous.tendsto (π y)).eventually
-    ((eventually_specializes_of_finite hC s).filter_mono (specializes_iff_nhds.1 h_spec))
+  have h_near : ∀ᶠ a in nhds (π y), z a ∈ C → z a ⤳ s :=
+    (z.continuous.tendsto (π y)).eventually
+      ((eventually_specializes_of_finite hC s).filter_mono (specializes_iff_nhds.1 h_spec))
   -- So the `x w` whose image specialises to `s` accumulate at `π y`, and these lift.
   refine (((mem_closure_iff_frequently.1 (h_dense (π y))).and_eventually h_near).mono
     ?_).mem_closure
@@ -393,17 +451,25 @@ lemma isSeparatingFamily_stalk {S : Scheme} [IsReduced S] {W : Type} {A : Scheme
   have hψ : Spec.map ψ ≫ S.fromSpecStalk s = x w ≫ z := by
     rw [Spec.map_comp, Category.assoc, SpecMap_stalkSpecializes_fromSpecStalk]
     exact Spec_stalkClosedPointTo_fromSpecStalk _
-  exact ⟨pullback.lift (x w) (Spec.map ψ) hψ.symm c, ⟨⟨w, ψ, hψ⟩, rfl⟩,
-    by rw [← Hom.comp_apply, pullback.lift_fst]⟩
+  exact ⟨
+    pullback.lift (x w) (Spec.map ψ) hψ.symm c,
+    ⟨⟨w, ψ, hψ⟩, rfl⟩,
+    by rw [← Hom.comp_apply, pullback.lift_fst]
+  ⟩
 
-/-- Let `S` be reduced with finitely many complex points `ξ i` whose images are dense. An element
+/--
+Let `S` be reduced with finitely many complex points `ξ i` whose images are dense. An element
 `a` of the stalk at `x` is zero if `ψ a = 0` for every map `ψ` from the stalk to `ℂ` such that
-some `ξ i` factors through the spectrum of the stalk via `Spec.map ψ`. -/
-lemma stalk_eq_zero_of_forall_factor {S : Scheme} [IsReduced S] {J : Type} [Finite J]
-    {ξ : J → (Spec (.of ℂ) ⟶ S)} (hξ : IsDenseFamily ξ) {x : S} (a : S.presheaf.stalk x)
-    (h_vanish : ∀ (i : J) (ψ : S.presheaf.stalk x ⟶ .of ℂ),
-      Spec.map ψ ≫ S.fromSpecStalk x = ξ i → ψ a = 0) :
-    a = 0 := by
+some `ξ i` factors through the spectrum of the stalk via `Spec.map ψ`.
+-/
+lemma stalk_eq_zero_of_forall_factor
+    {S : Scheme} [IsReduced S]
+    {J : Type} [Finite J]
+    {ξ : J → (Spec (.of ℂ) ⟶ S)} (hξ : IsDenseFamily ξ)
+    {x : S} (a : S.presheaf.stalk x)
+    (h_vanish
+      : ∀ (i : J) (ψ : S.presheaf.stalk x ⟶ .of ℂ), Spec.map ψ ≫ S.fromSpecStalk x = ξ i → ψ a = 0)
+    : a = 0 := by
   -- View `a` as a regular function `f` on the ring-valued points (`PointFn`) of
   -- `S ×_S Spec 𝒪_{S,x}`, where the lifts of the `ξ i` separate. It agrees at these lifts with the
   -- function of the zero section, hence also at the tautological point `inv q`, where it is `a`.
@@ -412,30 +478,43 @@ lemma stalk_eq_zero_of_forall_factor {S : Scheme} [IsReduced S] {J : Type} [Fini
   have hf : IsRegularOn f ⊤ := by simp [f, IsRegularOn]
   have h_eq : f _ (inv q) = ofSection (U := ⊤) 0 _ (inv q) := by
     refine (isSeparatingFamily_stalk (z := 𝟙 S) hξ (toFinite _) x).pointFn_ext hf
-      (isRegularOn_ofSection 0) (fun ⟨i, ψ, hψ⟩ _ ↦ ?_) _ (inv q) landsIn_top
+      (isRegularOn_ofSection 0)
+      (fun ⟨i, ψ, hψ⟩ _ ↦ ?_)
+      _ (inv q) landsIn_top
     -- At the lift given by `ψ` the function `f` takes the value `ψ a`.
     simpa [f, q, pullback.lift_snd] using h_vanish i ψ hψ
   simpa [f] using h_eq
 
-/-- The form of `New.stalk_eq_zero_of_forall_factor` in which the index `i`, the map `ψ` from the
+/--
+The form of `New.stalk_eq_zero_of_forall_factor` in which the index `i`, the map `ψ` from the
 stalk to `ℂ` and the factorisation of `ξ i` via `Spec.map ψ` are bundled into one triple `p` (so
 that `p.snd.fst` is `ψ`): for `S` reduced with finitely many dense complex points `ξ i`, an element
-`a` of the stalk at `x` is zero if `ψ a = 0` for every such triple. -/
-lemma stalk_eq_zero_of_dense {S : Scheme} [IsReduced S] {J : Type} [Finite J]
-    {ξ : J → (Spec (.of ℂ) ⟶ S)} (hξ : IsDenseFamily ξ) {x : S} (a : S.presheaf.stalk x)
-    (h_vanish : ∀ p : Σ' (i : J) (ψ : S.presheaf.stalk x ⟶ .of ℂ),
-      Spec.map ψ ≫ S.fromSpecStalk x = ξ i, p.snd.fst a = 0) : a = 0 :=
+`a` of the stalk at `x` is zero if `ψ a = 0` for every such triple.
+-/
+lemma stalk_eq_zero_of_dense
+    {S : Scheme} [IsReduced S]
+    {J : Type} [Finite J]
+    {ξ : J → (Spec (.of ℂ) ⟶ S)} (hξ : IsDenseFamily ξ)
+    {x : S} (a : S.presheaf.stalk x)
+    (h_vanish
+      : ∀ p : Σ' (i : J) (ψ : S.presheaf.stalk x ⟶ .of ℂ), Spec.map ψ ≫ S.fromSpecStalk x = ξ i,
+        p.snd.fst a = 0)
+    : a = 0 :=
   stalk_eq_zero_of_forall_factor hξ a fun i ψ hψ ↦ h_vanish ⟨i, ψ, hψ⟩
 
 open MonoidalCategory IsSchemeTheoreticallyDominant LocallyOfFiniteType CartesianMonoidalCategory
 
-/-- Let X be reduced, locally noetherian, flat and locally of finite type over a reduced locally
+/--
+Let X be reduced, locally noetherian, flat and locally of finite type over a reduced locally
 noetherian scheme S with finitely many complex points whose images are dense. Then the smooth
-locus of X over S is dense in X. -/
-lemma dense_smoothLocus_of_isDenseFamily {S : Scheme} [IsReduced S] [IsLocallyNoetherian S]
-    {J : Type} [Finite J] {ξ : J → (Spec (.of ℂ) ⟶ S)} (hξ : IsDenseFamily ξ) {X : Scheme}
-    (f : X ⟶ S) [LocallyOfFiniteType f] [Flat f] [IsReduced X] [IsLocallyNoetherian X] :
-    Dense (f.smoothLocus : Set X) := by
+locus of X over S is dense in X.
+-/
+lemma dense_smoothLocus_of_isDenseFamily
+    {S : Scheme} [IsReduced S] [IsLocallyNoetherian S]
+    {J : Type} [Finite J]
+    {ξ : J → (Spec (.of ℂ) ⟶ S)} (hξ : IsDenseFamily ξ)
+    {X : Scheme} (f : X ⟶ S) [LocallyOfFiniteType f] [Flat f] [IsReduced X] [IsLocallyNoetherian X]
+    : Dense (f.smoothLocus : Set X) := by
   -- At a generic point `a` of `X` the stalks of `X` and `S` are fields. The second maps to `ℂ`,
   -- so it has characteristic zero and is perfect, and the extension is formally smooth.
   refine (dense_iff_closure_eq.2 genericPoints.closure).mono fun a ha ↦ ?_
@@ -444,8 +523,9 @@ lemma dense_smoothLocus_of_isDenseFamily {S : Scheme} [IsReduced S] [IsLocallyNo
   have hS : IsField (S.presheaf.stalk (f a)) :=
     IsLocalHom.isField (stalkMap_injective_of_flat f a) hX
   -- As `1 ≠ 0` in the stalk, some `ξ i` factors through it.
-  obtain ⟨ψ⟩ : Nonempty (S.presheaf.stalk (f a) ⟶ .of ℂ) := by_contra fun h_empty ↦
-    one_ne_zero (stalk_eq_zero_of_forall_factor hξ 1 fun _ ψ _ ↦ (h_empty ⟨ψ⟩).elim)
+  obtain ⟨ψ⟩ : Nonempty (S.presheaf.stalk (f a) ⟶ .of ℂ) :=
+    by_contra fun h_empty ↦
+      one_ne_zero (stalk_eq_zero_of_forall_factor hξ 1 fun _ ψ _ ↦ (h_empty ⟨ψ⟩).elim)
   let : Field (X.presheaf.stalk a) := hX.toField
   let : Field (S.presheaf.stalk (f a)) := hS.toField
   have : CharZero (S.presheaf.stalk (f a)) := ψ.hom.charZero
@@ -453,22 +533,27 @@ lemma dense_smoothLocus_of_isDenseFamily {S : Scheme} [IsReduced S] [IsLocallyNo
   algebraize [(f.stalkMap a).hom]
   exact Algebra.FormallySmooth.of_perfectField
 
-/-- Let S be reduced and locally noetherian, with a finite family of complex points whose images are
+/--
+Let S be reduced and locally noetherian, with a finite family of complex points whose images are
 dense. Let A and B be flat and locally of finite type over S, with A reduced. Let η_w be complex
 points of S, and let y_w be complex points of B over η_w that separate B, meaning B is reduced and
 the images of the y_w are dense. Suppose that for each w the complex points e_w(v) of A over η_w
 have dense image in the fibre A ×_S Spec ℂ over η_w. Then the complex points (e_w(v), y_w) separate
-A ×_S B: it is reduced and their images are dense (`New.IsSeparatingFamily`). -/
-lemma IsSeparatingFamily.prod {S : Scheme} [IsReduced S] {A B : Over S} {V W J : Type} [Finite J]
+A ×_S B: it is reduced and their images are dense (`New.IsSeparatingFamily`).
+-/
+lemma IsSeparatingFamily.prod
+    {S : Scheme} [IsReduced S]
+    {A B : Over S} {V W J : Type} [Finite J]
     {ξ : J → (Spec (.of ℂ) ⟶ S)} {η : W → (Spec (.of ℂ) ⟶ S)} [LocallyOfFiniteType A.hom]
     [LocallyOfFiniteType B.hom] [IsLocallyNoetherian S] [Flat A.hom] [Flat B.hom]
     {y : ∀ w : W, Over.mk (η w) ⟶ B} {e : ∀ w : W, V → (Over.mk (η w) ⟶ A)}
-    (hy : IsSeparatingFamily fun w : W ↦ (y w).left) (hξ : IsDenseFamily ξ)
-    (h_red : IsReduced A.left)
-    (he : ∀ w : W, IsDenseFamily fun v : V ↦
-      (pullback.lift (e w v).left (𝟙 (Spec (.of ℂ))) (e w v).w :
-        Spec (.of ℂ) ⟶ pullback A.hom (η w))) :
-    IsSeparatingFamily fun ((w, v) : W × V) ↦
+    (hy : IsSeparatingFamily fun w : W ↦ (y w).left)
+    (hξ : IsDenseFamily ξ) (h_red : IsReduced A.left)
+    (he : ∀ w : W,
+      IsDenseFamily fun v : V ↦
+        (pullback.lift (e w v).left (𝟙 (Spec (.of ℂ))) (e w v).w
+          : Spec (.of ℂ) ⟶ pullback A.hom (η w)))
+    : IsSeparatingFamily fun ((w, v) : W × V) ↦
       ((CartesianMonoidalCategory.lift (e w v) (y w)).left : Spec (.of ℂ) ⟶ (A ⊗ B).left) := by
   obtain ⟨hB_red : IsReduced B.left, hB_dense⟩ := hy
   have : IsLocallyNoetherian A.left := isLocallyNoetherian A.hom

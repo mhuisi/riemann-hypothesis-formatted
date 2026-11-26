@@ -91,105 +91,131 @@ section DenseRelation
 
 open CategoryTheory AlgebraicGeometry Ideal CommRingCat Finset Quotient Spec ULift Fact Pi
 
-/-- Let `φ` map `T` to a valuation ring, and let `x` be neither zero nor a unit. If the product of
+/--
+Let `φ` map `T` to a valuation ring, and let `x` be neither zero nor a unit. If the product of
 `n` ideals `𝔮 l` lies in `α` and `x ^ (n + 1)` divides `φ α`, then `x` divides `φ (𝔮 l)` for
-some `l`. -/
-lemma New.Variety.exists_factor_forall_dvd {T V J : Type*} [CommRing T] [CommRing V] [IsDomain V]
-    [ValuationRing V] [Fintype J] (φ : T →+* V) {α : Ideal T} {𝔮 : J → Ideal T}
-    (h𝔮 : ∏ l : J, 𝔮 l ≤ α) {x : V} (hx_ne : x ≠ 0) (hx_nonunit : ¬IsUnit x)
-    (hα : ∀ r ∈ α, x ^ (Fintype.card J + 1) ∣ φ r) :
-    ∃ l : J, ∀ r ∈ 𝔮 l, x ∣ φ r := by
+some `l`.
+-/
+lemma New.Variety.exists_factor_forall_dvd
+    {T V J : Type*} [CommRing T] [CommRing V] [IsDomain V] [ValuationRing V] [Fintype J]
+    (φ : T →+* V)
+    {α : Ideal T} {𝔮 : J → Ideal T} (h𝔮 : ∏ l : J, 𝔮 l ≤ α)
+    {x : V} (hx_ne : x ≠ 0) (hx_nonunit : ¬ IsUnit x) (hα : ∀ r ∈ α, x ^ (Fintype.card J + 1) ∣ φ r)
+    : ∃ l : J, ∀ r ∈ 𝔮 l, x ∣ φ r := by
   -- Otherwise pick `r l ∈ 𝔮 l` with `φ (r l)` not divisible by `x`, hence dividing `x`. Then
   -- `x ^ (card J + 1)` divides `φ (∏ l, r l)`, which divides `x ^ card J`.
   by_contra! h_none : ∀ l : J, ∃ r ∈ 𝔮 l, ¬x ∣ φ r
   choose r hr_mem hr_ndvd using h_none
   have h_prod_dvd : φ (∏ l, r l) ∣ x ^ Fintype.card J := by
     rw [map_prod, ← Finset.card_univ, ← Finset.prod_const]
-    exact prod_dvd_prod_of_dvd _ _ fun l _ ↦
-      (ValuationRing.dvd_total ..).resolve_left (hr_ndvd l)
+    exact prod_dvd_prod_of_dvd _ _ fun l _ ↦ (ValuationRing.dvd_total ..).resolve_left (hr_ndvd l)
   have pow_succ_dvd : x ^ (Fintype.card J + 1) ∣ x ^ Fintype.card J :=
     (hα _ (h𝔮 (prod_mem_prod fun l _ ↦ hr_mem l))).trans h_prod_dvd
   exact Nat.not_succ_le_self _ ((pow_dvd_pow_iff hx_ne hx_nonunit).mp pow_succ_dvd)
 
-/-- In a noetherian ring `T`, every ideal `α` contains a product of finitely many primes, each
-containing `α`. -/
-lemma New.Variety.exists_primes_over_prod_le {T : Type} [CommRing T] [IsNoetherianRing T]
-    (α : Ideal T) :
-    ∃ (J : Type) (_ : Fintype J) (𝔮 : J → Ideal T),
+/--
+In a noetherian ring `T`, every ideal `α` contains a product of finitely many primes, each
+containing `α`.
+-/
+lemma New.Variety.exists_primes_over_prod_le
+    {T : Type} [CommRing T] [IsNoetherianRing T] (α : Ideal T)
+    : ∃ (J : Type) (_ : Fintype J) (𝔮 : J → Ideal T),
       (∀ l : J, (𝔮 l).IsPrime) ∧ (∀ l : J, α ≤ 𝔮 l) ∧ ∏ l : J, 𝔮 l ≤ α := by
   classical
   -- Pull back primes of `T ⧸ α` whose product is zero.
-  obtain ⟨Z, hZ⟩ : ∃ Z : Multiset (PrimeSpectrum (T ⧸ α)), (Multiset.map PrimeSpectrum.asIdeal
-    Z).prod ≤ ⊥ := PrimeSpectrum.exists_primeSpectrum_prod_le (T ⧸ α) ⊥
-  refine ⟨Z, inferInstance, fun l ↦ l.fst.asIdeal.comap (Ideal.Quotient.mk α),
-    fun l ↦ inferInstance, fun l ↦ mk_ker.ge.trans (ker_le_comap _), ?_⟩
+  obtain ⟨Z, hZ⟩
+      : ∃ Z : Multiset (PrimeSpectrum (T ⧸ α)), (Multiset.map PrimeSpectrum.asIdeal Z).prod ≤ ⊥ :=
+    PrimeSpectrum.exists_primeSpectrum_prod_le (T ⧸ α) ⊥
+  refine ⟨
+    Z,
+    inferInstance,
+    fun l ↦ l.fst.asIdeal.comap (Ideal.Quotient.mk α),
+    fun l ↦ inferInstance,
+    fun l ↦ mk_ker.ge.trans (ker_le_comap _),
+    ?_
+  ⟩
   rw [← Z.map_univ, ← prod_eq_multiset_prod] at hZ
   refine le_trans (le_comap_of_map_le ?_) ((comap_mono hZ).trans mk_ker.le)
   exact (map_prod (mapHom _) ..).trans_le (prod_le_prod fun _ _ ↦ map_comap_le)
 
-/-- Let `Y` be proper over `Spec R`, and let `u i : W ⟶ Y` be maps over `Spec R` with integers `n i`
+/--
+Let `Y` be proper over `Spec R`, and let `u i : W ⟶ Y` be maps over `Spec R` with integers `n i`
 and exponents `a i`. Assume `CongruenceRelation n 𝔴 p a u`: at every field-valued point of `W` of
 characteristic `p` killing `𝔴`, the points `u i` twisted by `Frob^(a i)` satisfy `∑ n i • [·] = 0`.
 Then the same holds over `T ⧸ 𝔭`: for any point `t : Spec T ⟶ W.left` and prime `𝔭` of `T` that
 contains the image of `𝔴` under `R → T` and has `p = 0` in `T ⧸ 𝔭`, the morphisms
 `Spec (T ⧸ 𝔭) ⟶ Y.left` given by `u i ∘ t`, precomposed with the quotient `T → T ⧸ 𝔭` followed by
 `frobPow` with exponent `a i` (the map `x ↦ x ^ p ^ a i`), satisfy `Cancels n`, that is,
-`∑ n i • [·] = 0` in the free abelian group on such morphisms. -/
-lemma New.Variety.cancels_quotient_of_congruenceRelation {p : ℕ} [ThePrime p] {R : CommRingCat.{0}}
-    {W Y : Over (Spec R)} {I : Type*} [Fintype I] {n : I → ℤ} {a : I → ℕ} {u : I → (W ⟶ Y)}
-    [IsProper Y.hom] {𝔴 : Ideal R} (h_cong : CongruenceRelation n 𝔴 p a u) {T : CommRingCat.{0}}
-    (t : Spec T ⟶ W.left) (𝔭 : Ideal T) [𝔭.IsPrime] (h𝔴 : 𝔴.map (Spec.preimage (t ≫ W.hom)).hom ≤ 𝔭)
-    (hp : (p : T ⧸ 𝔭) = 0) :
-    Cancels n fun i : I ↦
+`∑ n i • [·] = 0` in the free abelian group on such morphisms.
+-/
+lemma New.Variety.cancels_quotient_of_congruenceRelation
+    {p : ℕ} [ThePrime p]
+    {R : CommRingCat.{0}} {W Y : Over (Spec R)} {I : Type*} [Fintype I]
+    {n : I → ℤ} {a : I → ℕ} {u : I → (W ⟶ Y)} [IsProper Y.hom]
+    {𝔴 : Ideal R} (h_cong : CongruenceRelation n 𝔴 p a u)
+    {T : CommRingCat.{0}} (t : Spec T ⟶ W.left) (𝔭 : Ideal T) [𝔭.IsPrime]
+    (h𝔴 : 𝔴.map (Spec.preimage (t ≫ W.hom)).hom ≤ 𝔭) (hp : (p : T ⧸ 𝔭) = 0)
+    : Cancels n fun i : I ↦
       Spec.map (ofHom ((frobPow hp (a i)).comp (Ideal.Quotient.mk 𝔭))) ≫ t ≫ (u i).left := by
   -- The relation holds in the fraction field `K` of `T ⧸ 𝔭`.
   let K : Type := 𝔭.ResidueField
   have h_charP : CharP K p :=
     (CharP.charP_iff_prime_eq_zero out).mpr (natCast_eq_zero_of_algebra hp _)
   -- The point of `W` in `K` kills the image of `𝔴`, so the relation holds there.
-  have h_kills (r : R) (hr : r ∈ 𝔴) :
-      (Spec.preimage ((Spec.map (ofHom (algebraMap T K)) ≫ t) ≫ W.hom)).hom r = 0 := by
+  have h_kills (r : R) (hr : r ∈ 𝔴)
+      : (Spec.preimage ((Spec.map (ofHom (algebraMap T K)) ≫ t) ≫ W.hom)).hom r = 0 := by
     simpa [K] using le_comap_of_map_le h𝔴 hr
-  have h_cancels_residue : Cancels n fun i : I ↦ Spec.map (ofHom (iterateFrobenius K p (a i))) ≫
-      (Spec.map (ofHom (algebraMap T K)) ≫ t) ≫ (u i).left := h_cong K _ h_kills
+  have h_cancels_residue : Cancels n fun i : I ↦
+      Spec.map (ofHom (iterateFrobenius K p (a i))) ≫ (Spec.map (ofHom (algebraMap T K)) ≫ t)
+        ≫ (u i).left :=
+    h_cong K _ h_kills
   -- Points of the separated `Y` in `T ⧸ 𝔭` that agree in `K` are equal.
   have h_residue_injective : ∀ a : T ⧸ 𝔭, algebraMap (T ⧸ 𝔭) 𝔭.ResidueField a = 0 → a = 0 :=
     (injective_iff_map_eq_zero _).mp 𝔭.injective_algebraMap_quotient_residueField
   refine h_cancels_residue.mono fun i i' heq ↦ up_injective ?_
-  refine (isProperOver_pointsToBase Y.hom).ext_of_jointly_injective
-    ![ofHom (algebraMap (T ⧸ 𝔭) K)] (fun c hc ↦ h_residue_injective c (hc 0)) fun _ ↦ ?_
+  refine (isProperOver_pointsToBase Y.hom).ext_of_jointly_injective ![ofHom (algebraMap (T ⧸ 𝔭) K)]
+    (fun c hc ↦ h_residue_injective c (hc 0))
+    fun _ ↦ ?_
   apply up_inj.mpr
   -- Frobenius commutes with the map to `K`, on both sides of `heq`.
-  have frob_comm (l : I) :
-      Spec.map (ofHom (algebraMap (T ⧸ 𝔭) K)) ≫
-          Spec.map (ofHom ((frobPow hp (a l)).comp (Ideal.Quotient.mk 𝔭))) =
-        Spec.map (ofHom (iterateFrobenius K p (a l))) ≫ Spec.map (ofHom (algebraMap T K)) := by
+  have frob_comm (l : I)
+      : Spec.map (ofHom (algebraMap (T ⧸ 𝔭) K))
+          ≫ Spec.map (ofHom ((frobPow hp (a l)).comp (Ideal.Quotient.mk 𝔭)))
+        = Spec.map (ofHom (iterateFrobenius K p (a l))) ≫ Spec.map (ofHom (algebraMap T K)) := by
     rw [← map_comp, ← map_comp]
     congr 1 with _
     simp [K, iterateFrobenius_def]
   -- `-ofHom_comp` keeps the two `Spec.map` factors apart, so that `frob_comm` applies.
   simpa [reassoc_of% frob_comm, -ofHom_comp] using heq
 
-/-- Let `Y` be proper and let the relation `CongruenceRelation` hold. Let `t : Spec T ⟶ W` be a
+/--
+Let `Y` be proper and let the relation `CongruenceRelation` hold. Let `t : Spec T ⟶ W` be a
 point and `𝔮` a prime of `T` that contains `p` and the image of `𝔴`. Let a point `x` of `W` in `S`
 factor as `Spec β ≫ t`, and let `ρ : S → D`, with `p = 0` in `D`, kill `β 𝔮`. Then the relation
-holds (`New.Variety.Cancels`) at the points `Frob^{a_i} ∘ ρ` of `u_i(x)`. -/
-lemma New.Variety.cancels_frobPow_comp_of_spec_map_comp_eq {p : ℕ} [ThePrime p]
-    {R : CommRingCat.{0}} {W Y : Over (Spec R)} {I : Type*} [Fintype I] {n : I → ℤ} {a : I → ℕ}
-    {u : I → (W ⟶ Y)} [IsProper Y.hom] {𝔴 : Ideal R} (h_cong : CongruenceRelation n 𝔴 p a u)
+holds (`New.Variety.Cancels`) at the points `Frob^{a_i} ∘ ρ` of `u_i(x)`.
+-/
+lemma New.Variety.cancels_frobPow_comp_of_spec_map_comp_eq
+    {p : ℕ} [ThePrime p]
+    {R : CommRingCat.{0}} {W Y : Over (Spec R)} {I : Type*} [Fintype I]
+    {n : I → ℤ} {a : I → ℕ} {u : I → (W ⟶ Y)} [IsProper Y.hom]
+    {𝔴 : Ideal R} (h_cong : CongruenceRelation n 𝔴 p a u)
     {T S : CommRingCat.{0}} (t : Spec T ⟶ W.left) (𝔮 : Ideal T) [𝔮.IsPrime]
-    (h𝔴 : 𝔴.map (Spec.preimage (t ≫ W.hom)).hom ≤ 𝔮) (hp𝔮 : (p : T ⧸ 𝔮) = 0) (β : T ⟶ S)
-    {x : Spec S ⟶ W.left} (hβ : Spec.map β ≫ t = x) {D : Type} [CommRing D] (hpD : (p : D) = 0)
-    (ρ : S →+* D) (h_ρβ_eq_zero : ∀ r ∈ 𝔮, ρ.comp β.hom r = 0) :
-    Cancels n fun i : I ↦ Spec.map (ofHom ((frobPow hpD (a i)).comp ρ)) ≫ x ≫ (u i).left := by
+    (h𝔴 : 𝔴.map (Spec.preimage (t ≫ W.hom)).hom ≤ 𝔮) (hp𝔮 : (p : T ⧸ 𝔮) = 0)
+    (β : T ⟶ S)
+    {x : Spec S ⟶ W.left} (hβ : Spec.map β ≫ t = x)
+    {D : Type} [CommRing D]
+    (hpD : (p : D) = 0)
+    (ρ : S →+* D) (h_ρβ_eq_zero : ∀ r ∈ 𝔮, ρ.comp β.hom r = 0)
+    : Cancels n fun i : I ↦ Spec.map (ofHom ((frobPow hpD (a i)).comp ρ)) ≫ x ≫ (u i).left := by
   -- Both sides below are `Spec` of `r ↦ ρ (β r) ^ (p ^ a i)`, followed by `t ≫ (u i).left`.
-  have h_point (i : I) :
-      Spec.map (ofHom ((frobPow hpD (a i)).comp ρ)) ≫ x ≫ (u i).left =
-        Spec.map (ofHom (Ideal.Quotient.lift 𝔮 (ρ.comp β.hom) h_ρβ_eq_zero)) ≫
-          Spec.map (ofHom ((frobPow hp𝔮 (a i)).comp (Ideal.Quotient.mk 𝔮))) ≫ t ≫ (u i).left := by
-    have h_ring_eq : β ≫ ofHom ((frobPow hpD (a i)).comp ρ) =
-        ofHom ((frobPow hp𝔮 (a i)).comp (Ideal.Quotient.mk 𝔮)) ≫
-          ofHom (Ideal.Quotient.lift 𝔮 (ρ.comp β.hom) h_ρβ_eq_zero) := by
+  have h_point (i : I)
+      : Spec.map (ofHom ((frobPow hpD (a i)).comp ρ)) ≫ x ≫ (u i).left
+        = Spec.map (ofHom (Ideal.Quotient.lift 𝔮 (ρ.comp β.hom) h_ρβ_eq_zero))
+          ≫ Spec.map (ofHom ((frobPow hp𝔮 (a i)).comp (Ideal.Quotient.mk 𝔮))) ≫ t ≫ (u i).left := by
+    have h_ring_eq
+        : β ≫ ofHom ((frobPow hpD (a i)).comp ρ)
+          = ofHom ((frobPow hp𝔮 (a i)).comp (Ideal.Quotient.mk 𝔮))
+            ≫ ofHom (Ideal.Quotient.lift 𝔮 (ρ.comp β.hom) h_ρβ_eq_zero) := by
       ext r
       -- Both ring maps send `r` to `ρ (β r) ^ p ^ a i`.
       aesop
@@ -199,7 +225,8 @@ lemma New.Variety.cancels_frobPow_comp_of_spec_map_comp_eq {p : ℕ} [ThePrime p
   exact (cancels_quotient_of_congruenceRelation h_cong t 𝔮 h𝔴 hp𝔮).mono fun _ _ ↦
     (Spec.map (ofHom (Ideal.Quotient.lift 𝔮 (ρ.comp β.hom) h_ρβ_eq_zero)) ≫= ·)
 
-/-- Let R be a noetherian ring with a map to O_C, W and Y proper over R, `u i : W ⟶ Y` maps with
+/--
+Let R be a noetherian ring with a map to O_C, W and Y proper over R, `u i : W ⟶ Y` maps with
 integer weights `n i`, and p ∈ 𝔴. Suppose `∑ n i [u i(x) ∘ F^{a i}] = 0` as a formal sum of points
 whenever x is a point of W over a field of characteristic p that kills 𝔴, with F the p-th power map
 (`New.Variety.CongruenceRelation`). Then there is an M for which the following holds, for every z in
@@ -208,20 +235,26 @@ For every point x of W in a p-adic test (a product of cells `c.Cell i`, which ar
 which p ≠ 0, with a map from O_C = `OC`, the valuation ring of ℂ_p) and every maximal ideal m of its
 ring, there is b ∉ m with the following property. For every ring D in which p = 0 and every ring map
 ρ to D that inverts b and kills the image of z, `∑ n i [u i ∘ x ∘ Spec(F^{a i} ∘ ρ)] = 0`
-(`New.Variety.Cancels`). -/
-lemma New.Variety.exists_cancels_frobPow_locally {p : ℕ} [ThePrime p] {R : Type} [CommRing R]
-    [Algebra R OC] {W Y : Over (Spec ⟨R⟩)} {I : Type*} [Fintype I] (n : I → ℤ) (a : I → ℕ)
-    (u : I → (W ⟶ Y)) [IsNoetherianRing R] [IsProper Y.hom] [IsProper W.hom] (𝔴 : Ideal R)
-    (hp : ↑p ∈ 𝔴) (h_cong : CongruenceRelation n 𝔴 p a u) :
-    ∃ M : ℕ, ∀ (z : OC) (j : ℕ), (p : OC) ∣ z ^ j →
-      (∀ r ∈ 𝔴, z ^ (M + 1) ∣ algebraMap R OC r) →
-      ∀ (c : PadicTest) (x : (testPoints.obj W).obj c)
-        (m : Ideal ((PadicTest.algFunctor ⋙ restrictAlg (of R) OC).obj c)), IsMaximal m → ∃ b ∉ m,
-        ∀ (D : Type) [CommRing D] (hpD : (p : D) = 0)
-          (ρ : (PadicTest.algFunctor ⋙ restrictAlg (of R) OC).obj c →+* D),
-          IsUnit (ρ b) → ρ (c.structureMap z) = 0 →
-        Cancels n fun i : I ↦
-          Spec.map (ofHom ((frobPow hpD (a i)).comp ρ)) ≫ x.down.left ≫ (u i).left := by
+(`New.Variety.Cancels`).
+-/
+lemma New.Variety.exists_cancels_frobPow_locally
+    {p : ℕ} [ThePrime p]
+    {R : Type} [CommRing R] [Algebra R OC]
+    {W Y : Over (Spec ⟨R⟩)} {I : Type*} [Fintype I]
+    (n : I → ℤ) (a : I → ℕ) (u : I → (W ⟶ Y))
+    [IsNoetherianRing R] [IsProper Y.hom] [IsProper W.hom]
+    (𝔴 : Ideal R) (hp : ↑p ∈ 𝔴) (h_cong : CongruenceRelation n 𝔴 p a u)
+    : ∃ M : ℕ, ∀ (z : OC) (j : ℕ),
+      (p : OC) ∣ z ^ j → (∀ r ∈ 𝔴, z ^ (M + 1) ∣ algebraMap R OC r)
+        → ∀ (c : PadicTest) (x : (testPoints.obj W).obj c)
+            (m : Ideal ((PadicTest.algFunctor ⋙ restrictAlg (of R) OC).obj c)),
+          IsMaximal m
+            → ∃ b ∉ m,
+              ∀ (D : Type) [CommRing D] (hpD : (p : D) = 0)
+                  (ρ : (PadicTest.algFunctor ⋙ restrictAlg (of R) OC).obj c →+* D),
+                IsUnit (ρ b) → ρ (c.structureMap z) = 0
+                  → Cancels n fun i : I ↦
+                    Spec.map (ofHom ((frobPow hpD (a i)).comp ρ)) ≫ x.down.left ≫ (u i).left := by
   classical
   -- All points of `W` in tests lift to one `t : Spec T ⟶ W` with `T` noetherian. The ideal
   -- `α = 𝔴 T` contains a product of primes `𝔮 l ⊇ α`. A point `β` of `T` in a test sends, on each
@@ -236,9 +269,11 @@ lemma New.Variety.exists_cancels_frobPow_locally {p : ℕ} [ThePrime p] {R : Typ
   obtain ⟨β, hβ⟩ : ∃ β, map β ≫ t = x.down.left := lift_pt _ c.isTest.isComparableRing _
   -- `β` is a map of `R`-algebras, as `x` is a point over `R`: both ring maps from `R` below give
   -- the structure map of the test to `Spec R`.
-  have h_over : (Spec.map β ≫ t) ≫ W.hom =
-      (Opposite.unop ((specAlg (of R) (of R)).obj
-        ((PadicTest.algFunctor ⋙ restrictAlg (of R) OC).obj c))).hom := (hβ =≫ W.hom).trans x.down.w
+  have h_over
+      : (Spec.map β ≫ t) ≫ W.hom
+        = (Opposite.unop ((specAlg (of R) (of R)).obj
+          ((PadicTest.algFunctor ⋙ restrictAlg (of R) OC).obj c))).hom :=
+    (hβ =≫ W.hom).trans x.down.w
   have h_spec_preimage : Spec.map (preimage (t ≫ W.hom) ≫ β) = (Spec.map β ≫ t) ≫ W.hom := by simp
   have β_comm (r : R) : β ((preimage (t ≫ W.hom)).hom r) = c.structureMap (algebraMap R _ r) :=
     ConcreteCategory.congr_hom (map_injective (h_spec_preimage.trans h_over)) r
@@ -302,77 +337,89 @@ open CategoryTheory AlgebraicGeometry TensorProduct Ideal WittVector Period Fact
   Algebra.TensorProduct ConcreteCategory PadicTest ModuleCat.Algebra MulSemiringAction Function
   ULift Set
 
-/-- Let `σ` on `S` and a natural family `s` of ring maps both lie over `τ : A →+* A`. Then `σ ⊗ s`
-is a natural family of ring maps between the base changes to `S`. -/
-lemma exists_tensor_twist {C : Type*} {A S : Type} [Category C] [CommRing A] [CommRing S]
-    [Algebra A S] {ψ : C ⥤ C} {Θ : C ⥤ CommAlg A} {τ : A →+* A} (σ : S →+* S)
-    (hσ : ∀ a : A, σ (algebraMap A S a) = algebraMap A S (τ a))
+/--
+Let `σ` on `S` and a natural family `s` of ring maps both lie over `τ : A →+* A`. Then `σ ⊗ s`
+is a natural family of ring maps between the base changes to `S`.
+-/
+lemma exists_tensor_twist
+    {C : Type*} {A S : Type} [Category C] [CommRing A] [CommRing S] [Algebra A S]
+    {ψ : C ⥤ C} {Θ : C ⥤ CommAlg A} {τ : A →+* A}
+    (σ : S →+* S) (hσ : ∀ a : A, σ (algebraMap A S a) = algebraMap A S (τ a))
     (s : ψ ⋙ Θ ⋙ forget₂ (CommAlg A) CommRingCat ⟶ Θ ⋙ forget₂ (CommAlg A) CommRingCat)
     (hs : ∀ (c : C) (a : A),
-      s.app c (algebraMap A (Θ.obj (ψ.obj c)) a) = algebraMap A (Θ.obj c) (τ a)) :
-    ∃ t :
-          ψ ⋙ (Θ ⋙ algBaseChange S) ⋙ forget₂ (CommAlg S) CommRingCat ⟶
-            (Θ ⋙ algBaseChange S) ⋙ forget₂ (CommAlg S) CommRingCat,
+      s.app c (algebraMap A (Θ.obj (ψ.obj c)) a) = algebraMap A (Θ.obj c) (τ a))
+    : ∃ t : ψ ⋙ (Θ ⋙ algBaseChange S) ⋙ forget₂ (CommAlg S) CommRingCat
+        ⟶ (Θ ⋙ algBaseChange S) ⋙ forget₂ (CommAlg S) CommRingCat,
       ∀ (c : C) (a : S) (x : Θ.obj (ψ.obj c)),
-      t.app c (a ⊗ₜ x) = σ a ⊗ₜ show Θ.obj c from s.app c x := by
+        t.app c (a ⊗ₜ x) = σ a ⊗ₜ show Θ.obj c from s.app c x := by
   let t (c : C) : S ⊗[A] Θ.obj (ψ.obj c) →+* S ⊗[A] Θ.obj c :=
-    mapRingHom (T := Θ.obj (ψ.obj c)) (T' := Θ.obj c) τ σ (s.app c).hom
-      (RingHom.ext hσ) (RingHom.ext (hs c))
-  have ht (c : C) (a : S) (x : Θ.obj (ψ.obj c)) :
-      t c (a ⊗ₜ x) = σ a ⊗ₜ show Θ.obj c from s.app c x := mapRingHom_tmul ..
-  refine ⟨⟨fun c ↦ CommRingCat.ofHom (t c), fun c d f ↦
-    CommRingCat.hom_ext (tmul_ext fun a x ↦ ?_)⟩, ht⟩
+    mapRingHom (T := Θ.obj (ψ.obj c)) (T' := Θ.obj c) τ σ (s.app c).hom (RingHom.ext hσ)
+      (RingHom.ext (hs c))
+  have ht (c : C) (a : S) (x : Θ.obj (ψ.obj c))
+      : t c (a ⊗ₜ x) = σ a ⊗ₜ show Θ.obj c from s.app c x :=
+    mapRingHom_tmul ..
+  refine
+    ⟨⟨fun c ↦ CommRingCat.ofHom (t c), fun c d f ↦ CommRingCat.hom_ext (tmul_ext fun a x ↦ ?_)⟩, ht⟩
   -- Naturality is checked on pure tensors, where it is the naturality of `s`; the base change of a
   -- map acts on `a ⊗ x` by `a ⊗ f x`.
   change t d (a ⊗ₜ[A] (Θ.map (ψ.map f)).hom x) = lTensor S (Θ.map f).hom (t c (a ⊗ₜ[A] x))
   rw [ht, ht]
   exact congrArg (σ a ⊗ₜ[A] ·) (s.naturality_apply f x)
 
-/-- A domain in which `z ^ q = z` for every `z`, for some `q > 1`, is finite: every element is a
-root of the nonzero polynomial `X ^ q - X`. -/
-lemma finite_of_forall_pow_eq {k : Type*} [CommRing k] [IsDomain k] {q : ℕ} (hq : 1 < q)
-    (h_pow_eq : ∀ z : k, z ^ q = z) :
-    Finite k := by
+/--
+A domain in which `z ^ q = z` for every `z`, for some `q > 1`, is finite: every element is a
+root of the nonzero polynomial `X ^ q - X`.
+-/
+lemma finite_of_forall_pow_eq
+    {k : Type*} [CommRing k] [IsDomain k] {q : ℕ} (hq : 1 < q) (h_pow_eq : ∀ z : k, z ^ q = z)
+    : Finite k := by
   -- Otherwise the monic polynomial `X ^ q - X` would be zero.
   refine .of_not_infinite fun _ ↦ ?_
   have h_ne : (.X ^ q - .X : Polynomial k) ≠ 0 :=
     (Polynomial.monic_X_pow_sub (by simpa using hq)).ne_zero
   exact h_ne (Polynomial.funext fun z ↦ by simp [h_pow_eq z])
 
-/-- Suppose the structure map `hP.algebraMap : Ainf → Amax` commutes with the action of
+/--
+Suppose the structure map `hP.algebraMap : Ainf → Amax` commutes with the action of
 `(a, σ) ∈ FrobGal`. Then there is a natural transformation `τ` from the σ-twisted period sheaf to
 the untwisted one. These are the functors from p-adic tests to commutative rings sending a test `c`
 to the p-adic completion of `Amax ⊗ W(c^♭)`, with the tilt taken of `PadicTest.twist σ c` for the
 twisted sheaf. `τ` sends the class of `b ⊗ w` to `((a, σ) • b) ⊗ W(Frob^a)(w)`, and modulo the
 divided-power ideal (`pdQuotientMap`) it sends `testToPdReduction y` to
-`(testToPdReduction y) ^ p ^ a` for every `y` in the ring `c.ProdRing` of the test. -/
-lemma exists_period_twist {p : ℕ} [ThePrime p] [hP : CrysPeriodAlgebra] (a : ℕ) (σ : Gp p)
+`(testToPdReduction y) ^ p ^ a` for every `y` in the ring `c.ProdRing` of the test.
+-/
+lemma exists_period_twist
+    {p : ℕ} [ThePrime p] [hP : CrysPeriodAlgebra]
+    (a : ℕ) (σ : Gp p)
     (h_smul : ∀ z : Ainf,
-      ((.ofAdd a, σ) : FrobGal) • hP.algebraMap z = hP.algebraMap (((.ofAdd a, σ) : FrobGal) • z)) :
-    ∃ τ :
-          PadicTest.twist σ ⋙ (tilt ⋙ periodAlg Amax) ⋙ forget₂ (CommAlg Amax) CommRingCat ⟶
-            (tilt ⋙ periodAlg Amax) ⋙ forget₂ (CommAlg Amax) CommRingCat,
+      ((.ofAdd a, σ) : FrobGal) • hP.algebraMap z = hP.algebraMap (((.ofAdd a, σ) : FrobGal) • z))
+    : ∃ τ : PadicTest.twist σ ⋙ (tilt ⋙ periodAlg Amax) ⋙ forget₂ (CommAlg Amax) CommRingCat
+        ⟶ (tilt ⋙ periodAlg Amax) ⋙ forget₂ (CommAlg Amax) CommRingCat,
       (∀ {c : PadicTest} {b b' : Amax} {w w' : WittVector p c.TiltRing},
-        toRingHom FrobGal Amax (.ofAdd a, σ) b = b' →
-        WittVector.map (iterateFrobenius c.TiltRing p a) w = w' →
-        τ.app c (AdicCompletion.of _ _ (b ⊗ₜ w)) = .of _ _ (b' ⊗ₜ w')) ∧
-      ∀ (c : PadicTest) (y : c.ProdRing),
-        pdQuotientMap (τ.app c).hom (testToPdReduction.app ((PadicTest.twist σ).obj c) y) =
-          testToPdReduction.app c y ^ p ^ a := by
+          toRingHom FrobGal Amax (.ofAdd a, σ) b = b'
+            → WittVector.map (iterateFrobenius c.TiltRing p a) w = w'
+            → τ.app c (AdicCompletion.of _ _ (b ⊗ₜ w)) = .of _ _ (b' ⊗ₜ w'))
+        ∧ ∀ (c : PadicTest) (y : c.ProdRing),
+          pdQuotientMap (τ.app c).hom (testToPdReduction.app ((PadicTest.twist σ).obj c) y)
+            = testToPdReduction.app c y ^ p ^ a := by
   -- The action `t` on `Amax ⊗ W(c♭)` passes to the completion.
   let F : Amax →+* Amax := toRingHom FrobGal Amax (.ofAdd a, σ)
-  obtain ⟨t, ht⟩ := exists_tensor_twist (ψ := PadicTest.twist σ) (Θ := tilt ⋙ wittFunctor) F h_smul
-    ⟨fun c ↦ CommRingCat.ofHom (WittVector.map (iterateFrobenius c.TiltRing p a)),
-      fun _ _ _ ↦ ext_apply fun _ ↦ ext fun _ ↦ (map_pow ..).symm⟩
-    fun _ _ ↦ ext fun _ ↦ (congrArg (fun x ↦ x ^ p ^ a) (tiltMap_comp ..)).trans (map_pow ..).symm
-  let τ :
-      PadicTest.twist σ ⋙ (tilt ⋙ periodAlg Amax) ⋙ forget₂ .. ⟶
-        (tilt ⋙ periodAlg Amax) ⋙ forget₂ .. :=
+  obtain ⟨t, ht⟩ :=
+    exists_tensor_twist (ψ := PadicTest.twist σ) (Θ := tilt ⋙ wittFunctor) F h_smul
+      ⟨
+        fun c ↦ CommRingCat.ofHom (WittVector.map (iterateFrobenius c.TiltRing p a)),
+        fun _ _ _ ↦ ext_apply fun _ ↦ ext fun _ ↦ (map_pow ..).symm
+      ⟩
+      fun _ _ ↦ ext fun _ ↦ (congrArg (fun x ↦ x ^ p ^ a) (tiltMap_comp ..)).trans (map_pow ..).symm
+  let τ
+      : PadicTest.twist σ ⋙ (tilt ⋙ periodAlg Amax) ⋙ forget₂ ..
+        ⟶ (tilt ⋙ periodAlg Amax) ⋙ forget₂ .. :=
     (Functor.whiskerRight t
-      (.mk _ (CommAlgCat.ofHom ·.hom.toIntAlgHom) ⋙ algCompletion ℤ p ⋙ forget₂ _ CommRingCat) :)
-  have hτ {c b b' w w'} (hb : F b = b')
-      (hw : WittVector.map (iterateFrobenius c.TiltRing p a) w = w') :
-      τ.app c (.of _ _ (b ⊗ₜ w)) = .of _ _ (b' ⊗ₜ w') :=
+        (.mk _ (CommAlgCat.ofHom ·.hom.toIntAlgHom) ⋙ algCompletion ℤ p ⋙ forget₂ _ CommRingCat)
+      :)
+  have hτ
+      {c b b' w w'} (hb : F b = b') (hw : WittVector.map (iterateFrobenius c.TiltRing p a) w = w')
+      : τ.app c (.of _ _ (b ⊗ₜ w)) = .of _ _ (b' ⊗ₜ w') :=
     (adicMap_algebraMap ..).trans (congrArg _ ((ht ..).trans (congrArg₂ _ hb hw)))
   refine ⟨τ, hτ, fun c y ↦ ?_⟩
   -- Untilts exhaust the test, and `τ` raises a Teichmüller element to the power `p ^ a`.
@@ -380,122 +427,167 @@ lemma exists_period_twist {p : ℕ} [ThePrime p] [hP : CrysPeriodAlgebra] (a : �
   rw [← fontaineTheta_teichmuller]
   refine (congrArg (pdQuotientMap (τ.app c).hom) (testToPdReduction_theta ..)).trans ?_
   refine (congrArg _ (hτ (map_one _) (map_teichmuller ..))).trans ?_
-  refine (testToPdReduction_theta c
-    (teichmuller p (iterateFrobenius c.TiltRing p a b))).symm.trans ?_
+  refine (testToPdReduction_theta c (teichmuller p (iterateFrobenius c.TiltRing p a b))).symm.trans
+    ?_
   rw [fontaineTheta_teichmuller, fontaineTheta_teichmuller, iterateFrobenius_def, map_pow]
   exact map_pow (testToPdReduction.app c).hom _ _
 
-/-- Let `R` be noetherian with a ring map `σ` to `O_C`, and let the image of the ideal `𝔭` of `R`
+/--
+Let `R` be noetherian with a ring map `σ` to `O_C`, and let the image of the ideal `𝔭` of `R`
 lie in the maximal ideal. For every `M` there are `x` in `O_C` and `N` such that `p` divides
-`x ^ N` and `x ^ (M + 1)` divides the image of every element of `𝔭`. -/
-private lemma exists_dvd_pow_and_pow_dvd {p : ℕ} [ThePrime p] {R : Type} [CommRing R]
-    [IsNoetherianRing R] (σ : R →+* OC) (𝔭 : Ideal R)
-    (h𝔭 : 𝔭 ≤ (IsLocalRing.maximalIdeal OC).comap σ) (M : ℕ) :
-    ∃ (x : OC) (N : ℕ), (p : OC) ∣ x ^ N ∧ ∀ r ∈ 𝔭, x ^ (M + 1) ∣ σ r := by
+`x ^ N` and `x ^ (M + 1)` divides the image of every element of `𝔭`.
+-/
+private lemma exists_dvd_pow_and_pow_dvd
+    {p : ℕ} [ThePrime p]
+    {R : Type} [CommRing R] [IsNoetherianRing R]
+    (σ : R →+* OC) (𝔭 : Ideal R) (h𝔭 : 𝔭 ≤ (IsLocalRing.maximalIdeal OC).comap σ)
+    (M : ℕ)
+    : ∃ (x : OC) (N : ℕ), (p : OC) ∣ x ^ N ∧ ∀ r ∈ 𝔭, x ^ (M + 1) ∣ σ r := by
   -- `O_C` is a Bézout ring in which every element has an `(M + 1)`-th root: take `x ^ (M + 1)`
   -- generating the image of `𝔭`. It is not a unit, so `p` divides a power of `x`.
   obtain ⟨y, hy⟩ := IsBezout.isPrincipal_of_FG _ (𝔭.fg_of_isNoetherianRing.map σ)
   obtain ⟨x, rfl⟩ := IsAbsIntegrallyClosed.exists_pow_eq (M + 1) y
-  have hx_nonunit : ¬IsUnit x := fun hx ↦
+  have hx_nonunit : ¬ IsUnit x := fun hx ↦
     map_le_of_le_comap h𝔭 (hy.ge (subset_span rfl)) (hx.pow _)
   obtain ⟨N, hN⟩ := OC.exists_dvd_pow hx_nonunit (NeZero.ne (p : OC))
   exact ⟨x, N, hN, fun r hr ↦ mem_span_singleton.mp (hy.le (mem_map_of_mem σ hr))⟩
 
-/-- Let `e` embed `Ω` in `ℚ̄_p` and carry `R` into the integers (`hR`), compatibly with the actions
+/--
+Let `e` embed `Ω` in `ℚ̄_p` and carry `R` into the integers (`hR`), compatibly with the actions
 of `Γ` through `toGp` (`hj`), and let `𝔭` be the ideal of the elements of `R` whose image has norm
-`< 1` (`h𝔭`). If `s` fixes `R` and `(toGp s, f)` is a Weil pair, then `z ^ p ^ f = z` on `R ⧸ 𝔭`. -/
-private lemma pow_pow_eq_of_isWeilPair {p : ℕ} [ThePrime p] {R : CommRingCat} [Algebra R Ω]
+`< 1` (`h𝔭`). If `s` fixes `R` and `(toGp s, f)` is a Weil pair, then `z ^ p ^ f = z` on `R ⧸ 𝔭`.
+-/
+private lemma pow_pow_eq_of_isWeilPair
+    {p : ℕ} [ThePrime p]
+    {R : CommRingCat} [Algebra R Ω]
     {e : Ω →+* PadicAlgCl p} (hR : ∀ r : R, algebraMap R Ω r ∈ (intQpBar p).comap e)
     {Γ : Type} [Group Γ] [OverGp Γ p] [MulSemiringAction Γ Ω] [SMulCommClass Γ R Ω]
-    (hj : ∀ (g : Γ) (x : Ω), toGp g (e x) = e (g • x)) {𝔭 : Ideal R}
-    (h𝔭 : ∀ r : R, r ∈ 𝔭 ↔ ‖e (algebraMap R Ω r)‖ < 1) {s : Γ} {f : ℕ}
-    (hs : IsWeilPair (toGp s) f) (z : R ⧸ 𝔭) :
-    z ^ p ^ f = z := by
+    (hj : ∀ (g : Γ) (x : Ω), toGp g (e x) = e (g • x))
+    {𝔭 : Ideal R} (h𝔭 : ∀ r : R, r ∈ 𝔭 ↔ ‖e (algebraMap R Ω r)‖ < 1)
+    {s : Γ} {f : ℕ} (hs : IsWeilPair (toGp s) f)
+    (z : R ⧸ 𝔭)
+    : z ^ p ^ f = z := by
   -- `s` fixes `r`, and `s⁻¹`, a Frobenius for `p ^ f`, moves `r` to `r ^ p ^ f` modulo `𝔭`.
   obtain ⟨r⟩ := z
   refine Ideal.Quotient.eq.mpr ?_
-  simpa [← map_inv, h𝔭, hj, norm_sub_rev] using
-    hs.2 _ ((New.intQpBar p).valuation_le_one ⟨_, hR r⟩)
+  simpa [← map_inv, h𝔭, hj, norm_sub_rev] using hs.2 _ ((New.intQpBar p).valuation_le_one ⟨_, hR r⟩)
 
-/-- Let `k` be a perfect domain of characteristic `p` and `πk : R →+* k`. The ring map
-`R → W(k) ⧸ pdIdeal W(k)` that sends `z` to the class of the Teichmüller lift of `πk z`. -/
-private noncomputable def teichReduction {p : ℕ} [ThePrime p] {R k : Type} [CommRing R]
-    [CommRing k] [IsDomain k] [CharP k p] [PerfectRing k p] (πk : R →+* k) :
-    R →+* WittVector p k ⧸ pdIdeal (WittVector p k) :=
-  (constantCoeff.liftOfRightInverse (teichmuller p) .refl
-    ⟨pdQuotientMk _, by simp [IsCompleteTorsionFree.p_mem_pdIdeal,
-      isReductionMod_constantCoeff_and_isCompleteTorsionFree k]⟩).comp πk
+/--
+Let `k` be a perfect domain of characteristic `p` and `πk : R →+* k`. The ring map
+`R → W(k) ⧸ pdIdeal W(k)` that sends `z` to the class of the Teichmüller lift of `πk z`.
+-/
+private noncomputable def teichReduction
+    {p : ℕ} [ThePrime p]
+    {R k : Type} [CommRing R] [CommRing k] [IsDomain k] [CharP k p] [PerfectRing k p]
+    (πk : R →+* k)
+    : R →+* WittVector p k ⧸ pdIdeal (WittVector p k) :=
+  (constantCoeff.liftOfRightInverse (teichmuller p) .refl ⟨
+    pdQuotientMk _,
+    by
+      simp [IsCompleteTorsionFree.p_mem_pdIdeal,
+        isReductionMod_constantCoeff_and_isCompleteTorsionFree k]
+  ⟩).comp πk
 
-/-- The coefficients `Bmax ⊗ A` of the period maps on `p`-adic tests, where `A` is the completion of
-`Amax ⊗ W(c♭)` at the test `c`. -/
-private noncomputable abbrev periodCoeff {p : ℕ} [ThePrime p] [CrysPeriodAlgebra] :
-    AbFunctor PadicTest := moduleCoeff (asModules (tilt ⋙ periodAlg Amax) ⋙ tensorWith Bmax Bmax)
+/--
+The coefficients `Bmax ⊗ A` of the period maps on `p`-adic tests, where `A` is the completion of
+`Amax ⊗ W(c♭)` at the test `c`.
+-/
+private noncomputable abbrev periodCoeff {p : ℕ} [ThePrime p] [CrysPeriodAlgebra]
+    : AbFunctor PadicTest :=
+  moduleCoeff (asModules (tilt ⋙ periodAlg Amax) ⋙ tensorWith Bmax Bmax)
 
-/-- Degree-`n` cohomology of the points of `V` in `B ⧸ pdIdeal B`, where `B` runs over the
+/--
+Degree-`n` cohomology of the points of `V` in `B ⧸ pdIdeal B`, where `B` runs over the
 `p`-torsion-free, `p`-adically complete `W(k)`-algebras and `R` acts through `teichReduction πk`,
 with coefficients `B`. The periods `C z` of `map_J_tensorAction_eq_pull` and
-`sum_linearFrob_apply_eq_zero` are indexed by its elements `z`. -/
-private noncomputable abbrev crysClasses (p : ℕ) [ThePrime p] {R : CommRingCat} {k : Type}
-    [CommRing k] [IsDomain k] [CharP k p] [PerfectRing k p] (πk : R →+* k) {Y : Over (Spec R)}
-    (V : Subfunctor (algPointsOf R R Y)) (n : ℕ) : Type 2 :=
+`sum_linearFrob_apply_eq_zero` are indexed by its elements `z`.
+-/
+private noncomputable abbrev crysClasses
+    (p : ℕ) [ThePrime p]
+    {R : CommRingCat} {k : Type} [CommRing k] [IsDomain k] [CharP k p] [PerfectRing k p]
+    (πk : R →+* k)
+    {Y : Over (Spec R)} (V : Subfunctor (algPointsOf R R Y))
+    (n : ℕ)
+    : Type 2 :=
   H (freeAb.obj (pdReduction (teichReduction (p := p) πk) ⋙ V.toFunctor))
     (moduleCoeff (asModules (ObjectProperty.ι fun A : CommAlg (WittVector p k) ↦
-      IsCompleteTorsionFree A))) n
+      IsCompleteTorsionFree A)))
+    n
 
-/-- Let `z ^ p ^ a = z` on `k`, and let `W(k) → A_max` agree with `integersToPdQuotient` on the
+/--
+Let `z ^ p ^ a = z` on `k`, and let `W(k) → A_max` agree with `integersToPdQuotient` on the
 Teichmüller lifts of the image of `R` (`hr`). Then `x ↦ x ^ p ^ a` on `B ⧸ pdIdeal B`, for the
 crystalline tests `B`, is a map of `R`-algebras from the structure through `integersToPdQuotient` to
-the structure through `teichReduction πk`. -/
-private noncomputable def frobPowHom {p : ℕ} [ThePrime p] [CrysPeriodAlgebra] {R : CommRingCat}
-    [Algebra R OC] {k : Type} [CommRing k] [IsDomain k] [CharP k p] [PerfectRing k p]
-    [Algebra (WittVector p k) Amax] (πk : R →+* k)
-    (hr : ∀ z : R, pdQuotientMk Amax (algebraMap (WittVector p k) Amax (teichmuller p (πk z))) =
-      integersToPdQuotient (algebraMap R OC z))
-    (a : ℕ) (ha : ∀ z : k, z ^ p ^ a = z) :
-    pdReduction integersToPdQuotient ⋙ restrictAlg R OC ⟶
-      CrysTest.restrictScalars (WittVector p k) ⋙ pdReduction (teichReduction (p := p) πk) where
-  app B := CommAlg.homOfRingHom (frobPow B.p_eq_zero_mod_pdIdeal a) fun z ↦ by
-    -- `z ^ p ^ a` and `z` have the same image in `k`.
-    have hz : pdQuotientMk Amax (algebraMap (WittVector p k) Amax (teichmuller p (πk z))) =
-        integersToPdQuotient (algebraMap R OC z) ^ p ^ a := by
-      rw [← map_pow, ← map_pow, ← hr, map_pow πk, ha (πk z)]
-    exact ((congrArg (pdQuotientMap _) hz).trans (map_pow ..)).symm
+the structure through `teichReduction πk`.
+-/
+private noncomputable def frobPowHom
+    {p : ℕ} [ThePrime p] [CrysPeriodAlgebra]
+    {R : CommRingCat} [Algebra R OC]
+    {k : Type}
+    [CommRing k] [IsDomain k] [CharP k p] [PerfectRing k p] [Algebra (WittVector p k) Amax]
+    (πk : R →+* k)
+    (hr : ∀ z : R,
+      pdQuotientMk Amax (algebraMap (WittVector p k) Amax (teichmuller p (πk z)))
+        = integersToPdQuotient (algebraMap R OC z))
+    (a : ℕ) (ha : ∀ z : k, z ^ p ^ a = z)
+    : pdReduction integersToPdQuotient ⋙ restrictAlg R OC
+      ⟶ CrysTest.restrictScalars (WittVector p k) ⋙ pdReduction (teichReduction (p := p) πk) where
+  app B :=
+    CommAlg.homOfRingHom (frobPow B.p_eq_zero_mod_pdIdeal a) fun z ↦ by
+      -- `z ^ p ^ a` and `z` have the same image in `k`.
+      have hz
+          : pdQuotientMk Amax (algebraMap (WittVector p k) Amax (teichmuller p (πk z)))
+            = integersToPdQuotient (algebraMap R OC z) ^ p ^ a := by
+        rw [← map_pow, ← map_pow, ← hr, map_pow πk, ha (πk z)]
+      exact ((congrArg (pdQuotientMap _) hz).trans (map_pow ..)).symm
   naturality _ _ _ := by
     ext
     exact (map_pow ..).symm
 
 /-- For `a = 0` the map `frobPowHom` is `x ↦ x ^ p ^ 0 = x`, so it is bijective at every test. -/
-private lemma bijective_frobPowHom_zero_app {p : ℕ} [ThePrime p] [CrysPeriodAlgebra]
-    {R : CommRingCat} [Algebra R OC] {k : Type} [CommRing k] [IsDomain k] [CharP k p]
-    [PerfectRing k p] [Algebra (WittVector p k) Amax] (πk : R →+* k)
-    (hr : ∀ z : R, pdQuotientMk Amax (algebraMap (WittVector p k) Amax (teichmuller p (πk z))) =
-      integersToPdQuotient (algebraMap R OC z))
-    (B : CrysTest Amax) :
-    Bijective ((frobPowHom πk hr 0 pow_one).app B) := by
+private lemma bijective_frobPowHom_zero_app
+    {p : ℕ} [ThePrime p] [CrysPeriodAlgebra]
+    {R : CommRingCat} [Algebra R OC]
+    {k : Type}
+    [CommRing k] [IsDomain k] [CharP k p] [PerfectRing k p] [Algebra (WittVector p k) Amax]
+    (πk : R →+* k)
+    (hr : ∀ z : R,
+      pdQuotientMk Amax (algebraMap (WittVector p k) Amax (teichmuller p (πk z)))
+        = integersToPdQuotient (algebraMap R OC z))
+    (B : CrysTest Amax)
+    : Bijective ((frobPowHom πk hr 0 pow_one).app B) := by
   have h_id : ⇑((frobPowHom πk hr 0 pow_one).app B) = id := funext pow_one
   rw [h_id]
   exact bijective_id
 
-/-- Let `algebraMap : W(k) → A_max` be the unique lift of `ℓ : k → A_max ⧸ pdIdeal A_max` (`h_lift`,
+/--
+Let `algebraMap : W(k) → A_max` be the unique lift of `ℓ : k → A_max ⧸ pdIdeal A_max` (`h_lift`,
 `h_lift_unique`), where `ℓ` comes from `integersToPdQuotient` on `R` (`hℓ`). If `z ^ p ^ a = z` on
-`k`, then the pair `(a, toGp s)` fixes the image of `W(k)` in `A_max`. -/
-private lemma toRingHom_algebraMap_witt_eq {p : ℕ} [ThePrime p] {R : CommRingCat} [Algebra R Ω]
-    [Algebra R OC] {e : Ω →+* PadicAlgCl p}
+`k`, then the pair `(a, toGp s)` fixes the image of `W(k)` in `A_max`.
+-/
+private lemma toRingHom_algebraMap_witt_eq
+    {p : ℕ} [ThePrime p]
+    {R : CommRingCat} [Algebra R Ω] [Algebra R OC]
+    {e : Ω →+* PadicAlgCl p}
     (he_algebraMap : ∀ r : R, (e (algebraMap R Ω r) : ℂ_[p]) = algebraMap R OC r)
     {Γ : Type} [Group Γ] [OverGp Γ p] [MulSemiringAction Γ Ω] [SMulCommClass Γ R Ω]
-    (he_smul : ∀ (g : Γ) (x : Ω), toGp g (e x) = e (g • x)) [CrysPeriodAlgebra]
+    (he_smul : ∀ (g : Γ) (x : Ω), toGp g (e x) = e (g • x))
+    [CrysPeriodAlgebra]
     (h_smul : ∀ (μ : FrobGal) (b : Ainf), μ • algebraMap Ainf Amax b = algebraMap Ainf Amax (μ • b))
-    {k : Type} [CommRing k] (πk : R →+* k) (hπk : Surjective πk) (ℓ : k →+* Amax ⧸ pdIdeal Amax)
+    {k : Type} [CommRing k]
+    (πk : R →+* k) (hπk : Surjective πk)
+    (ℓ : k →+* Amax ⧸ pdIdeal Amax)
     (hℓ : ∀ z : R, ℓ (πk z) = integersToPdQuotient (algebraMap R OC z))
     [Algebra (WittVector p k) Amax]
     (h_lift : ∀ w : WittVector p k,
       pdQuotientMk Amax (algebraMap (WittVector p k) Amax w) = ℓ (w.coeff 0))
     (h_lift_unique : ∀ g' : WittVector p k →+* Amax,
-      (∀ w : WittVector p k, pdQuotientMk Amax (g' w) = ℓ (w.coeff 0)) →
-        g' = algebraMap (WittVector p k) Amax)
-    (a : ℕ) (ha : ∀ z : k, z ^ p ^ a = z) (s : Γ) (w : WittVector p k) :
-    toRingHom FrobGal Amax ((.ofAdd a, toGp s) : FrobGal) (algebraMap (WittVector p k) Amax w) =
-      algebraMap (WittVector p k) Amax w := by
+      (∀ w : WittVector p k, pdQuotientMk Amax (g' w) = ℓ (w.coeff 0))
+        → g' = algebraMap (WittVector p k) Amax)
+    (a : ℕ) (ha : ∀ z : k, z ^ p ^ a = z)
+    (s : Γ) (w : WittVector p k)
+    : toRingHom FrobGal Amax ((.ofAdd a, toGp s) : FrobGal) (algebraMap (WittVector p k) Amax w)
+      = algebraMap (WittVector p k) Amax w := by
   let μ : FrobGal := (.ofAdd a, toGp s)
   let F : Amax →+* Amax := toRingHom FrobGal Amax μ
   -- By `ha`, the map `F ∘ algebraMap` lifts the same map `ℓ` as `algebraMap`.
@@ -514,54 +606,73 @@ private lemma toRingHom_algebraMap_witt_eq {p : ℕ} [ThePrime p] {R : CommRingC
     _ = integersToPdQuotient ((μ.2 • b.untilt) ^ p ^ a) := congrArg _ (untilt_frobGal_smul μ b)
     _ = ℓ (w.coeff 0) := by rw [hb, h_inv, ← map_pow (algebraMap R OC), ← hℓ, map_pow, ha, hy]
 
-/-- The main step of `ellAdicCohom.isCrystalline_and_linearFrob_rel`, for a period map `J` and a
+/--
+The main step of `ellAdicCohom.isCrystalline_and_linearFrob_rel`, for a period map `J` and a
 subfunctor `V` of the points of `Y`. Let `C z` restrict on `V` to the pull-back of the crystalline
 class `z` along the reduction of points (`hC`), and let every pair `(a, toGp s)` with
 `z ^ p ^ a = z` on `k` fix `W(k)` in `A_max`. If `z ^ p ^ a = z` on `k`, then `(a, toGp s)` acting
 on `Bmax`, with `s` acting on the cohomology, sends `C z` to a period that restricts to the
-pull-back of `z` along the reduction of points followed by `Frob ^ a`. -/
-private lemma map_J_tensorAction_eq_pull {p : ℕ} [ThePrime p] {R : CommRingCat} [Algebra R Ω]
-    [Algebra R OC] {e : Ω →+* PadicAlgCl p}
+pull-back of `z` along the reduction of points followed by `Frob ^ a`.
+-/
+private lemma map_J_tensorAction_eq_pull
+    {p : ℕ} [ThePrime p]
+    {R : CommRingCat} [Algebra R Ω] [Algebra R OC]
+    {e : Ω →+* PadicAlgCl p}
     (he_algebraMap : ∀ r : R, (e (algebraMap R Ω r) : ℂ_[p]) = algebraMap R OC r)
     {Γ : Type} [Group Γ] [OverGp Γ p] [MulSemiringAction Γ Ω] [SMulCommClass Γ R Ω]
-    (he_smul : ∀ (g : Γ) (x : Ω), toGp g (e x) = e (g • x)) [CrysPeriodAlgebra]
+    (he_smul : ∀ (g : Γ) (x : Ω), toGp g (e x) = e (g • x))
+    [CrysPeriodAlgebra]
     (h_smul : ∀ (μ : FrobGal) (b : Ainf), μ • algebraMap Ainf Amax b = algebraMap Ainf Amax (μ • b))
-    {k : Type} [CommRing k] [IsDomain k] [CharP k p] [PerfectRing k p] (πk : R →+* k)
+    {k : Type} [CommRing k] [IsDomain k] [CharP k p] [PerfectRing k p]
+    (πk : R →+* k)
     [Algebra (WittVector p k) Amax]
-    (h_witt_fixed : ∀ a : ℕ, (∀ z : k, z ^ p ^ a = z) → ∀ (s : Γ) (w : WittVector p k),
-      toRingHom FrobGal Amax ((.ofAdd a, toGp s) : FrobGal) (algebraMap (WittVector p k) Amax w) =
-        algebraMap (WittVector p k) Amax w)
+    (h_witt_fixed : ∀ a : ℕ,
+      (∀ z : k, z ^ p ^ a = z)
+        → ∀ (s : Γ) (w : WittVector p k),
+          toRingHom FrobGal Amax ((.ofAdd a, toGp s) : FrobGal) (algebraMap (WittVector p k) Amax w)
+            = algebraMap (WittVector p k) Amax w)
     (h_teichmuller : ∀ z : R,
-      pdQuotientMk Amax (algebraMap (WittVector p k) Amax (teichmuller p (πk z))) =
-        integersToPdQuotient (algebraMap R OC z))
-    {Y : Over (Spec R)} (V : Subfunctor (algPointsOf R R Y)) (n : ℕ)
-    {J : ∀ Y : Over (Spec R), Bmax ⊗[ℤ_[p]] (ellAdicCohom (ℓ := p) R Ω n).obj ⟨Y⟩ →ₗ[Bmax]
-      H (freeAb.obj (testPoints.obj Y)) (periodCoeff (p := p)) n}
+      pdQuotientMk Amax (algebraMap (WittVector p k) Amax (teichmuller p (πk z)))
+        = integersToPdQuotient (algebraMap R OC z))
+    {Y : Over (Spec R)} (V : Subfunctor (algPointsOf R R Y))
+    (n : ℕ)
+    {J : ∀ Y : Over (Spec R),
+      Bmax ⊗[ℤ_[p]] (ellAdicCohom (ℓ := p) R Ω n).obj ⟨Y⟩ →ₗ[Bmax]
+        H (freeAb.obj (testPoints.obj Y)) (periodCoeff (p := p)) n}
     (hJ : IsPadicPeriodMap he_algebraMap (Iso.refl _) he_smul J)
     (C : crysClasses p πk V n → Bmax ⊗[ℤ_[p]] (ellAdicCohom (ℓ := p) R Ω n).obj ⟨Y⟩)
-    (hC : ∀ z : crysClasses p πk V n, H.map (periodCoeff (p := p))
-        (freeAb.map (V.whisker (algFunctor ⋙ restrictAlg R OC)).ι) n (J Y (C z)) =
-      crysComparison.pull (freeAbMap (toCrysPoints V (frobPowHom πk h_teichmuller 0 pow_one))) n z)
-    (a : ℕ) (ha : ∀ z : k, z ^ p ^ a = z) (s : Γ) (z : crysClasses p πk V n) :
-    H.map (periodCoeff (p := p)) (freeAb.map (V.whisker (algFunctor ⋙ restrictAlg R OC)).ι) n
-        (J Y (tensorAction Bmax ((.ofAdd a, toGp s) : FrobGal)
-          (ellAdicCohom.galoisAction R Ω Γ Y n s) (C z))) =
-      crysComparison.pull (freeAbMap (toCrysPoints V (frobPowHom πk h_teichmuller a ha))) n z := by
+    (hC : ∀ z : crysClasses p πk V n,
+      H.map (periodCoeff (p := p)) (freeAb.map (V.whisker (algFunctor ⋙ restrictAlg R OC)).ι) n
+          (J Y (C z))
+        = crysComparison.pull (freeAbMap (toCrysPoints V (frobPowHom πk h_teichmuller 0 pow_one))) n
+          z)
+    (a : ℕ) (ha : ∀ z : k, z ^ p ^ a = z)
+    (s : Γ) (z : crysClasses p πk V n)
+    : H.map (periodCoeff (p := p)) (freeAb.map (V.whisker (algFunctor ⋙ restrictAlg R OC)).ι) n
+        (J Y
+          (tensorAction Bmax ((.ofAdd a, toGp s) : FrobGal) (ellAdicCohom.galoisAction R Ω Γ Y n s)
+            (C z)))
+      = crysComparison.pull (freeAbMap (toCrysPoints V (frobPowHom πk h_teichmuller a ha))) n
+        z := by
   let Ψ : AbFunctor PadicTest := periodCoeff (p := p)
   let μ : FrobGal := (.ofAdd a, toGp s)
   let F : Amax →+* Amax := toRingHom FrobGal Amax μ
   -- `μ` acts on the period sheaves: by `τ` over `Amax` and by `β` over `Bmax`.
   obtain ⟨τ, hτ, h_eta⟩ := exists_period_twist a (toGp s) (h_smul μ)
-  obtain ⟨β, hβ⟩ := exists_tensor_twist (τ := F) (toRingHom FrobGal Bmax μ) (by simp [F]) τ
-    fun _ _ ↦ hτ rfl (map_one _)
-  let cmp : Comparison Ψ Ψ := ⟨PadicTest.twist (toGp s),
-    (Functor.whiskerRight β (liftCoeff (forget₂ _ RingCat ⋙ forget₂ ..)) :)⟩
+  obtain ⟨β, hβ⟩ :=
+    exists_tensor_twist (τ := F) (toRingHom FrobGal Bmax μ) (by simp [F]) τ fun _ _ ↦
+      hτ rfl (map_one _)
+  let cmp : Comparison Ψ Ψ := ⟨
+    PadicTest.twist (toGp s),
+    (Functor.whiskerRight β (liftCoeff (forget₂ _ RingCat ⋙ forget₂ ..)) :)
+  ⟩
   -- `F` fixes the image of `W(k)` (`h_witt_fixed`), so `τ` is a map `κ` of algebras over `W(k)`.
-  let κ : PadicTest.twist (toGp s) ⋙ crysComparison.functor ⟶ crysComparison.functor :=
-    { app c := ⟨ofHom ⟨(τ.app c).hom, fun _ ↦ hτ (h_witt_fixed a ha s _) (map_one _)⟩⟩
-      naturality _ _ _ := by
-        ext
-        apply τ.naturality_apply }
+  let κ : PadicTest.twist (toGp s) ⋙ crysComparison.functor ⟶ crysComparison.functor := {
+    app c := ⟨ofHom ⟨(τ.app c).hom, fun _ ↦ hτ (h_witt_fixed a ha s _) (map_one _)⟩⟩
+    naturality _ _ _ := by
+      ext
+      apply τ.naturality_apply
+  }
   -- `incl` includes the points of `V`, `δ` twists them by `s`, and `red a ha` reduces them and
   -- composes with `Frob ^ a`.
   let incl := freeAb.map (V.whisker (algFunctor ⋙ restrictAlg R OC)).ι
@@ -580,8 +691,9 @@ private lemma map_J_tensorAction_eq_pull {p : ℕ} [ThePrime p] {R : CommRingCat
     -- `x ^ p ^ 0 = x`, then `h_eta`
     exact (congrArg (pdQuotientMap (τ.app c).hom) (pow_one _)).trans (h_eta c y)
   -- Twisting the coefficients by `β` is moving the period ring by `κ`: both give `1 ⊗ τ x`.
-  have h_coeff : (crysComparison.trans cmp).coeffHom =
-      Functor.whiskerRight κ _ ≫ crysComparison.coeffHom := by
+  have h_coeff
+      : (crysComparison.trans cmp).coeffHom
+        = Functor.whiskerRight κ _ ≫ crysComparison.coeffHom := by
     ext
     -- `hβ` at `1 ⊗ x`, with `μ 1 = 1`.
     exact congrArg ULift.up ((hβ ..).trans (congrArg (· ⊗ₜ _) (toRingHom FrobGal Bmax μ).map_one))
@@ -591,16 +703,20 @@ private lemma map_J_tensorAction_eq_pull {p : ℕ} [ThePrime p] {R : CommRingCat
         (congrArg (crysComparison.pull · n) h_points))
   -- `J` turns the action of `μ` and `s` into the comparison `cmp`, because `β` acts by `μ` on
   -- `Bmax` and fixes the Witt vectors with coefficients in the prime field.
-  have h_twist : J Y (tensorAction Bmax μ (ellAdicCohom.galoisAction R Ω Γ Y n s) (C z)) =
-      cmp.pull (freeAbMap (toTwistPoints he_algebraMap he_smul s Y)) n (J Y (C z)) :=
-    hJ.equivariant Y s _ cmp.coeffHom (fun c b w hw ↦
-      -- The coordinates of `w` are fixed by Frobenius, so `Frob ^ a` fixes `w`.
-      have h_frob_w : WittVector.map (iterateFrobenius c.TiltRing p a) w = w :=
-        ext fun i ↦ (congrFun (pow_iterate ..) _).symm.trans (iterate_fixed (hw i) _)
-      congrArg ULift.up ((hβ ..).trans (congrArg _ (hτ (map_one _) h_frob_w)))) _
+  have h_twist
+      : J Y (tensorAction Bmax μ (ellAdicCohom.galoisAction R Ω Γ Y n s) (C z))
+        = cmp.pull (freeAbMap (toTwistPoints he_algebraMap he_smul s Y)) n (J Y (C z)) :=
+    hJ.equivariant Y s _ cmp.coeffHom
+      (fun c b w hw ↦
+        -- The coordinates of `w` are fixed by Frobenius, so `Frob ^ a` fixes `w`.
+        have h_frob_w : WittVector.map (iterateFrobenius c.TiltRing p a) w = w :=
+          ext fun i ↦ (congrFun (pow_iterate ..) _).symm.trans (iterate_fixed (hw i) _)
+        congrArg ULift.up ((hβ ..).trans (congrArg _ (hτ (map_one _) h_frob_w))))
+      _
   -- Twisting points by `s` commutes with the inclusion of the points of `V`.
-  have h_square : incl ≫ freeAbMap (toTwistPoints he_algebraMap he_smul s Y) =
-      δ ≫ cmp.functor.whiskerLeft incl :=
+  have h_square
+      : incl ≫ freeAbMap (toTwistPoints he_algebraMap he_smul s Y)
+        = δ ≫ cmp.functor.whiskerLeft incl :=
     freeAb.hom_ext fun _ _ ↦ rfl
   refine .trans ?_ ((pull_trans z).trans (DFunLike.congr_fun h_pull z))
   calc
@@ -608,25 +724,34 @@ private lemma map_J_tensorAction_eq_pull {p : ℕ} [ThePrime p] {R : CommRingCat
       (congrArg (H.map Ψ incl n) h_twist).trans (map_pull_eq_pull_map h_square n _)
     _ = cmp.pull δ n (crysComparison.pull (red 0 pow_one) n z) := congrArg _ (hC z)
 
-/-- The congruence relation of `ellAdicCohom.isCrystalline_and_linearFrob_rel` on one period `C z`.
+/--
+The congruence relation of `ellAdicCohom.isCrystalline_and_linearFrob_rel` on one period `C z`.
 Let `periodCoeff` have Zariski descent (`h_zar`), let `V` be cohomologically dense (`hV_dense`), and
 let the periods be fixed by `Γ` (`h_fixed`) and moved by the Weil pairs as in `h_action`. If the
 relation of the points `Frob ^ a i (u i x)` holds near every closed point of a test once `p` and
 `x₀` vanish (`h_rel_loc`), and `integersToPdQuotient` kills `x₀`, then
-`∑ m i • (u i)^* ∘ linearFrob (γ i) (a i)` kills `C z`. -/
-private lemma sum_linearFrob_apply_eq_zero {p : ℕ} [ThePrime p] {R : CommRingCat} [Algebra R Ω]
-    [Algebra R OC] {e : Ω →+* PadicAlgCl p}
+`∑ m i • (u i)^* ∘ linearFrob (γ i) (a i)` kills `C z`.
+-/
+private lemma sum_linearFrob_apply_eq_zero
+    {p : ℕ} [ThePrime p]
+    {R : CommRingCat} [Algebra R Ω] [Algebra R OC]
+    {e : Ω →+* PadicAlgCl p}
     (he_algebraMap : ∀ r : R, (e (algebraMap R Ω r) : ℂ_[p]) = algebraMap R OC r)
     {Γ : Type} [Group Γ] [OverGp Γ p] [MulSemiringAction Γ Ω] [SMulCommClass Γ R Ω]
-    (he_smul : ∀ (g : Γ) (x : Ω), toGp g (e x) = e (g • x)) [CrysPeriodAlgebra]
-    {k : Type} [CommRing k] [IsDomain k] [CharP k p] [PerfectRing k p] (πk : R →+* k)
+    (he_smul : ∀ (g : Γ) (x : Ω), toGp g (e x) = e (g • x))
+    [CrysPeriodAlgebra]
+    {k : Type} [CommRing k] [IsDomain k] [CharP k p] [PerfectRing k p]
+    (πk : R →+* k)
     [Algebra (WittVector p k) Amax]
     (h_teichmuller : ∀ z : R,
-      pdQuotientMk Amax (algebraMap (WittVector p k) Amax (teichmuller p (πk z))) =
-        integersToPdQuotient (algebraMap R OC z))
-    {W Y : Over (Spec R)} [IsProper W.hom] [IsCharted W Ω] (V : Subfunctor (algPointsOf R R Y))
-    (n : ℕ) {J : ∀ Y : Over (Spec R), Bmax ⊗[ℤ_[p]] (ellAdicCohom (ℓ := p) R Ω n).obj ⟨Y⟩ →ₗ[Bmax]
-      H (freeAb.obj (testPoints.obj Y)) (periodCoeff (p := p)) n}
+      pdQuotientMk Amax (algebraMap (WittVector p k) Amax (teichmuller p (πk z)))
+        = integersToPdQuotient (algebraMap R OC z))
+    {W Y : Over (Spec R)} [IsProper W.hom] [IsCharted W Ω]
+    (V : Subfunctor (algPointsOf R R Y))
+    (n : ℕ)
+    {J : ∀ Y : Over (Spec R),
+      Bmax ⊗[ℤ_[p]] (ellAdicCohom (ℓ := p) R Ω n).obj ⟨Y⟩ →ₗ[Bmax]
+        H (freeAb.obj (testPoints.obj Y)) (periodCoeff (p := p)) n}
     (hJ : IsPadicPeriodMap he_algebraMap (Iso.refl _) he_smul J)
     (h_zar : HasZariskiDescent PadicTest.ringFunctor (periodCoeff (p := p)))
     (hV_dense : IsCohomDense (periodCoeff (p := p)) (V.whisker (algFunctor ⋙ restrictAlg R OC)))
@@ -636,36 +761,50 @@ private lemma sum_linearFrob_apply_eq_zero {p : ℕ} [ThePrime p] {R : CommRingC
       C z ∈ fixedPeriods (ellAdicCohom.galoisAction R Ω Γ Y n) Bmax 𝓕)
     (h_action : ∀ (a : ℕ) (ha : ∀ z : k, z ^ p ^ a = z) (s : Γ) (z : crysClasses p πk V n),
       H.map (periodCoeff (p := p)) (freeAb.map (V.whisker (algFunctor ⋙ restrictAlg R OC)).ι) n
-          (J Y (tensorAction Bmax ((.ofAdd a, toGp s) : FrobGal)
-            (ellAdicCohom.galoisAction R Ω Γ Y n s) (C z))) =
-        crysComparison.pull (freeAbMap (toCrysPoints V (frobPowHom πk h_teichmuller a ha))) n z)
+          (J Y
+            (tensorAction Bmax ((.ofAdd a, toGp s) : FrobGal)
+              (ellAdicCohom.galoisAction R Ω Γ Y n s) (C z)))
+        = crysComparison.pull (freeAbMap (toCrysPoints V (frobPowHom πk h_teichmuller a ha))) n z)
     (h_pow : ∀ {s : Γ} {f : ℕ}, IsWeilPair (toGp s) f → ∀ z : k, z ^ p ^ f = z)
-    {ι : Type} [Fintype ι] (u : ι → (W ⟶ Y)) (a : ι → ℕ) (γ : ι → Γ) (m : ι → ℤ)
-    (hW : ∀ i : ι, IsWeilPair (toGp (γ i)) (a i)) (x₀ : OC) (hx_zero : integersToPdQuotient x₀ = 0)
+    {ι : Type} [Fintype ι]
+    (u : ι → (W ⟶ Y))
+    (a : ι → ℕ)
+    (γ : ι → Γ)
+    (m : ι → ℤ)
+    (hW : ∀ i : ι, IsWeilPair (toGp (γ i)) (a i))
+    (x₀ : OC) (hx_zero : integersToPdQuotient x₀ = 0)
     (h_rel_loc : ∀ (c : PadicTest) (x : (testPoints.obj W).obj c)
-      (𝔪 : Ideal ((algFunctor ⋙ restrictAlg R OC).obj c)), 𝔪.IsMaximal →
-      ∃ b ∉ 𝔪, ∀ (D : Type) [CommRing D] (hpD : (p : D) = 0)
-        (ρ : (algFunctor ⋙ restrictAlg R OC).obj c →+* D),
-        IsUnit (ρ b) → ρ (c.structureMap x₀) = 0 →
-          Cancels m fun i : ι ↦ Spec.map (CommRingCat.ofHom ((frobPow hpD (a i)).comp ρ)) ≫
-            x.down.left ≫ (u i).left)
-    (z : crysClasses p πk V n) :
-    (∑ i : ι,
-      m i • (((ellAdicCohom R Ω n).map (u i).op).hom.restrictScalars ℤ_[p]).baseChange Bmax ∘ₗ
-        linearFrob (ellAdicCohom.galoisAction R Ω Γ Y n) (γ i) (a i)) (C z) = 0 := by
+        (𝔪 : Ideal ((algFunctor ⋙ restrictAlg R OC).obj c)),
+      𝔪.IsMaximal
+        → ∃ b ∉ 𝔪,
+          ∀ (D : Type) [CommRing D] (hpD : (p : D) = 0)
+              (ρ : (algFunctor ⋙ restrictAlg R OC).obj c →+* D),
+            IsUnit (ρ b) → ρ (c.structureMap x₀) = 0
+              → Cancels m fun i : ι ↦
+                Spec.map (CommRingCat.ofHom ((frobPow hpD (a i)).comp ρ)) ≫ x.down.left
+                  ≫ (u i).left)
+    (z : crysClasses p πk V n)
+    : (∑ i : ι,
+        m i • (((ellAdicCohom R Ω n).map (u i).op).hom.restrictScalars ℤ_[p]).baseChange Bmax ∘ₗ
+          linearFrob (ellAdicCohom.galoisAction R Ω Γ Y n) (γ i) (a i))
+        (C z)
+      = 0 := by
   let Ψ : AbFunctor PadicTest := periodCoeff (p := p)
   let V' := V.whisker (algFunctor ⋙ restrictAlg R OC)
   -- It suffices to work on the dense set `T` of points of `W` that every `u i` sends into `V`.
   let T := ⨅ i, V'.preimage (testPoints.map (u i))
-  have hT : IsCohomDense Ψ T := InfClosed.iInf_mem (s := {U | IsCohomDense Ψ U})
-    (fun _ hU _ hU' ↦ IsCohomDense.inf hU hU') (IsCohomDense.of_top_le le_rfl)
-    fun _ ↦ hV_dense.preimage _
+  have hT : IsCohomDense Ψ T :=
+    InfClosed.iInf_mem (s := {U | IsCohomDense Ψ U})
+      (fun _ hU _ hU' ↦ IsCohomDense.inf hU hU')
+      (IsCohomDense.of_top_le le_rfl)
+      fun _ ↦ hV_dense.preimage _
   refine (hJ.bijective W).injective ((hT.isCohomEquiv n).1 ?_)
   -- `linearFrob` acts on the fixed period `C z` as the Weil pair, giving the class `y i`, and `J`
   -- commutes with pull-backs.
   let y (i : ι) : H (freeAb.obj (testPoints.obj Y)) Ψ n :=
-    J Y (tensorAction Bmax ((.ofAdd (a i), toGp (γ i)) : FrobGal)
-      (ellAdicCohom.galoisAction R Ω Γ Y n (γ i)) (C z))
+    J Y
+      (tensorAction Bmax ((.ofAdd (a i), toGp (γ i)) : FrobGal)
+        (ellAdicCohom.galoisAction R Ω Γ Y n (γ i)) (C z))
   simp [linearFrob_apply h_crys.isPotentiallyCrystalline (hW _), h_fixed, hJ.natural, Ψ, H.map_map]
   show ∑ i, m i • H.map Ψ (freeAb.map T.ι ≫ freeAb.map (testPoints.map (u i))) n (y i) = 0
   -- `δ i` takes a point `w` of `T` to `u i w`; `red i` takes it on to the point over the period
@@ -674,8 +813,9 @@ private lemma sum_linearFrob_apply_eq_zero {p : ℕ} [ThePrime p] {R : CommRingC
   let red (i : ι) := toCrysPoints V (frobPowHom πk h_teichmuller (a i) (h_pow (hW i)))
   let v (i : ι) := δ i ≫ red i
   -- On `T` the `i`-th term is the pull-back of the crystalline class `z` along `v i`.
-  have h_term (i : ι) : H.map Ψ (freeAb.map T.ι ≫ freeAb.map (testPoints.map (u i))) n (y i) =
-      crysComparison.pull (freeAbMap (v i)) n z :=
+  have h_term (i : ι)
+      : H.map Ψ (freeAb.map T.ι ≫ freeAb.map (testPoints.map (u i))) n (y i)
+        = crysComparison.pull (freeAbMap (v i)) n z :=
     calc
       _ = H.map Ψ (freeAb.map (δ i)) n (H.map Ψ (freeAb.map V'.ι) n (y i)) :=
         (congrArg (H.map Ψ · n (y i)) freeAb.hom_ext).trans (H.map_comp ..)
@@ -691,9 +831,10 @@ private lemma sum_linearFrob_apply_eq_zero {p : ℕ} [ThePrime p] {R : CommRingC
   refine ⟨b, hb, fun B f hf ↦ ?_⟩
   -- Apply `h_rel` in the period ring of `B` modulo divided powers, where `p` and `x₀` vanish.
   let π := (testToPdReduction.app B).hom.comp f
-  have h_cancel : Cancels m fun i ↦ Spec.map (CommRingCat.ofHom
-      ((frobPow (crysThickening.obj B).p_eq_zero_mod_pdIdeal (a i)).comp π.toRingHom)) ≫
-        (T.ι.app c w).down.left ≫ (u i).left :=
+  have h_cancel : Cancels m fun i ↦
+      Spec.map (CommRingCat.ofHom ((frobPow (crysThickening.obj B).p_eq_zero_mod_pdIdeal (a i)).comp
+          π.toRingHom))
+        ≫ (T.ι.app c w).down.left ≫ (u i).left :=
     h_rel _ _ π.toRingHom (hf.map (testToPdReduction.app B).hom)
       ((π.commutes x₀).trans ((congrArg (pdQuotientMap _) hx_zero).trans (map_zero _)))
   refine ((congrArg _ (funext fun i ↦ ?_)).mpr h_cancel).mono fun _ _ he ↦
@@ -701,7 +842,8 @@ private lemma sum_linearFrob_apply_eq_zero {p : ℕ} [ThePrime p] {R : CommRingC
   -- The point `v i` of the image of `w` in `B` is `Frob ^ a i (u i w)`, read through `π`.
   exact (_ ≫= Category.assoc ..).trans (Spec.map_comp_assoc ..).symm
 
-/-- Let `R` be a noetherian ring and `K` a field. Let `Ω` be an algebraic closure of `ℚ` that is an
+/--
+Let `R` be a noetherian ring and `K` a field. Let `Ω` be an algebraic closure of `ℚ` that is an
 algebra over `R` and over `K`, compatibly with a map `R → K`. Let `A` be the valuation ring of a
 `p`-adic place of `Ω` over `K` (`GaloisRep.PadicPlaceEmbedding`), with `R` mapping into `A`. Let
 `Y`, `W` be proper over `R`, charted over `Ω`, and `Y` also charted over `R`. Suppose
@@ -710,24 +852,33 @@ elements whose valuation in `A` is `< 1`. Let each `γ i` lie in the decompositi
 the Galois group of `Ω` over `K` (`decompGroup`). Suppose its image in `G_p` forms an `IsWeilPair`
 with `a i`. (a) The representation of this decomposition group on `Vⁿ(Y)` is crystalline. (b)
 `∑ m i • (u i)^* ∘ β i = 0` on `Bmax ⊗ Vⁿ(Y)`, where `β i` is `linearFrob` of this representation
-at `γ i` and `a i`. -/
-lemma ellAdicCohom.isCrystalline_and_linearFrob_rel {p : ℕ} [ThePrime p] {R : CommRingCat}
-    (K : Type) [Field K] [Algebra R Ω] [Algebra K Ω] [Algebra R K] [IsScalarTower R K Ω]
+at `γ i` and `a i`.
+-/
+lemma ellAdicCohom.isCrystalline_and_linearFrob_rel
+    {p : ℕ} [ThePrime p]
+    {R : CommRingCat} (K : Type)
+    [Field K] [Algebra R Ω] [Algebra K Ω] [Algebra R K] [IsScalarTower R K Ω]
     {A : ClosurePlace} [I : GaloisRep.PadicPlaceEmbedding K A p]
-    (hR : ∀ r : R, algebraMap R Ω r ∈ A) {W Y : Over (Spec R)} [IsNoetherianRing R]
-    [hY_charted : IsCharted Y R] [IsCharted Y Ω] [IsProper Y.hom] (n : ℕ) [IsProper W.hom]
-    [IsCharted W Ω] {ι : Type} [Fintype.{0} ι] (u : ι → (W ⟶ Y)) (a : ι → ℕ)
-    (γ : ι → decompGroup Gal(Ω/K) A) (m : ι → ℤ)
-    (h_cong : CongruenceRelation m {r : R | A.valuation (algebraMap R Ω r) < 1} p a u)
-    (hW : ∀ i : ι, IsWeilPair (I.toGp (γ i)) (a i)) :
-    let ρ : Representation ℚ_[p] (decompGroup Gal(Ω/K) A) ((ellAdicCohom R Ω n).obj (.op Y)) :=
-      galoisAction R Ω (decompGroup Gal(Ω/K) A) Y n
-    -- (a) the cohomology is crystalline
-    IsCrystalline ρ ∧
-    -- (b) the congruence relation holds for the operators `linearFrob` of the Weil pairs
-    ∑ i : ι,
-      m i • (((ellAdicCohom R Ω n).map (u i).op).hom.restrictScalars ℤ_[p]).baseChange Bmax ∘ₗ
-        linearFrob ρ (γ i) (a i) = 0 := by
+    (hR : ∀ r : R, algebraMap R Ω r ∈ A)
+    {W Y : Over (Spec R)}
+    [IsNoetherianRing R] [hY_charted : IsCharted Y R] [IsCharted Y Ω] [IsProper Y.hom]
+    (n : ℕ)
+    [IsProper W.hom] [IsCharted W Ω]
+    {ι : Type} [Fintype.{0} ι]
+    (u : ι → (W ⟶ Y))
+    (a : ι → ℕ)
+    (γ : ι → decompGroup Gal(Ω/K) A)
+    (m : ι → ℤ) (h_cong : CongruenceRelation m {r : R | A.valuation (algebraMap R Ω r) < 1} p a u)
+    (hW : ∀ i : ι, IsWeilPair (I.toGp (γ i)) (a i))
+    : let ρ : Representation ℚ_[p] (decompGroup Gal(Ω/K) A) ((ellAdicCohom R Ω n).obj (.op Y)) :=
+        galoisAction R Ω (decompGroup Gal(Ω/K) A) Y n
+      -- (a) the cohomology is crystalline
+      IsCrystalline ρ
+        -- (b) the congruence relation holds for the operators `linearFrob` of the Weil pairs
+        ∧ ∑ i : ι,
+            m i • (((ellAdicCohom R Ω n).map (u i).op).hom.restrictScalars ℤ_[p]).baseChange Bmax ∘ₗ
+              linearFrob ρ (γ i) (a i)
+          = 0 := by
   -- The crystalline classes `z` on `Y` give periods `C z` that span. A Weil pair `(toGp s, a)` acts
   -- on `C z` as the pull-back along `Frob ^ a` on points (`h_action`). The case `a = 0` shows that
   -- they are fixed; the relation between the points `Frob ^ a i (u i x)` gives the congruence
@@ -763,8 +914,8 @@ lemma ellAdicCohom.isCrystalline_and_linearFrob_rel {p : ℕ} [ThePrime p] {R : 
   obtain ⟨V, hV⟩ := hY_charted.exists_isCharting
   -- Choose `x` with `x ^ (M + 1)` dividing the image of `𝔭` and `N` with `p ∣ x ^ N`. By `hM`
   -- the given relation then holds modulo `(p, x)` near every closed point of a test.
-  obtain ⟨M, hM⟩ := exists_cancels_frobPow_locally m a u 𝔭 hp
-    (by simpa [← h𝔭, comap_apply_lt_one_iff] using h_cong)
+  obtain ⟨M, hM⟩ :=
+    exists_cancels_frobPow_locally m a u 𝔭 hp (by simpa [← h𝔭, comap_apply_lt_one_iff] using h_cong)
   obtain ⟨x, N, hN, hx_dvd⟩ := exists_dvd_pow_and_pow_dvd σ 𝔭 le_rfl M
   -- An `Ainf`-algebra structure on `Amax` for which `integersToPdQuotient` kills `x`, hence `σ 𝔭`.
   -- So `integersToPdQuotient` induces a map `k → Amax ⧸ pdIdeal Amax`, with exactly one lift
@@ -783,12 +934,13 @@ lemma ellAdicCohom.isCrystalline_and_linearFrob_rel {p : ℕ} [ThePrime p] {R : 
   let Ψ : AbFunctor PadicTest := periodCoeff (p := p)
   choose J hJ using fun n : ℕ ↦ exists_period_map hσ Bmax (.refl _) n hj hP.toIsPeriodRingPair
   -- `Ψ` has Zariski descent, so `V` is dense and `J` followed by restriction to `V` is bijective.
-  have h_zar : HasZariskiDescent _ Ψ := (hasPartitions_periodAlg (S := Amax) Bmax
-    (.refl _)).hasZariskiDescent (𝟙 _) (by simp) (·.isTest.isComparableRing)
+  have h_zar : HasZariskiDescent _ Ψ :=
+    (hasPartitions_periodAlg (S := Amax) Bmax (.refl _)).hasZariskiDescent (𝟙 _) (by simp)
+      (·.isTest.isComparableRing)
   let V' := V.whisker (algFunctor ⋙ restrictAlg R OC)
   have hV_dense : IsCohomDense Ψ V' := h_zar (hV.1.whisker _)
-  let periodEquiv (n : ℕ) :
-      Bmax ⊗[ℤ_[p]] (ellAdicCohom R Ω n).obj ⟨Y⟩ ≃ₗ[Bmax] H (freeAb.obj V'.toFunctor) Ψ n :=
+  let periodEquiv (n : ℕ)
+      : Bmax ⊗[ℤ_[p]] (ellAdicCohom R Ω n).obj ⟨Y⟩ ≃ₗ[Bmax] H (freeAb.obj V'.toFunctor) Ψ n :=
     .ofBijective (H.mapₗ .. ∘ₗ J n Y) ((hV_dense.isCohomEquiv n).comp ((hJ n).bijective Y))
   -- `pullFrob a ha z` is the pull-back of a crystalline class `z` along the reduction of points
   -- followed by `Frob ^ a` (`frobPowHom`); `C z` is the period with
@@ -798,12 +950,14 @@ lemma ellAdicCohom.isCrystalline_and_linearFrob_rel {p : ℕ} [ThePrime p] {R : 
   choose C hC using fun z ↦ (periodEquiv n).surjective (pullFrob 0 pow_one z)
   -- The main step (`map_J_tensorAction_eq_pull`): `(a, toGp s)` together with `ρ s` sends `C z`
   -- to the preimage of `pullFrob a ha z`.
-  have h_action (a : ℕ) (ha : ∀ z : k, z ^ p ^ a = z) s z :
-      periodEquiv n (tensorAction Bmax ((.ofAdd a, toGp s) : FrobGal) (ρ s) (C z)) =
-        pullFrob a ha z :=
+  have h_action (a : ℕ) (ha : ∀ z : k, z ^ p ^ a = z) s z
+      : periodEquiv n (tensorAction Bmax ((.ofAdd a, toGp s) : FrobGal) (ρ s) (C z))
+        = pullFrob a ha z :=
     map_J_tensorAction_eq_pull hσ hj h_smul (algebraMap R k)
       (toRingHom_algebraMap_witt_eq hσ hj h_smul (algebraMap R k) Ideal.Quotient.mk_surjective ℓ
-        (fun _ ↦ rfl) hg hg_unique) hr V n (hJ n) C hC a ha s z
+        (fun _ ↦ rfl)
+        hg hg_unique)
+      hr V n (hJ n) C hC a ha s z
   -- The classes `pullFrob 0 _ z` span, since `frobPowHom _ _ 0 _` is an isomorphism; so the
   -- periods `C z` span.
   have h_span : Submodule.span Bmax (.range C) = ⊤ := by
@@ -811,7 +965,8 @@ lemma ellAdicCohom.isCrystalline_and_linearFrob_rel {p : ℕ} [ThePrime p] {R : 
       span_range_crysComparison_pull_eq_top V _
         (isoOfAppBijective _ (bijective_frobPowHom_zero_app (algebraMap R k) hr)).isIso_hom
         (isCompleteTorsionFree_wittVector k k) hV (irreducible p)
-        (fun n ↦ .equiv (equivOfCompatibleSMul _ ℚ_[p] .. ≪≫ₗ periodEquiv n)) n
+        (fun n ↦ .equiv (equivOfCompatibleSMul _ ℚ_[p] .. ≪≫ₗ periodEquiv n))
+        n
     -- `using!`: the groups of `pullFrob 0 _` and of `periodEquiv n` agree only after unfolding.
     simpa [← Submodule.map_eq_top_iff (e := periodEquiv n), Submodule.map_span, ← range_comp', hC]
       using! h_range
@@ -821,8 +976,11 @@ lemma ellAdicCohom.isCrystalline_and_linearFrob_rel {p : ℕ} [ThePrime p] {R : 
   have h_crys : IsCrystalline ρ :=
     eq_top_mono (Submodule.span_mono (range_subset_iff.mpr h_fixed)) h_span
   -- The relation on each period `C z` (`sum_linearFrob_apply_eq_zero`).
-  exact ⟨h_crys, LinearMap.ext_on_range h_span fun z ↦
-    sum_linearFrob_apply_eq_zero hσ hj (algebraMap R k) hr V n (hJ n) h_zar hV_dense C h_crys
-      h_fixed h_action h_pow u a γ m hW x hx_zero (hM x N hN hx_dvd) z⟩
+  exact ⟨
+    h_crys,
+    LinearMap.ext_on_range h_span fun z ↦
+      sum_linearFrob_apply_eq_zero hσ hj (algebraMap R k) hr V n (hJ n) h_zar hV_dense C h_crys
+        h_fixed h_action h_pow u a γ m hW x hx_zero (hM x N hN hx_dvd) z
+  ⟩
 
 end New.Variety

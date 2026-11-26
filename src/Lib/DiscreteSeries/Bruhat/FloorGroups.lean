@@ -63,35 +63,44 @@ variable {A : Type} [CommRing A] [StarRing A] {𝔰 : Shape} {T : 𝔰.Form A} (
 
 /-! ### Floors, the opposite basis vector and the Weyl elements -/
 
-/-- The floor of a basis index: `a` for both members `inl a` and `inr (inr a)` of the hyperbolic
+/--
+The floor of a basis index: `a` for both members `inl a` and `inr (inr a)` of the hyperbolic
 pair number `a < ϱ`, `ϱ` for the last vector `z = inr (inl (inr ()))` of the middle block, and
-`ϱ + 1` for the middle indices `inr (inl (inl k))`, `k : κ`. -/
+`ϱ + 1` for the middle indices `inr (inl (inl k))`, `k : κ`.
+-/
 def floorOf : 𝔰.BesselIndex → ℕ
   | inl a | eStar a => a
   | inr (inl (inl _)) => 𝔰.n
   | _ => 𝔰.ϱ
 
-/-- The involution of the basis indices that exchanges `inl a` and `inr (inr a)`, the two members
-of a hyperbolic pair, and fixes each index `inr (inl m)` of the middle block. -/
+/--
+The involution of the basis indices that exchanges `inl a` and `inr (inr a)`, the two members
+of a hyperbolic pair, and fixes each index `inr (inl m)` of the middle block.
+-/
 def oppositeIndex : 𝔰.BesselIndex → 𝔰.BesselIndex
   | inl a => eStar a
   | eStar a => inl a
   | i => i
 
-attribute [simp] floorOf.eq_1 floorOf.eq_2 floorOf.eq_3 floorOf.eq_4 oppositeIndex.eq_1
-  oppositeIndex.eq_2 oppositeIndex.eq_3
+attribute [simp]
+  floorOf.eq_1 floorOf.eq_2 floorOf.eq_3 floorOf.eq_4 oppositeIndex.eq_1 oppositeIndex.eq_2
+  oppositeIndex.eq_3
 
-/-- For `b ≤ ϱ` and an isometry `g`, the vector `g⁻¹ f_b`, where `f = (e_0, …, e_{ϱ-1}, z)` is the
-frame `𝔰.besselFrame`. -/
+/--
+For `b ≤ ϱ` and an isometry `g`, the vector `g⁻¹ f_b`, where `f = (e_0, …, e_{ϱ-1}, z)` is the
+frame `𝔰.besselFrame`.
+-/
 def orbitPoint (b : Fin (𝔰.ϱ + 1)) (g : T.G) : 𝔰.BesselIndex → A :=
   g⁻¹.val.val *ᵥ Pi.single (𝔰.besselFrame b) 1
 
-/-- Floor against level: an index is either in a hyperbolic pair (floor below `ϱ`, and level equal
-to the floor or to `2ϱ` minus it) or in the middle block (level `ϱ`, floor `ϱ` or `ϱ + 1`). -/
+/--
+Floor against level: an index is either in a hyperbolic pair (floor below `ϱ`, and level equal
+to the floor or to `2ϱ` minus it) or in the middle block (level `ϱ`, floor `ϱ` or `ϱ + 1`).
+-/
 @[grind .]
-lemma floorOf_level_cases (i : 𝔰.BesselIndex) :
-    (floorOf i = level i ∨ level i + floorOf i = 2 * 𝔰.ϱ) ∧ floorOf i < 𝔰.ϱ ∨
-    level i = 𝔰.ϱ ∧ 𝔰.ϱ ≤ floorOf i ∧ floorOf i ≤ 𝔰.n := by
+lemma floorOf_level_cases (i : 𝔰.BesselIndex)
+    : (floorOf i = level i ∨ level i + floorOf i = 2 * 𝔰.ϱ) ∧ floorOf i < 𝔰.ϱ
+      ∨ level i = 𝔰.ϱ ∧ 𝔰.ϱ ≤ floorOf i ∧ floorOf i ≤ 𝔰.n := by
   obtain a | (k | u) | a := i <;> simp [level]; lia
 
 lemma oppositeIndex_oppositeIndex (i : 𝔰.BesselIndex) : oppositeIndex (oppositeIndex i) = i := by
@@ -101,8 +110,8 @@ lemma floorOf_oppositeIndex (i : 𝔰.BesselIndex) : floorOf (oppositeIndex i) =
   obtain a | m | a := i <;> simp
 
 /-- `oppositeIndex` reflects the level in `ϱ`. -/
-lemma level_oppositeIndex_add_level (i : 𝔰.BesselIndex) :
-    level (oppositeIndex i) + level i = 2 * 𝔰.ϱ := by
+lemma level_oppositeIndex_add_level (i : 𝔰.BesselIndex)
+    : level (oppositeIndex i) + level i = 2 * 𝔰.ϱ := by
   obtain a | m | a := i
   · change 2 * 𝔰.ϱ - a + a = 2 * 𝔰.ϱ
     lia
@@ -110,28 +119,33 @@ lemma level_oppositeIndex_add_level (i : 𝔰.BesselIndex) :
   · change a + (2 * 𝔰.ϱ - a) = 2 * 𝔰.ϱ
     lia
 
-/-- `oppositeIndex` is an involution of the basis indices that keeps the floor `floorOf` and
-reflects the level in `ϱ`. -/
-lemma oppositeIndex_involutive_and_floorOf_level (i : 𝔰.BesselIndex) :
-    oppositeIndex (oppositeIndex i) = i ∧
-    floorOf (oppositeIndex i) = floorOf i ∧
-    level (oppositeIndex i) + level i = 2 * 𝔰.ϱ :=
+/--
+`oppositeIndex` is an involution of the basis indices that keeps the floor `floorOf` and
+reflects the level in `ϱ`.
+-/
+lemma oppositeIndex_involutive_and_floorOf_level (i : 𝔰.BesselIndex)
+    : oppositeIndex (oppositeIndex i) = i ∧ floorOf (oppositeIndex i) = floorOf i
+      ∧ level (oppositeIndex i) + level i = 2 * 𝔰.ϱ :=
   ⟨oppositeIndex_oppositeIndex i, floorOf_oppositeIndex i, level_oppositeIndex_add_level i⟩
 
 omit [StarRing A] in
-/-- In the rows and columns of the hyperbolic pairs the Gram matrix is the permutation matrix of
-`oppositeIndex`. -/
+/--
+In the rows and columns of the hyperbolic pairs the Gram matrix is the permutation matrix of
+`oppositeIndex`.
+-/
 @[simp]
-lemma splitGram_eq_ite_oppositeIndex (i j : 𝔰.BesselIndex)
-    (h_pair : floorOf i < 𝔰.ϱ ∨ floorOf j < 𝔰.ϱ) :
-    T.splitGram i j = if oppositeIndex i = j then 1 else 0 := by
+lemma splitGram_eq_ite_oppositeIndex
+    (i j : 𝔰.BesselIndex) (h_pair : floorOf i < 𝔰.ϱ ∨ floorOf j < 𝔰.ϱ)
+    : T.splitGram i j = if oppositeIndex i = j then 1 else 0 := by
   revert i j
   simp [splitGram, Matrix.one_apply]
 
 open scoped Classical in
-/-- Write `e_a`, `e*_a` for the basis vectors `inl a`, `inr (inr a)`. On each floor `a < ϱ` where
+/--
+Write `e_a`, `e*_a` for the basis vectors `inl a`, `inr (inr a)`. On each floor `a < ϱ` where
 `P a` holds and `c = p a` is a unit, this isometry sends `e_a` to `c e*_a` and `e*_a` to
-`(star c)⁻¹ e_a`; it fixes all other basis vectors. -/
+`(star c)⁻¹ e_a`; it fixes all other basis vectors.
+-/
 def weylOn (P : ℕ → Prop) (p : ℕ → A) : T.G :=
   let M (p : ℕ → A) : Matrix 𝔰.BesselIndex 𝔰.BesselIndex A :=
     of fun i j ↦
@@ -140,33 +154,42 @@ def weylOn (P : ℕ → Prop) (p : ℕ → A) : T.G :=
         if swapped then (if level j < 𝔰.ϱ then p (floorOf j) else (star (p (floorOf j)))⁻¹ʳ) else 1
       else
         0
-  { val :=
-      { val := M p
-        inv := M (star p)
-        val_inv := by
-          ext
-          simp [M, Matrix.mul_apply, Matrix.one_apply]
-          grind [oppositeIndex_involutive_and_floorOf_level, inverse_mul_cancel]
-        inv_val := by
-          ext
-          simp [M, Matrix.mul_apply, Matrix.one_apply]
-          grind [oppositeIndex_involutive_and_floorOf_level, inverse_mul_cancel] }
+  {
+    val := {
+      val := M p
+      inv := M (star p)
+      val_inv := by
+        ext
+        simp [M, Matrix.mul_apply, Matrix.one_apply]
+        grind [oppositeIndex_involutive_and_floorOf_level, inverse_mul_cancel]
+      inv_val := by
+        ext
+        simp [M, Matrix.mul_apply, Matrix.one_apply]
+        grind [oppositeIndex_involutive_and_floorOf_level, inverse_mul_cancel]
+    }
     property := by
       ext
       simp [M, Matrix.mul_apply, apply_ite star, inverse_star]
       grind [splitGram_eq_ite_oppositeIndex, oppositeIndex_involutive_and_floorOf_level,
-        inverse_mul_cancel] }
+        inverse_mul_cancel]
+  }
 
-/-- The Weyl element `w_p` of the first `l` hyperbolic pairs: `e_a ↦ p_a e*_a` and
-`e*_a ↦ e_a / p̄_a` on the pairs `a < l`, fixing the other basis vectors. -/
+/--
+The Weyl element `w_p` of the first `l` hyperbolic pairs: `e_a ↦ p_a e*_a` and
+`e*_a ↦ e_a / p̄_a` on the pairs `a < l`, fixing the other basis vectors.
+-/
 def weylElem (p : ℕ → Aˣ) : T.G := weylOn (· < l) (p ·)
 
-/-- The Weyl element `w_l(c)` of floor `l`: `e_l ↦ c e*_l` and `e*_l ↦ e_l / c̄`, fixing the other
-basis vectors; it is `1` if `l ≥ ϱ` or `c` is not a unit. -/
+/--
+The Weyl element `w_l(c)` of floor `l`: `e_l ↦ c e*_l` and `e*_l ↦ e_l / c̄`, fixing the other
+basis vectors; it is `1` if `l ≥ ϱ` or `c` is not a unit.
+-/
 def floorWeyl (c : A) : T.G := weylOn (· = l) fun _ ↦ c
 
-/-- The inverse, in the sense of `Ring.inverse`, of the conjugate of a unit `u` is the conjugate of
-`u⁻¹`. -/
+/--
+The inverse, in the sense of `Ring.inverse`, of the conjugate of a unit `u` is the conjugate of
+`u⁻¹`.
+-/
 @[simp ↓]
 lemma inverse_star_unit (u : Aˣ) : (star ↑u)⁻¹ʳ = star u⁻¹.val := by aesop
 
@@ -174,90 +197,113 @@ lemma inverse_star_unit (u : Aˣ) : (star ↑u)⁻¹ʳ = star u⁻¹.val := by a
 
 /-- The group `H_l` of the isometries that fix every basis vector of floor below `l`. -/
 def _root_.New.Shape.Form.floorGroup : Subgroup T.G :=
-  (agreeWithOneOn (fun _ j : 𝔰.BesselIndex ↦ floorOf j < l) A
-    fun _ _ _ hj ↦ Or.inr hj).subgroupOf T.G
+  (agreeWithOneOn (fun _ j : 𝔰.BesselIndex ↦ floorOf j < l) A fun _ _ _ hj ↦ Or.inr hj).subgroupOf
+    T.G
 
-/-- The group `𝒩_{<l}` of the isometries that are unitriangular when the basis vectors of floor
-below `l` keep their level and all others are given the middle level `𝔰.ϱ`. -/
+/--
+The group `𝒩_{<l}` of the isometries that are unitriangular when the basis vectors of floor
+below `l` keep their level and all others are given the middle level `𝔰.ϱ`.
+-/
 def _root_.New.Shape.Form.unipotentBelow : Subgroup T.G :=
   (unitriangular (fun i : 𝔰.BesselIndex ↦ if floorOf i < l then level i else 𝔰.ϱ) A).subgroupOf T.G
 
-/-- The group `𝒩_l = H_l ∩ 𝒩_{<l+1}`: the elements of `unipotentBelow (l + 1)` that fix every
-basis vector of floor below `l`. -/
+/--
+The group `𝒩_l = H_l ∩ 𝒩_{<l+1}`: the elements of `unipotentBelow (l + 1)` that fix every
+basis vector of floor below `l`.
+-/
 def floorUnipotent : Subgroup T.G := T.floorGroup l ⊓ T.unipotentBelow (l + 1)
 
-/-- The group `Q_l`. Its elements agree with the identity matrix at every entry `(i, j)` with
+/--
+The group `Q_l`. Its elements agree with the identity matrix at every entry `(i, j)` with
 `level j ≤ level i` whose column `j` has floor and level both below `l`; when `𝔰.n < l` they do
-so at every entry with `level j ≤ level i`. -/
+so at every entry with `level j ≤ level i`.
+-/
 def _root_.New.Shape.Form.partialUnitriangularGroup : Subgroup T.G :=
   (agreeWithOneOn
       (fun i j : 𝔰.BesselIndex ↦ level j ≤ level i ∧ (floorOf j < l ∧ level j < l ∨ 𝔰.n < l))
-      A <| by
-    -- Given a prescribed entry `(i, j)` and any `k`, the entry `(k, j)` is prescribed if
-    -- `level j ≤ level k`, and `(i, k)` is otherwise, as `floorOf k ≤ level k + 1 ≤ level j`.
-    intro i k j ⟨hji, hj_low⟩
-    obtain hjk | hkj := le_or_gt (level j) (level k)
-    · exact .inr ⟨hjk, hj_low⟩
-    · have hk_floor : floorOf k ≤ level k + 1 := by grind
-      exact .inl ⟨hkj.le.trans hji, by lia⟩).subgroupOf T.G
+      A <|
+    by
+      -- Given a prescribed entry `(i, j)` and any `k`, the entry `(k, j)` is prescribed if
+      -- `level j ≤ level k`, and `(i, k)` is otherwise, as `floorOf k ≤ level k + 1 ≤ level j`.
+      intro i k j ⟨hji, hj_low⟩
+      obtain hjk | hkj := le_or_gt (level j) (level k)
+      · exact .inr ⟨hjk, hj_low⟩
+      · have hk_floor : floorOf k ≤ level k + 1 := by grind
+        exact .inl ⟨hkj.le.trans hji, by lia⟩).subgroupOf T.G
 
 export Shape.Form (floorGroup unipotentBelow partialUnitriangularGroup)
 
-variable {l} {g s σ τ : T.G} {b : Fin 𝔰.n} {e v : 𝔰.BesselIndex → A} {P : ℕ → Prop} {p : ℕ → Aˣ}
-  {j : ℕ}
+variable
+  {l} {g s σ τ : T.G} {b : Fin 𝔰.n} {e v : 𝔰.BesselIndex → A} {P : ℕ → Prop} {p : ℕ → Aˣ} {j : ℕ}
 
-/-- An isometry is in the fixer `floorGroup l = H_l` if and only if it agrees with `1` in every
-column of floor below `l`. -/
-lemma mem_floorGroup :
-    g ∈ floorGroup l ↔
-      ∀ i j : 𝔰.BesselIndex, floorOf j < l →
-        g.val i j = (1 : Matrix 𝔰.BesselIndex 𝔰.BesselIndex A) i j :=
+/--
+An isometry is in the fixer `floorGroup l = H_l` if and only if it agrees with `1` in every
+column of floor below `l`.
+-/
+lemma mem_floorGroup
+    : g ∈ floorGroup l
+      ↔ ∀ i j : 𝔰.BesselIndex,
+        floorOf j < l → g.val i j = (1 : Matrix 𝔰.BesselIndex 𝔰.BesselIndex A) i j :=
   Iff.rfl
 
-/-- An element of `H_l = floorGroup l` agrees with `1` in the rows of floor below `l` that belong to
-a hyperbolic pair. -/
-lemma floorGroup_apply_row (hg : g ∈ floorGroup l) (i j : 𝔰.BesselIndex) (hi : floorOf i < l)
-    (hi_pair : floorOf i < 𝔰.ϱ) :
-    g.val i j = (1 : Matrix 𝔰.BesselIndex 𝔰.BesselIndex A) i j := by
+/--
+An element of `H_l = floorGroup l` agrees with `1` in the rows of floor below `l` that belong to
+a hyperbolic pair.
+-/
+lemma floorGroup_apply_row
+    (hg : g ∈ floorGroup l) (i j : 𝔰.BesselIndex) (hi : floorOf i < l) (hi_pair : floorOf i < 𝔰.ϱ)
+    : g.val i j = (1 : Matrix 𝔰.BesselIndex 𝔰.BesselIndex A) i j := by
   -- Read the entry `(oppositeIndex i, j)` of `gᴴ J g = J`: the column `oppositeIndex i` of `g` is
   -- that of `1`, so the left side is `g i j`.
-  have h_isometry : (g.val.valᴴ * T.splitGram * g.val.val) (oppositeIndex i) j =
-      T.splitGram (oppositeIndex i) j := congrFun₂ g.property _ _
+  have h_isometry
+      : (g.val.valᴴ * T.splitGram * g.val.val) (oppositeIndex i) j
+        = T.splitGram (oppositeIndex i) j :=
+    congrFun₂ g.property _ _
   simpa [mem_floorGroup.1 hg, oppositeIndex_oppositeIndex, floorOf_oppositeIndex, hi, hi_pair,
-    apply_ite, Matrix.one_apply, Matrix.mul_apply] using h_isometry
+      apply_ite, Matrix.one_apply, Matrix.mul_apply]
+    using h_isometry
 
-/-- An element of `H_l = floorGroup l` agrees with `1` in the rows of floor below both `l` and
-`𝔰.ϱ`, and in the columns of floor below `l`. -/
-lemma apply_eq_one_apply_of_mem_floorGroup (hg : g ∈ floorGroup l) (i j : 𝔰.BesselIndex)
-    (h_floor : floorOf i < l ∧ floorOf i < 𝔰.ϱ ∨ floorOf j < l) :
-    g.val i j = (1 : Matrix 𝔰.BesselIndex 𝔰.BesselIndex A) i j :=
-  h_floor.elim (fun ⟨hi, hi_pair⟩ ↦ floorGroup_apply_row hg i j hi hi_pair)
+/--
+An element of `H_l = floorGroup l` agrees with `1` in the rows of floor below both `l` and
+`𝔰.ϱ`, and in the columns of floor below `l`.
+-/
+lemma apply_eq_one_apply_of_mem_floorGroup
+    (hg : g ∈ floorGroup l)
+    (i j : 𝔰.BesselIndex) (h_floor : floorOf i < l ∧ floorOf i < 𝔰.ϱ ∨ floorOf j < l)
+    : g.val i j = (1 : Matrix 𝔰.BesselIndex 𝔰.BesselIndex A) i j :=
+  h_floor.elim
+    (fun ⟨hi, hi_pair⟩ ↦ floorGroup_apply_row hg i j hi hi_pair)
     (mem_floorGroup.1 hg i j)
 
-/-- An isometry is in `unipotentBelow l = 𝒩_{<l}` if and only if it agrees with `1` at every entry
-`(i, j)` where the level of `j` is at most that of `i`, the floors from `l` on having level `ϱ`. -/
-lemma mem_unipotentBelow :
-    g ∈ unipotentBelow l ↔
-      ∀ i j : 𝔰.BesselIndex,
-        (if floorOf j < l then level j else 𝔰.ϱ) ≤ (if floorOf i < l then level i else 𝔰.ϱ) →
-          g.val i j = (1 : Matrix 𝔰.BesselIndex 𝔰.BesselIndex A) i j :=
+/--
+An isometry is in `unipotentBelow l = 𝒩_{<l}` if and only if it agrees with `1` at every entry
+`(i, j)` where the level of `j` is at most that of `i`, the floors from `l` on having level `ϱ`.
+-/
+lemma mem_unipotentBelow
+    : g ∈ unipotentBelow l
+      ↔ ∀ i j : 𝔰.BesselIndex,
+        (if floorOf j < l then level j else 𝔰.ϱ) ≤ (if floorOf i < l then level i else 𝔰.ϱ)
+          → g.val i j = (1 : Matrix 𝔰.BesselIndex 𝔰.BesselIndex A) i j :=
   Iff.rfl
 
-/-- An isometry is in `partialUnitriangularGroup l = Q_l` if and only if it agrees with `1` at every
+/--
+An isometry is in `partialUnitriangularGroup l = Q_l` if and only if it agrees with `1` at every
 entry `(i, j)` with `level j ≤ level i` whose column has floor and level below `l` (or with any
-column, if `ϱ + 1 < l`). -/
-lemma mem_partialUnitriangularGroup :
-    g ∈ partialUnitriangularGroup l ↔
-      ∀ i j : 𝔰.BesselIndex, level j ≤ level i → floorOf j < l ∧ level j < l ∨ 𝔰.n < l →
-        g.val i j = (1 : Matrix 𝔰.BesselIndex 𝔰.BesselIndex A) i j :=
+column, if `ϱ + 1 < l`).
+-/
+lemma mem_partialUnitriangularGroup
+    : g ∈ partialUnitriangularGroup l
+      ↔ ∀ i j : 𝔰.BesselIndex,
+        level j ≤ level i → floorOf j < l ∧ level j < l ∨ 𝔰.n < l
+          → g.val i j = (1 : Matrix 𝔰.BesselIndex 𝔰.BesselIndex A) i j :=
   forall₂_congr fun _ _ ↦ and_imp
 
 /-- The floor of the frame vector number `b` is `b`. -/
 lemma floorOf_besselFrame : floorOf (𝔰.besselFrame b) = b := by
   induction b using Fin.lastCases <;> simp
 
-attribute [grind .] mem_floorGroup mem_unipotentBelow mem_partialUnitriangularGroup
-  floorOf_besselFrame
+attribute [grind .]
+  mem_floorGroup mem_unipotentBelow mem_partialUnitriangularGroup floorOf_besselFrame
   level_besselFrame apply_eq_one_apply_of_mem_floorGroup
 
 /-- The vector `g⁻¹ f_b` is `e` if and only if `g` sends `e` to the frame vector `f_b`. -/
@@ -266,20 +312,25 @@ lemma orbitPoint_eq_iff : orbitPoint b g = e ↔ g *ᵥ e = Pi.single (𝔰.bess
   (inv_smul_eq_iff (g := g)).trans eq_comm
 
 /-- The frame vector `b` is the only basis vector of floor `b` and level at most `b`. -/
-lemma eq_besselFrame_of_floorOf_eq {i : 𝔰.BesselIndex} (h_floor : floorOf i = b)
-    (h_level : level i ≤ b) : i = 𝔰.besselFrame b := by
+lemma eq_besselFrame_of_floorOf_eq
+    {i : 𝔰.BesselIndex} (h_floor : floorOf i = b) (h_level : level i ≤ b)
+    : i = 𝔰.besselFrame b := by
   revert i
   -- In each case for `b`, compare floor and level of each kind of index with those of `f_b`.
   induction b using Fin.lastCases <;> simp [level] <;> lia
 
-/-- An element `s` of `H_b = floorGroup b` lies in `Q_{b+1} = partialUnitriangularGroup (b + 1)`
+/--
+An element `s` of `H_b = floorGroup b` lies in `Q_{b+1} = partialUnitriangularGroup (b + 1)`
 exactly when it fixes the frame vector `f_b = 𝔰.besselFrame b`, that is, when
-`orbitPoint b s = s⁻¹ f_b` equals `f_b`. -/
-lemma mem_partialUnitriangularGroup_succ_iff (hs : s ∈ floorGroup b) :
-    s ∈ partialUnitriangularGroup (b + 1) ↔ orbitPoint b s = Pi.single (𝔰.besselFrame b) 1 := by
-  have h_column : orbitPoint b s = Pi.single (𝔰.besselFrame b) 1 ↔
-      ∀ i : 𝔰.BesselIndex, s.val i (𝔰.besselFrame b) =
-        (1 : Matrix 𝔰.BesselIndex 𝔰.BesselIndex A) i (𝔰.besselFrame b) := by
+`orbitPoint b s = s⁻¹ f_b` equals `f_b`.
+-/
+lemma mem_partialUnitriangularGroup_succ_iff (hs : s ∈ floorGroup b)
+    : s ∈ partialUnitriangularGroup (b + 1) ↔ orbitPoint b s = Pi.single (𝔰.besselFrame b) 1 := by
+  have h_column
+      : orbitPoint b s = Pi.single (𝔰.besselFrame b) 1
+        ↔ ∀ i : 𝔰.BesselIndex,
+          s.val i (𝔰.besselFrame b)
+            = (1 : Matrix 𝔰.BesselIndex 𝔰.BesselIndex A) i (𝔰.besselFrame b) := by
     rw [orbitPoint_eq_iff]
     simp [funext_iff, ← Matrix.one_apply, Pi.single_apply]
   rw [h_column, mem_partialUnitriangularGroup]
@@ -296,25 +347,30 @@ lemma mem_partialUnitriangularGroup_succ_iff (hs : s ∈ floorGroup b) :
       rw [eq_besselFrame_of_floorOf_eq h_floor_eq h_level]
       exact h_frame i
 
-/-- Two elements `σ`, `τ` of `H_b = floorGroup b` that send the frame vector `f_b` to the same
-vector (`orbitPoint b σ⁻¹` is `σ f_b`) differ on the right by an element of `Q_{b+1} ∩ H_b`. -/
-lemma inv_mul_mem_of_orbitPoint_eq (hσ : σ ∈ floorGroup b) (hτ : τ ∈ floorGroup b)
-    (h_orbit : orbitPoint b σ⁻¹ = orbitPoint b τ⁻¹) :
-    σ⁻¹ * τ ∈ partialUnitriangularGroup (b + 1) ⊓ floorGroup b := by
+/--
+Two elements `σ`, `τ` of `H_b = floorGroup b` that send the frame vector `f_b` to the same
+vector (`orbitPoint b σ⁻¹` is `σ f_b`) differ on the right by an element of `Q_{b+1} ∩ H_b`.
+-/
+lemma inv_mul_mem_of_orbitPoint_eq
+    (hσ : σ ∈ floorGroup b) (hτ : τ ∈ floorGroup b) (h_orbit : orbitPoint b σ⁻¹ = orbitPoint b τ⁻¹)
+    : σ⁻¹ * τ ∈ partialUnitriangularGroup (b + 1) ⊓ floorGroup b := by
   have h_mem : σ⁻¹ * τ ∈ floorGroup b := mul_mem (inv_mem hσ) hτ
-  have h_image : τ.val.val *ᵥ Pi.single (𝔰.besselFrame b) 1 =
-      σ.val.val *ᵥ Pi.single (𝔰.besselFrame b) 1 := by
+  have h_image
+      : τ.val.val *ᵥ Pi.single (𝔰.besselFrame b) 1
+        = σ.val.val *ᵥ Pi.single (𝔰.besselFrame b) 1 := by
     simpa [orbitPoint] using h_orbit.symm
-  refine mem_inf.2 ⟨(mem_partialUnitriangularGroup_succ_iff h_mem).2 (orbitPoint_eq_iff.2 ?_),
-    h_mem⟩
-  calc (σ⁻¹ * τ).val.val *ᵥ Pi.single (𝔰.besselFrame b) 1
+  refine mem_inf.2
+    ⟨(mem_partialUnitriangularGroup_succ_iff h_mem).2 (orbitPoint_eq_iff.2 ?_), h_mem⟩
+  calc
+    (σ⁻¹ * τ).val.val *ᵥ Pi.single (𝔰.besselFrame b) 1
       = σ⁻¹.val.val *ᵥ τ.val.val *ᵥ Pi.single (𝔰.besselFrame b) 1 := (mulVec_mulVec _ _ _).symm
     _ = σ⁻¹.val.val *ᵥ σ.val.val *ᵥ Pi.single (𝔰.besselFrame b) 1 := by rw [h_image]
     _ = Pi.single (𝔰.besselFrame b) 1 := by simp [mulVec_mulVec, -mulVec_single]
 
 /-- The unitriangular group `𝖴 = besselU` lies in every `Q_l = partialUnitriangularGroup l`. -/
-@[simp] lemma _root_.New.mem_partialUnitriangularGroup_of_mem_besselU (hg : g ∈ besselU) :
-    g ∈ partialUnitriangularGroup l :=
+@[simp]
+lemma _root_.New.mem_partialUnitriangularGroup_of_mem_besselU (hg : g ∈ besselU)
+    : g ∈ partialUnitriangularGroup l :=
   mem_partialUnitriangularGroup.2 fun i j h_level _ ↦ mem_besselU.1 hg i j h_level
 
 /-- For `l ≥ ϱ` the group `𝒩_{<l} = unipotentBelow l` is the whole unitriangular group `𝖴`. -/
@@ -329,9 +385,9 @@ lemma unipotentBelow_le_besselU : unipotentBelow l ≤ T.besselU := by
   grind [mem_besselU, IsConcreteLE.le_iff]
 
 /-- Every `𝒩_{<j} = unipotentBelow j` lies in every `Q_l = partialUnitriangularGroup l`. -/
-lemma unipotentBelow_le_partialUnitriangularGroup :
-    T.unipotentBelow j ≤ partialUnitriangularGroup l :=
-  fun _ hg ↦ mem_partialUnitriangularGroup_of_mem_besselU (unipotentBelow_le_besselU hg)
+lemma unipotentBelow_le_partialUnitriangularGroup
+    : T.unipotentBelow j ≤ partialUnitriangularGroup l := fun _ hg ↦
+  mem_partialUnitriangularGroup_of_mem_besselU (unipotentBelow_le_besselU hg)
 
 /-- The groups `𝒩_{<j} = unipotentBelow j` increase with `j`. -/
 lemma unipotentBelow_le_succ : T.unipotentBelow j ≤ unipotentBelow (j + 1) := by
@@ -342,8 +398,7 @@ lemma partialUnitriangularGroup_anti : Antitone T.partialUnitriangularGroup := b
   grind [IsConcreteLE.le_iff, Antitone]
 
 /-- The fixers `H_l = floorGroup l` decrease as `l` grows. -/
-lemma floorGroup_anti : Antitone T.floorGroup := by
-  grind [IsConcreteLE.le_iff, Antitone]
+lemma floorGroup_anti : Antitone T.floorGroup := by grind [IsConcreteLE.le_iff, Antitone]
 
 @[simp]
 lemma floorGroup_zero : T.floorGroup 0 = ⊤ := by grind [IsConcreteLE.le_iff]
@@ -356,28 +411,33 @@ lemma floorGroup_eq_bot (hl : 𝔰.ϱ + 2 ≤ l) : T.floorGroup l = ⊥ := by
 
 /-- The group `Q_{ϱ+2}` is the unitriangular group `𝖴`. -/
 @[simp]
-lemma partialUnitriangularGroup_add_two_eq_besselU :
-    partialUnitriangularGroup (𝔰.ϱ + 2) = T.besselU := by
+lemma partialUnitriangularGroup_add_two_eq_besselU
+    : partialUnitriangularGroup (𝔰.ϱ + 2) = T.besselU := by
   ext
   grind [mem_besselU]
 
-/-- In the fixer `H_ϱ` of all hyperbolic pairs, `Q_{ϱ+1}` cuts out the fixer `H_{ϱ+1}` of these
-pairs and of `z`. -/
-lemma partialUnitriangularGroup_inf_floorGroup_last :
-    partialUnitriangularGroup (𝔰.top + 1) ⊓ floorGroup 𝔰.top = T.floorGroup 𝔰.n := by
+/--
+In the fixer `H_ϱ` of all hyperbolic pairs, `Q_{ϱ+1}` cuts out the fixer `H_{ϱ+1}` of these
+pairs and of `z`.
+-/
+lemma partialUnitriangularGroup_inf_floorGroup_last
+    : partialUnitriangularGroup (𝔰.top + 1) ⊓ floorGroup 𝔰.top = T.floorGroup 𝔰.n := by
   ext
   grind [mem_inf]
 
 /-- The fixer `H_l = floorGroup l` lies in `Q_l = partialUnitriangularGroup l`. -/
-@[simp] lemma _root_.New.mem_partialUnitriangularGroup_of_mem_floorGroup (hg : g ∈ floorGroup l) :
-    g ∈ partialUnitriangularGroup l :=
+@[simp]
+lemma _root_.New.mem_partialUnitriangularGroup_of_mem_floorGroup (hg : g ∈ floorGroup l)
+    : g ∈ partialUnitriangularGroup l :=
   mem_partialUnitriangularGroup.2 fun i j _ hj ↦
     mem_floorGroup.1 hg i j (by grind [floorOf_level_cases j])
 
-/-- The fixer `H_l` of the floors below `l` meets the unitriangular group `𝒩_{<j}` of the floors
-below `j` trivially when `j ≤ l` or `ϱ ≤ l`. -/
-lemma eq_one_of_mem_floorGroup_inf (hg : g ∈ floorGroup l ⊓ unipotentBelow j)
-    (hj : j ≤ l ∨ 𝔰.ϱ ≤ l) : g = 1 := by
+/--
+The fixer `H_l` of the floors below `l` meets the unitriangular group `𝒩_{<j}` of the floors
+below `j` trivially when `j ≤ l` or `ϱ ≤ l`.
+-/
+lemma eq_one_of_mem_floorGroup_inf (hg : g ∈ floorGroup l ⊓ unipotentBelow j) (hj : j ≤ l ∨ 𝔰.ϱ ≤ l)
+    : g = 1 := by
   obtain ⟨hg_floor, hg_unipotent⟩ := mem_inf.1 hg
   ext row col
   by_cases h_fixed : floorOf row < l ∧ floorOf row < 𝔰.ϱ ∨ floorOf col < l
@@ -385,51 +445,60 @@ lemma eq_one_of_mem_floorGroup_inf (hg : g ∈ floorGroup l ⊓ unipotentBelow j
   · -- Otherwise both indices are given the middle level `ϱ`.
     exact mem_unipotentBelow.1 hg_unipotent row col (by grind)
 
-/-- For `s` in the step `𝒩_l = floorUnipotent l` and `a ≠ l`, the entry of `s` just above the
-diagonal at the frame vectors `(a, a + 1)` vanishes. -/
-lemma floorUnipotent_superdiag_eq_zero (a : Fin 𝔰.ϱ) (hs : s ∈ floorUnipotent l) (hl : l ≠ a) :
-    s.val (𝔰.besselFrame a.castSucc) (𝔰.besselFrame a.succ) = 0 := by
+/--
+For `s` in the step `𝒩_l = floorUnipotent l` and `a ≠ l`, the entry of `s` just above the
+diagonal at the frame vectors `(a, a + 1)` vanishes.
+-/
+lemma floorUnipotent_superdiag_eq_zero (a : Fin 𝔰.ϱ) (hs : s ∈ floorUnipotent l) (hl : l ≠ a)
+    : s.val (𝔰.besselFrame a.castSucc) (𝔰.besselFrame a.succ) = 0 := by
   obtain ⟨h_floor, h_unipotent⟩ := mem_inf.1 hs
   rw [← one_apply_ne (α := A) (besselFrame_injective.ne a.castSucc_lt_succ.ne)]
   obtain h_lt | h_gt := hl.symm.lt_or_gt
   · -- The row `a` has floor below `l`.
-    exact apply_eq_one_apply_of_mem_floorGroup h_floor _ _
-      (.inl (by simp [h_lt]))
+    exact apply_eq_one_apply_of_mem_floorGroup h_floor _ _ (.inl (by simp [h_lt]))
   · -- Both indices are given the middle level `ϱ`.
     exact mem_unipotentBelow.1 h_unipotent _ _ (by grind)
 
 /-! ### Conjugation and projections -/
 
-/-- The fixer `H_l` of the floors below `l` normalises the unitriangular group `𝒩_{<l}` of these
-floors. -/
-lemma conj_mem_unipotentBelow (hσ : σ ∈ floorGroup l) (hg : g ∈ unipotentBelow l) :
-    σ * g * σ⁻¹ ∈ unipotentBelow l :=
+/--
+The fixer `H_l` of the floors below `l` normalises the unitriangular group `𝒩_{<l}` of these
+floors.
+-/
+lemma conj_mem_unipotentBelow (hσ : σ ∈ floorGroup l) (hg : g ∈ unipotentBelow l)
+    : σ * g * σ⁻¹ ∈ unipotentBelow l :=
   -- `σ⁻¹` is block triangular for the levels that define `unipotentBelow l`.
-  have h_tri :
-      σ⁻¹.val.val.BlockTriangular fun i : 𝔰.BesselIndex ↦ if floorOf i < l then level i else 𝔰.ϱ :=
-    fun _ ↦ by grind [inv_mem hσ, one_apply_ne]
+  have h_tri : σ⁻¹.val.val.BlockTriangular fun i : 𝔰.BesselIndex ↦
+      if floorOf i < l then level i else 𝔰.ϱ := fun _ ↦ by
+    grind [inv_mem hσ, one_apply_ne]
   conj_mem_unitriangular (d := σ⁻¹.val) h_tri hg
 
 /-- The fixer `H_{l+1}` of the floors up to `l` normalises the step `𝒩_l = H_l ∩ 𝒩_{<l+1}`. -/
-lemma conj_mem_floorUnipotent (hg : g ∈ floorUnipotent l) (σ : T.G)
-    (hσ : σ ∈ floorGroup (l + 1)) : σ * g * σ⁻¹ ∈ floorUnipotent l := by
+lemma conj_mem_floorUnipotent (hg : g ∈ floorUnipotent l) (σ : T.G) (hσ : σ ∈ floorGroup (l + 1))
+    : σ * g * σ⁻¹ ∈ floorUnipotent l := by
   obtain ⟨hg_floor, hg_unipotent⟩ := mem_inf.1 hg
   have hσ_floor : σ ∈ floorGroup l := floorGroup_anti l.le_succ hσ
-  exact mem_inf.2 ⟨mul_mem (mul_mem hσ_floor hg_floor) (inv_mem hσ_floor),
-    conj_mem_unipotentBelow hσ hg_unipotent⟩
+  exact mem_inf.2 ⟨
+    mul_mem (mul_mem hσ_floor hg_floor) (inv_mem hσ_floor),
+    conj_mem_unipotentBelow hσ hg_unipotent
+  ⟩
 
-/-- Conjugation by the fixer `H_{l+1}` of the floors up to `l` keeps the entry at the frame vectors
-`(f_a, f_{a+1})` of an element of the unitriangular group `𝒩_{<l}` of the floors below `l`. -/
-lemma superdiag_conj_eq (hg : g ∈ unipotentBelow l) (hs : s ∈ floorGroup (l + 1)) :
-    (s * g * s⁻¹).val (𝔰.besselFrame a.castSucc) (𝔰.besselFrame a.succ) =
-      g.val (𝔰.besselFrame a.castSucc) (𝔰.besselFrame a.succ) := by
+/--
+Conjugation by the fixer `H_{l+1}` of the floors up to `l` keeps the entry at the frame vectors
+`(f_a, f_{a+1})` of an element of the unitriangular group `𝒩_{<l}` of the floors below `l`.
+-/
+lemma superdiag_conj_eq (hg : g ∈ unipotentBelow l) (hs : s ∈ floorGroup (l + 1))
+    : (s * g * s⁻¹).val (𝔰.besselFrame a.castSucc) (𝔰.besselFrame a.succ)
+      = g.val (𝔰.besselFrame a.castSucc) (𝔰.besselFrame a.succ) := by
   by_cases ha : a < l
   · -- The row `a` of `s` and the column `a + 1` of `s⁻¹`, in the frame, are those of `1`.
-    have h_row (k : 𝔰.BesselIndex) : s.val (𝔰.besselFrame a.castSucc) k =
-        (1 : Matrix 𝔰.BesselIndex 𝔰.BesselIndex A) (𝔰.besselFrame a.castSucc) k :=
+    have h_row (k : 𝔰.BesselIndex)
+        : s.val (𝔰.besselFrame a.castSucc) k
+          = (1 : Matrix 𝔰.BesselIndex 𝔰.BesselIndex A) (𝔰.besselFrame a.castSucc) k :=
       apply_eq_one_apply_of_mem_floorGroup hs _ k (.inl (by simp [ha.le]))
-    have h_col (k : 𝔰.BesselIndex) : s⁻¹.val k (𝔰.besselFrame a.succ) =
-        (1 : Matrix 𝔰.BesselIndex 𝔰.BesselIndex A) k (𝔰.besselFrame a.succ) :=
+    have h_col (k : 𝔰.BesselIndex)
+        : s⁻¹.val k (𝔰.besselFrame a.succ)
+          = (1 : Matrix 𝔰.BesselIndex 𝔰.BesselIndex A) k (𝔰.besselFrame a.succ) :=
       apply_eq_one_apply_of_mem_floorGroup (inv_mem hs) k _
         (.inr (by simp [floorOf_besselFrame, ha]))
     simp only [Subgroup.coe_mul, Units.val_mul, Matrix.mul_apply, h_row, h_col]
@@ -441,77 +510,90 @@ section
 
 omit [StarRing A]
 
-/-- The column of the Gram matrix at an index `i` of a hyperbolic pair is the basis vector at the
-other index of the pair. -/
+/--
+The column of the Gram matrix at an index `i` of a hyperbolic pair is the basis vector at the
+other index of the pair.
+-/
 @[simp]
-lemma splitGram_col (i : 𝔰.BesselIndex) (hi : floorOf i < 𝔰.ϱ) :
-    T.splitGram.col i = Pi.single (oppositeIndex i) 1 := by
+lemma splitGram_col (i : 𝔰.BesselIndex) (hi : floorOf i < 𝔰.ϱ)
+    : T.splitGram.col i = Pi.single (oppositeIndex i) 1 := by
   revert i
   simp [funext_iff, Pi.single_apply]
 
-/-- At an index of a hyperbolic pair, the coordinate of `J e`, where `J = T.splitGram`, is the
-coordinate of `e` at the other index of the pair. -/
-lemma splitGram_mulVec_apply (i : 𝔰.BesselIndex) (hi : floorOf i < 𝔰.ϱ) :
-    (T.splitGram *ᵥ e) i = e (oppositeIndex i) := by
+/--
+At an index of a hyperbolic pair, the coordinate of `J e`, where `J = T.splitGram`, is the
+coordinate of `e` at the other index of the pair.
+-/
+lemma splitGram_mulVec_apply (i : 𝔰.BesselIndex) (hi : floorOf i < 𝔰.ϱ)
+    : (T.splitGram *ᵥ e) i = e (oppositeIndex i) := by
   revert i
   simp [splitGram, fromBlocks_mulVec]
 
-/-- At an index of a hyperbolic pair, the coordinate of `e J`, where `J = T.splitGram`, is the
-coordinate of `e` at the other index of the pair. -/
-lemma vecMul_splitGram_apply (i : 𝔰.BesselIndex) (hi : floorOf i < 𝔰.ϱ) :
-    (e ᵥ* T.splitGram) i = e (oppositeIndex i) := by
+/--
+At an index of a hyperbolic pair, the coordinate of `e J`, where `J = T.splitGram`, is the
+coordinate of `e` at the other index of the pair.
+-/
+lemma vecMul_splitGram_apply (i : 𝔰.BesselIndex) (hi : floorOf i < 𝔰.ϱ)
+    : (e ᵥ* T.splitGram) i = e (oppositeIndex i) := by
   revert i
   simp [splitGram, vecMul_fromBlocks]
 
-/-- Multiplication by `T.splitGram` on either side exchanges the two coordinates of a hyperbolic
-pair. -/
-@[simp] lemma splitGram_mulVec_and_vecMul_apply (i : 𝔰.BesselIndex) (hi : floorOf i < 𝔰.ϱ) :
-    (T.splitGram *ᵥ e) i = e (oppositeIndex i) ∧
-    (e ᵥ* T.splitGram) i = e (oppositeIndex i) :=
+/--
+Multiplication by `T.splitGram` on either side exchanges the two coordinates of a hyperbolic
+pair.
+-/
+@[simp]
+lemma splitGram_mulVec_and_vecMul_apply (i : 𝔰.BesselIndex) (hi : floorOf i < 𝔰.ϱ)
+    : (T.splitGram *ᵥ e) i = e (oppositeIndex i) ∧ (e ᵥ* T.splitGram) i = e (oppositeIndex i) :=
   ⟨splitGram_mulVec_apply i hi, vecMul_splitGram_apply i hi⟩
 
-/-- The inclusion matrix of the indices of floor at least `l` extends a vector on these indices by
-zero. -/
-lemma inclMatrix_val_mulVec (u : {i : 𝔰.BesselIndex // l ≤ floorOf i} → A) (i : 𝔰.BesselIndex) :
-    (inclMatrix A Subtype.val *ᵥ u) i = if h : l ≤ floorOf i then u ⟨i, h⟩ else 0 := by
-  by_cases hi : l ≤ floorOf i <;>
-    simp [inclMatrix, mulVec_eq_sum, Subtype.coe_eq_iff, hi, Matrix.one_apply]
+/--
+The inclusion matrix of the indices of floor at least `l` extends a vector on these indices by
+zero.
+-/
+lemma inclMatrix_val_mulVec (u : {i : 𝔰.BesselIndex // l ≤ floorOf i} → A) (i : 𝔰.BesselIndex)
+    : (inclMatrix A Subtype.val *ᵥ u) i = if h : l ≤ floorOf i then u ⟨i, h⟩ else 0 := by
+  by_cases hi : l ≤ floorOf i
+    <;> simp [inclMatrix, mulVec_eq_sum, Subtype.coe_eq_iff, hi, Matrix.one_apply]
 
 end
 
-/-- Let `l ≤ ϱ` and let `s` fix the basis vectors of floor below `l`. Applying the block of `s` on
+/--
+Let `l ≤ ϱ` and let `s` fix the basis vectors of floor below `l`. Applying the block of `s` on
 the indices of floor at least `l` and then extending by zero is the same as extending by zero and
-then applying `s`. -/
-lemma inclMatrix_mulVec_floor_block (hl : l ≤ 𝔰.ϱ) (hs : s ∈ floorGroup l)
-    (u : {i : 𝔰.BesselIndex // l ≤ floorOf i} → A) :
-    inclMatrix A Subtype.val *ᵥ
-        s.val.val.toSquareBlockProp (fun i : 𝔰.BesselIndex ↦ l ≤ floorOf i) *ᵥ u =
-      s.val.val *ᵥ inclMatrix A Subtype.val *ᵥ u := by
+then applying `s`.
+-/
+lemma inclMatrix_mulVec_floor_block
+    (hl : l ≤ 𝔰.ϱ) (hs : s ∈ floorGroup l) (u : {i : 𝔰.BesselIndex // l ≤ floorOf i} → A)
+    : inclMatrix A Subtype.val
+        *ᵥ s.val.val.toSquareBlockProp (fun i : 𝔰.BesselIndex ↦ l ≤ floorOf i) *ᵥ u
+      = s.val.val *ᵥ inclMatrix A Subtype.val *ᵥ u := by
   rw [mulVec_mulVec, mulVec_mulVec, mul_inclMatrix]
   congr 1
   ext i j
   -- Extend the column `j` of the block by zero; `s` vanishes in the rows of floor below `l`.
-  change (inclMatrix A Subtype.val *ᵥ
-    fun k : {i : 𝔰.BesselIndex // l ≤ floorOf i} ↦ s.val k j) i = s.val i j
+  change (inclMatrix A Subtype.val *ᵥ fun k : {i : 𝔰.BesselIndex // l ≤ floorOf i} ↦ s.val k j) i
+    = s.val i j
   rw [inclMatrix_val_mulVec]
   split_ifs with hi
   · rfl
   · rw [apply_eq_one_apply_of_mem_floorGroup hs i j (.inl (by lia)), one_apply_ne (by grind)]
 
-/-- For `σ` in the fixer `H_b` of the floors below `b` and `s` in `Q_{b+1}`, the column of `σ` at
+/--
+For `σ` in the fixer `H_b` of the floors below `b` and `s` in `Q_{b+1}`, the column of `σ` at
 the frame vector `f_b` vanishes in the rows of floor below `b` and is that of `σ * s` in the other
-rows. -/
-lemma floorGroup_apply_besselFrame (hσ : σ ∈ floorGroup b)
-    (hs : s ∈ partialUnitriangularGroup (b + 1)) (i : 𝔰.BesselIndex) :
-    σ.val i (𝔰.besselFrame b) =
-      if floorOf i < b then 0 else (σ * s).val i (𝔰.besselFrame b) := by
+rows.
+-/
+lemma floorGroup_apply_besselFrame
+    (hσ : σ ∈ floorGroup b) (hs : s ∈ partialUnitriangularGroup (b + 1)) (i : 𝔰.BesselIndex)
+    : σ.val i (𝔰.besselFrame b) = if floorOf i < b then 0 else (σ * s).val i (𝔰.besselFrame b) := by
   split_ifs with hi
   · grind [one_apply_ne]
   -- Compare `σ * 1` with `σ * s` term by term: row `i` of `σ` vanishes in the columns of floor
   -- below `b`, and in the other rows the column `𝔰.besselFrame b` of `s` is that of `1`.
-  have h_term (k : 𝔰.BesselIndex) :
-      σ.val i k * (1 : Matrix 𝔰.BesselIndex 𝔰.BesselIndex A) k (𝔰.besselFrame b) =
-        σ.val i k * s.val k (𝔰.besselFrame b) := by
+  have h_term (k : 𝔰.BesselIndex)
+      : σ.val i k * (1 : Matrix 𝔰.BesselIndex 𝔰.BesselIndex A) k (𝔰.besselFrame b)
+        = σ.val i k * s.val k (𝔰.besselFrame b) := by
     by_cases hk : floorOf k < b
     · rw [mem_floorGroup.1 hσ i k hk, one_apply_ne (by grind), zero_mul, zero_mul]
     · grind
@@ -519,18 +601,23 @@ lemma floorGroup_apply_besselFrame (hσ : σ ∈ floorGroup b)
     Finset.sum_congr rfl fun k (_ : k ∈ Finset.univ) ↦ h_term k
 
 /-- A column of `weylOn P p` on a floor that is exchanged has its only entry in the opposite row. -/
-lemma weylOn_apply_of_swapped {p : ℕ → A} (i : 𝔰.BesselIndex) {k : 𝔰.BesselIndex}
-    (hk : P (floorOf k) ∧ floorOf k < 𝔰.ϱ ∧ IsUnit (p (floorOf k))) :
-    (weylOn P p : T.G).val i k =
-      if i = oppositeIndex k then
-        if level k < 𝔰.ϱ then p (floorOf k) else (star (p (floorOf k)))⁻¹ʳ
-      else 0 := by
+lemma weylOn_apply_of_swapped
+    {p : ℕ → A}
+    (i : 𝔰.BesselIndex)
+    {k : 𝔰.BesselIndex} (hk : P (floorOf k) ∧ floorOf k < 𝔰.ϱ ∧ IsUnit (p (floorOf k)))
+    : (weylOn P p : T.G).val i k
+      = if i = oppositeIndex k then
+          if level k < 𝔰.ϱ then p (floorOf k) else (star (p (floorOf k)))⁻¹ʳ
+        else
+          0 := by
   simp [weylOn, hk]
 
 /-- A column of `weylOn P p` on a floor that is not exchanged is that of the identity matrix. -/
-lemma weylOn_apply_of_not_swapped {p : ℕ → A} (i : 𝔰.BesselIndex) {k : 𝔰.BesselIndex}
-    (hk : ¬(P (floorOf k) ∧ floorOf k < 𝔰.ϱ ∧ IsUnit (p (floorOf k)))) :
-    (weylOn P p : T.G).val i k = (1 : Matrix 𝔰.BesselIndex 𝔰.BesselIndex A) i k := by
+lemma weylOn_apply_of_not_swapped
+    {p : ℕ → A}
+    (i : 𝔰.BesselIndex)
+    {k : 𝔰.BesselIndex} (hk : ¬(P (floorOf k) ∧ floorOf k < 𝔰.ϱ ∧ IsUnit (p (floorOf k))))
+    : (weylOn P p : T.G).val i k = (1 : Matrix 𝔰.BesselIndex 𝔰.BesselIndex A) i k := by
   simp [weylOn, hk, Matrix.one_apply]
 
 /-- The Weyl element of floor `l` fixes the basis vectors of floor below `l`. -/
@@ -539,20 +626,28 @@ lemma floorWeyl_mem_floorGroup {c : A} : floorWeyl l c ∈ T.floorGroup l :=
   mem_floorGroup.2 fun i _ h_floor ↦
     weylOn_apply_of_not_swapped i fun h_swapped ↦ h_floor.ne h_swapped.left
 
-/-- The Weyl element `weylOn P p`, which exchanges the hyperbolic pairs on the floors satisfying
-`P`, commutes with the fixer `H_l` of the floors below `l` if `P` holds only below `l`. -/
-lemma commute_weylOn {p : ℕ → A} (hP : ∀ a : ℕ, P a → a < l) (hs : s ∈ floorGroup l) :
-    Commute (weylOn P p) s := by
+/--
+The Weyl element `weylOn P p`, which exchanges the hyperbolic pairs on the floors satisfying
+`P`, commutes with the fixer `H_l` of the floors below `l` if `P` holds only below `l`.
+-/
+lemma commute_weylOn {p : ℕ → A} (hP : ∀ a : ℕ, P a → a < l) (hs : s ∈ floorGroup l)
+    : Commute (weylOn P p) s := by
   classical
   ext i k
-  have h_entry (i j : 𝔰.BesselIndex) (hij : floorOf i < l ∧ floorOf i < 𝔰.ϱ ∨ floorOf j < l) :
-      s.val i j = if i = j then 1 else 0 := apply_eq_one_apply_of_mem_floorGroup hs i j hij
-  have h_weyl (i j : 𝔰.BesselIndex) : (weylOn P p : T.G).val i j =
-      if P (floorOf j) ∧ floorOf j < 𝔰.ϱ ∧ IsUnit (p (floorOf j)) then
-        if i = oppositeIndex j then
-          if level j < 𝔰.ϱ then p (floorOf j) else (star (p (floorOf j)))⁻¹ʳ
-        else 0
-      else if i = j then 1 else 0 := by
+  have h_entry (i j : 𝔰.BesselIndex) (hij : floorOf i < l ∧ floorOf i < 𝔰.ϱ ∨ floorOf j < l)
+      : s.val i j = if i = j then 1 else 0 :=
+    apply_eq_one_apply_of_mem_floorGroup hs i j hij
+  have h_weyl (i j : 𝔰.BesselIndex)
+      : (weylOn P p : T.G).val i j
+        = if P (floorOf j) ∧ floorOf j < 𝔰.ϱ ∧ IsUnit (p (floorOf j)) then
+            if i = oppositeIndex j then
+              if level j < 𝔰.ϱ then p (floorOf j) else (star (p (floorOf j)))⁻¹ʳ
+            else
+              0
+          else if i = j then
+            1
+          else
+            0 := by
     grind only [weylOn_apply_of_swapped, weylOn_apply_of_not_swapped, Matrix.one_apply]
   -- Row `i` of `weylOn P p` vanishes outside the column `i'`, and column `k` outside the row `k'`.
   let i' : 𝔰.BesselIndex :=
@@ -560,8 +655,8 @@ lemma commute_weylOn {p : ℕ → A} (hP : ∀ a : ℕ, P a → a < l) (hs : s �
   let k' : 𝔰.BesselIndex :=
     if P (floorOf k) ∧ floorOf k < 𝔰.ϱ ∧ IsUnit (p (floorOf k)) then oppositeIndex k else k
   have h_left : (weylOn P p * s).val i k = (weylOn P p : T.G).val i i' * s.val i' k :=
-    sum_eq_single i' fun j ↦ by grind (branches := 16384) only
-                                  [oppositeIndex_involutive_and_floorOf_level j]
+    sum_eq_single i' fun j ↦ by
+      grind (branches := 16384) only [oppositeIndex_involutive_and_floorOf_level j]
   have h_right : (s * weylOn P p).val i k = s.val i k' * (weylOn P p : T.G).val k' k :=
     sum_eq_single k' (by grind only)
   rw [h_left, h_right]
@@ -573,16 +668,18 @@ lemma weylElem_zero : (weylElem 0 p : T.G) = 1 := by
   ext i k
   exact weylOn_apply_of_not_swapped i (by simp)
 
-/-- The Weyl element of length `l + 1` is the Weyl element of floor `l` with parameter `p l` times
-the Weyl element of length `l`. -/
+/--
+The Weyl element of length `l + 1` is the Weyl element of floor `l` with parameter `p l` times
+the Weyl element of length `l`.
+-/
 lemma weylElem_succ : (weylElem (l + 1) p : T.G) = floorWeyl l (p l).val * weylElem l p := by
   ext i k
   by_cases hk : floorOf k < l ∧ floorOf k < 𝔰.ϱ
   · -- The right factor moves `k` to the opposite index, which the left factor fixes.
     have h_floor : floorOf (oppositeIndex k) ≠ l := by
       grind only [oppositeIndex_involutive_and_floorOf_level k]
-    by_cases hi : i = oppositeIndex k <;>
-      simp [weylElem, weylOn, floorWeyl, Matrix.mul_apply, hk, hk.left.le, h_floor, hi]
+    by_cases hi : i = oppositeIndex k
+      <;> simp [weylElem, weylOn, floorWeyl, Matrix.mul_apply, hk, hk.left.le, h_floor, hi]
   · -- The right factor fixes `k`; both sides move it exactly when its floor is `l < ϱ`.
     have h_iff : floorOf k ≤ l ∧ floorOf k < 𝔰.ϱ ↔ floorOf k = l ∧ floorOf k < 𝔰.ϱ := by lia
     by_cases hl : floorOf k = l ∧ floorOf k < 𝔰.ϱ
@@ -608,53 +705,62 @@ lemma weylElem_star : (weylElem l (star p) : T.G) = (weylElem l p)⁻¹ := by
   ext
   rfl
 
-lemma weylElem_left_comm (hs : s ∈ floorGroup l) :
-    weylElem l p * (s * g) = s * (weylElem l p * g) :=
+lemma weylElem_left_comm (hs : s ∈ floorGroup l)
+    : weylElem l p * (s * g) = s * (weylElem l p * g) :=
   (commute_weylElem hs).left_comm g
 
-lemma weylElem_inv_left_comm (hs : s ∈ floorGroup l) :
-    (weylElem l p)⁻¹ * (s * g) = s * ((weylElem l p)⁻¹ * g) :=
+lemma weylElem_inv_left_comm (hs : s ∈ floorGroup l)
+    : (weylElem l p)⁻¹ * (s * g) = s * ((weylElem l p)⁻¹ * g) :=
   (commute_weylElem hs).inv_left.left_comm g
 
-/-- For `s` in the fixer `H_l` of the floors below `l`, the Weyl element `w_p` of length `l` and its
-inverse can be moved past `s` on the left. -/
-lemma weylElem_mul_left_comm (hs : s ∈ floorGroup l) :
-    weylElem l p * (s * g) = s * (weylElem l p * g) ∧
-    (weylElem l p)⁻¹ * (s * g) = s * ((weylElem l p)⁻¹ * g) :=
+/--
+For `s` in the fixer `H_l` of the floors below `l`, the Weyl element `w_p` of length `l` and its
+inverse can be moved past `s` on the left.
+-/
+lemma weylElem_mul_left_comm (hs : s ∈ floorGroup l)
+    : weylElem l p * (s * g) = s * (weylElem l p * g)
+      ∧ (weylElem l p)⁻¹ * (s * g) = s * ((weylElem l p)⁻¹ * g) :=
   ⟨weylElem_left_comm hs, weylElem_inv_left_comm hs⟩
 
-/-- The diagonal entry `b` of the frame Gram matrix of `σ τ⁻¹`, that is the hermitian product of
+/--
+The diagonal entry `b` of the frame Gram matrix of `σ τ⁻¹`, that is the hermitian product of
 `f_b` and `σ τ⁻¹ f_b`, is the hermitian product of `σ⁻¹ f_b = orbitPoint b σ` and
 `τ⁻¹ f_b = orbitPoint b τ` (for isometries `σ τ : T.G` and `b : Fin 𝔰.n`), where `f_b` is the frame
-vector number `b`. -/
-lemma frameGram_eq_form_orbitPoint :
-    T.frameGram (σ * τ⁻¹).val b b = star (orbitPoint b σ) ⬝ᵥ T.splitGram *ᵥ orbitPoint b τ := by
+vector number `b`.
+-/
+lemma frameGram_eq_form_orbitPoint
+    : T.frameGram (σ * τ⁻¹).val b b = star (orbitPoint b σ) ⬝ᵥ T.splitGram *ᵥ orbitPoint b τ := by
   -- Move both vectors by the isometry `σ`, which takes `orbitPoint b σ` to the frame vector.
   rw [← U.form_mulVec_mulVec σ, orbitPoint_eq_iff.1 rfl, orbitPoint, mulVec_mulVec, mulVec_mulVec]
   simp [frameGram, mul_assoc]
 
-/-- The hermitian product of `e_a` with its image `c e*_a` under the Weyl element of floor `a`
-is `c`. -/
-lemma frameGram_floorWeyl (c : Aˣ) :
-    T.frameGram (floorWeyl a c : T.G).val a.castSucc a.castSucc = c := by
+/--
+The hermitian product of `e_a` with its image `c e*_a` under the Weyl element of floor `a`
+is `c`.
+-/
+lemma frameGram_floorWeyl (c : Aˣ)
+    : T.frameGram (floorWeyl a c : T.G).val a.castSucc a.castSucc = c := by
   simp [frameGram, floorWeyl, weylOn, level, Matrix.mul_apply]
 
 /-! ### Leading minors of the products of the frame vectors -/
 
-/-- An element `s` of `Q_l` changes each frame vector of index below `l` by a combination of the
+/--
+An element `s` of `Q_l` changes each frame vector of index below `l` by a combination of the
 earlier ones. So a right factor `s` keeps the leading minors of order `j ≤ l` of the block of a
-matrix `M` on the frame. -/
-lemma leadingMinor_submatrix_mul_of_mem_partialUnitriangularGroup {l : ℕ} {s : T.G}
-    (hs : s ∈ partialUnitriangularGroup l) {j : Fin (𝔰.n + 1)} (hj : j.val ≤ l)
-    (M : Matrix 𝔰.BesselIndex 𝔰.BesselIndex A) :
-    leadingMinor ((M * s.val.val).submatrix 𝔰.besselFrame 𝔰.besselFrame) j =
-      leadingMinor (M.submatrix 𝔰.besselFrame 𝔰.besselFrame) j := by
+matrix `M` on the frame.
+-/
+lemma leadingMinor_submatrix_mul_of_mem_partialUnitriangularGroup
+    {l : ℕ} {s : T.G} (hs : s ∈ partialUnitriangularGroup l)
+    {j : Fin (𝔰.n + 1)} (hj : j.val ≤ l)
+    (M : Matrix 𝔰.BesselIndex 𝔰.BesselIndex A)
+    : leadingMinor ((M * s.val.val).submatrix 𝔰.besselFrame 𝔰.besselFrame) j
+      = leadingMinor (M.submatrix 𝔰.besselFrame 𝔰.besselFrame) j := by
   let f (a : Fin j) : 𝔰.BesselIndex := 𝔰.besselFrame (a.castLE j.is_le)
   have f_injective : Function.Injective f := besselFrame_injective.comp (Fin.castLE_injective _)
   have f_level (a : Fin j) : level (f a) = a := level_besselFrame _
   have f_floor (a : Fin j) : floorOf (f a) = a := floorOf_besselFrame
-  have h_column (i : 𝔰.BesselIndex) (b : Fin j) (hi : b ≤ level i) :
-      s.val.val i (f b) = (1 : Matrix 𝔰.BesselIndex 𝔰.BesselIndex A) i (f b) :=
+  have h_column (i : 𝔰.BesselIndex) (b : Fin j) (hi : b ≤ level i)
+      : s.val.val i (f b) = (1 : Matrix 𝔰.BesselIndex 𝔰.BesselIndex A) i (f b) :=
     have hb : b.val < l := b.is_lt.trans_le hj
     mem_partialUnitriangularGroup.1 hs i (f b) ((f_level b).trans_le hi)
       (.inl ⟨(f_floor b).trans_lt hb, (f_level b).trans_lt hb⟩)
@@ -674,51 +780,62 @@ lemma leadingMinor_submatrix_mul_of_mem_partialUnitriangularGroup {l : ℕ} {s :
     exact h_column (f a) b (hba.trans_eq (f_level a).symm)
   exact det_eq_of_eq_mul_det_one _ h_det h_block
 
-/-- The leading minors of order `j ≤ l` of the matrix `T.frameGram γ` of the products
+/--
+The leading minors of order `j ≤ l` of the matrix `T.frameGram γ` of the products
 `h(f_a, γ f_b)` of the frame vectors, h being the form `splitGram T`, do not change when `γ` is
 multiplied on either side by elements of `Q_l`. Here `Q_l` = `partialUnitriangularGroup l`, whose
 elements agree with the identity at each entry (i, j) with level j ≤ level i whose column j has
-floor and level below l. -/
-lemma leadingMinor_frameGram_partialUnitriangularGroup_mul {l : ℕ} {s s' : T.G}
-    (hs : s ∈ partialUnitriangularGroup l) (hs' : s' ∈ partialUnitriangularGroup l) (γ : T.G)
-    {j : Fin (𝔰.n + 1)} (hj : j.val ≤ l) :
-    leadingMinor (T.frameGram (s⁻¹ * γ * s').val.val) j =
-      leadingMinor (T.frameGram γ.val.val) j := by
+floor and level below l.
+-/
+lemma leadingMinor_frameGram_partialUnitriangularGroup_mul
+    {l : ℕ} {s s' : T.G}
+    (hs : s ∈ partialUnitriangularGroup l) (hs' : s' ∈ partialUnitriangularGroup l)
+    (γ : T.G)
+    {j : Fin (𝔰.n + 1)} (hj : j.val ≤ l)
+    : leadingMinor (T.frameGram (s⁻¹ * γ * s').val.val) j
+      = leadingMinor (T.frameGram γ.val.val) j := by
   -- With `J = T.splitGram` we have `J s⁻¹ = sᴴ J`, so the conjugate transpose turns the factor on
   -- the left into a factor on the right.
-  have h_form : T.splitGram * (s⁻¹ * γ * s').val.val =
-      ((T.splitGram * γ.val.val)ᴴ * s.val.val)ᴴ * s'.val.val := by
+  have h_form
+      : T.splitGram * (s⁻¹ * γ * s').val.val
+        = ((T.splitGram * γ.val.val)ᴴ * s.val.val)ᴴ * s'.val.val := by
     simp [← Matrix.mul_assoc, ← U.form_mul_inv_eq]
-  have h_conj (M : Matrix 𝔰.BesselIndex 𝔰.BesselIndex A) :
-      leadingMinor (Mᴴ.submatrix 𝔰.besselFrame 𝔰.besselFrame) j =
-        star (leadingMinor (M.submatrix 𝔰.besselFrame 𝔰.besselFrame) j) :=
+  have h_conj (M : Matrix 𝔰.BesselIndex 𝔰.BesselIndex A)
+      : leadingMinor (Mᴴ.submatrix 𝔰.besselFrame 𝔰.besselFrame) j
+        = star (leadingMinor (M.submatrix 𝔰.besselFrame 𝔰.besselFrame) j) :=
     det_conjTranspose ((M.submatrix _ _).submatrix _ _)
   rw [frameGram, h_form, leadingMinor_submatrix_mul_of_mem_partialUnitriangularGroup hs' hj, h_conj,
     leadingMinor_submatrix_mul_of_mem_partialUnitriangularGroup hs hj, h_conj, star_star, frameGram]
 
-/-- The leading minors of the matrix `T.frameGram γ` of the products `h(f_a, γ f_b)` of the frame
+/--
+The leading minors of the matrix `T.frameGram γ` of the products `h(f_a, γ f_b)` of the frame
 vectors do not change when `γ` is multiplied on either side by elements of the unipotent group
-`New.Shape.Form.besselU`. -/
-lemma _root_.New.Filling.leadingMinor_frameGram_besselU_mul {γ u u' : T.G} (hu : u ∈ T.besselU)
-    (hu' : u' ∈ T.besselU) (j : Fin (𝔰.ϱ + 1 + 1)) :
-    leadingMinor (T.frameGram (u⁻¹ * γ * u').val) j = leadingMinor (T.frameGram γ) j :=
+`New.Shape.Form.besselU`.
+-/
+lemma _root_.New.Filling.leadingMinor_frameGram_besselU_mul
+    {γ u u' : T.G} (hu : u ∈ T.besselU) (hu' : u' ∈ T.besselU) (j : Fin (𝔰.ϱ + 1 + 1))
+    : leadingMinor (T.frameGram (u⁻¹ * γ * u').val) j = leadingMinor (T.frameGram γ) j :=
   leadingMinor_frameGram_partialUnitriangularGroup_mul
     (mem_partialUnitriangularGroup_of_mem_besselU hu)
     (mem_partialUnitriangularGroup_of_mem_besselU hu') γ le_rfl
 
-/-- Let `l ≤ ϱ`, and let `w_p = weylElem l p` be the isometry with `e_a ↦ p a • e*_a` and
+/--
+Let `l ≤ ϱ`, and let `w_p = weylElem l p` be the isometry with `e_a ↦ p a • e*_a` and
 `e*_a ↦ e_a / conj (p a)` for `a < l`, fixing the other basis vectors. For `j ≤ l`, the leading
 principal minor of order `j` of `frameGram w_p` equals `p 0 * ⋯ * p (j - 1)`. Here `frameGram w_p`
-is the matrix of the products `h(f_a, w_p f_b)`, and `f = (e_0, …, e_{ϱ-1}, z)` is the frame. -/
-lemma leadingMinor_frameGram_weylElem {l : ℕ} (hl : l ≤ 𝔰.ϱ) (p : ℕ → Aˣ) {j : Fin (𝔰.n + 1)}
-    (hj : j.val ≤ l) :
-    leadingMinor (T.frameGram (weylElem l p : T.G).val.val) j =
-      (∏ a ∈ Finset.range j, p a).val := by
+is the matrix of the products `h(f_a, w_p f_b)`, and `f = (e_0, …, e_{ϱ-1}, z)` is the frame.
+-/
+lemma leadingMinor_frameGram_weylElem
+    {l : ℕ} (hl : l ≤ 𝔰.ϱ) (p : ℕ → Aˣ) {j : Fin (𝔰.n + 1)} (hj : j.val ≤ l)
+    : leadingMinor (T.frameGram (weylElem l p : T.G).val.val) j
+      = (∏ a ∈ Finset.range j, p a).val := by
   -- `w_p` sends `e_b` to `p b` times `e*_b`, so the block is diagonal.
   have h_frame (a : Fin j) : 𝔰.besselFrame (a.castLE j.is_le) = inl ⟨a, by lia⟩ :=
     besselFrame_castSucc ⟨a, by lia⟩
-  have h_block : (T.frameGram (weylElem l p : T.G).val.val).submatrix (Fin.castLE j.is_le)
-      (Fin.castLE j.is_le) = diagonal fun a : Fin j ↦ (p a).val := by
+  have h_block
+      : (T.frameGram (weylElem l p : T.G).val.val).submatrix (Fin.castLE j.is_le)
+          (Fin.castLE j.is_le)
+        = diagonal fun a : Fin j ↦ (p a).val := by
     ext a b
     have hb : b.val < l := by lia
     simp +contextual [frameGram, h_frame, weylElem, weylOn, level, Matrix.mul_apply, diagonal_apply,
@@ -728,38 +845,43 @@ lemma leadingMinor_frameGram_weylElem {l : ℕ} (hl : l ≤ 𝔰.ϱ) (p : ℕ �
 /-! ### Action on coordinates of vectors -/
 
 /-- An index has level at most `ϱ` or is some `e*_b`, of floor `b`. -/
-lemma level_le_or_exists_eq_eStar (k : 𝔰.BesselIndex) :
-    level k ≤ 𝔰.ϱ ∨ ∃ b : Fin 𝔰.ϱ, k = eStar b ∧ floorOf k = b := by
+lemma level_le_or_exists_eq_eStar (k : 𝔰.BesselIndex)
+    : level k ≤ 𝔰.ϱ ∨ ∃ b : Fin 𝔰.ϱ, k = eStar b ∧ floorOf k = b := by
   obtain a | m | a := k <;> simp [level]
 
-/-- If the coordinates `e*_b` of `v : 𝔰.BesselIndex → A` with `b < j` vanish (`j : ℕ`), an element
+/--
+If the coordinates `e*_b` of `v : 𝔰.BesselIndex → A` with `b < j` vanish (`j : ℕ`), an element
 of the unitriangular group `𝒩_{<j}` of the floors below `j` keeps the coordinates of `v` of floor at
-least `j` and those of level above `ϱ`. -/
-lemma unipotentBelow_mulVec_apply (hg : g ∈ unipotentBelow j)
-    (hv : ∀ b : Fin 𝔰.ϱ, b < j → v (eStar b) = 0) (i : 𝔰.BesselIndex)
-    (hi : j ≤ floorOf i ∨ 𝔰.ϱ < level i) :
-    (g *ᵥ v) i = v i := by
+least `j` and those of level above `ϱ`.
+-/
+lemma unipotentBelow_mulVec_apply
+    (hg : g ∈ unipotentBelow j) (hv : ∀ b : Fin 𝔰.ϱ, b < j → v (eStar b) = 0)
+    (i : 𝔰.BesselIndex) (hi : j ≤ floorOf i ∨ 𝔰.ϱ < level i)
+    : (g *ᵥ v) i = v i := by
   -- Compare with `1 *ᵥ v` term by term: where row `i` of `g` may differ from `1`, `v` vanishes.
   conv_rhs => rw [← one_mulVec v]
   refine Finset.sum_congr rfl fun k _ ↦ ?_
   change g.val i k * v k = (1 : Matrix 𝔰.BesselIndex 𝔰.BesselIndex A) i k * v k
   grind [level_le_or_exists_eq_eStar k]
 
-/-- Let `s` lie in `Q_j`, the group of isometries that are unitriangular in the columns of floor
+/--
+Let `s` lie in `Q_j`, the group of isometries that are unitriangular in the columns of floor
 and level below `j`. For `a < j`, the row `e*_a` of `s` is that of `1` outside the columns `e*_b`
-with `b < a`. -/
-lemma partialUnitriangularGroup_apply_eStar (hs : s ∈ partialUnitriangularGroup j) (ha : a < j)
-    (k : 𝔰.BesselIndex) (hk : ∀ b : Fin 𝔰.ϱ, b < a → k ≠ eStar b) :
-    s.val (eStar a) k = (1 : Matrix 𝔰.BesselIndex 𝔰.BesselIndex A) (eStar a) k := by
+with `b < a`.
+-/
+lemma partialUnitriangularGroup_apply_eStar
+    (hs : s ∈ partialUnitriangularGroup j) (ha : a < j)
+    (k : 𝔰.BesselIndex) (hk : ∀ b : Fin 𝔰.ϱ, b < a → k ≠ eStar b)
+    : s.val (eStar a) k = (1 : Matrix 𝔰.BesselIndex 𝔰.BesselIndex A) (eStar a) k := by
   -- The row `inl a` of `J s = (s⁻¹)ᴴ J` is the row `eStar a` of `s`; the column `inl a` of
   -- `s⁻¹ ∈ partialUnitriangularGroup j` is that of `1` at the levels `≥ a`.
-  have h_col (x : 𝔰.BesselIndex) (hx : a ≤ level x) :
-      s⁻¹.val x (inl a) = (1 : Matrix 𝔰.BesselIndex 𝔰.BesselIndex A) x (inl a) :=
+  have h_col (x : 𝔰.BesselIndex) (hx : a ≤ level x)
+      : s⁻¹.val x (inl a) = (1 : Matrix 𝔰.BesselIndex 𝔰.BesselIndex A) x (inl a) :=
     mem_partialUnitriangularGroup.1 (inv_mem hs) x (inl a) hx (.inl ⟨ha, ha⟩)
   have h_form : T.splitGram * s.val.val = s⁻¹.val.valᴴ * T.splitGram := by
     simpa using U.form_mul_inv_eq s⁻¹
-  have h_row :
-      s.val (eStar a) k = ∑ x : 𝔰.BesselIndex, star (s⁻¹.val x (inl a)) * T.splitGram x k := by
+  have h_row
+      : s.val (eStar a) k = ∑ x : 𝔰.BesselIndex, star (s⁻¹.val x (inl a)) * T.splitGram x k := by
     simpa [Matrix.mul_apply] using congrFun₂ h_form (inl a) k
   rw [h_row]
   obtain b | m | b := k
@@ -775,11 +897,15 @@ lemma partialUnitriangularGroup_apply_eStar (hs : s ∈ partialUnitriangularGrou
     rw [sum_eq_single (inl b) (by simp +contextual [eq_comm]), h_col (inl b) hab]
     simp [Matrix.one_apply, apply_ite star, eq_comm]
 
-/-- For `a < j`, an element `s` of `Q_j` (`partialUnitriangularGroup j`, `j : ℕ`) keeps, under `*ᵥ`,
+/--
+For `a < j`, an element `s` of `Q_j` (`partialUnitriangularGroup j`, `j : ℕ`) keeps, under `*ᵥ`,
 the coordinate `e*_a` of a `v : 𝔰.BesselIndex → A` that is a vector whose coordinates `e*_b` with
-`b < a` vanish. -/
-lemma partialUnitriangularGroup_mulVec_eStar (hs : s ∈ partialUnitriangularGroup j) (ha : a < j)
-    (hv : ∀ b : Fin 𝔰.ϱ, b < a → v (eStar b) = 0) : (s.val.val *ᵥ v) (eStar a) = v (eStar a) := by
+`b < a` vanish.
+-/
+lemma partialUnitriangularGroup_mulVec_eStar
+    (hs : s ∈ partialUnitriangularGroup j) (ha : a < j)
+    (hv : ∀ b : Fin 𝔰.ϱ, b < a → v (eStar b) = 0)
+    : (s.val.val *ᵥ v) (eStar a) = v (eStar a) := by
   -- Compare with `1 *ᵥ v` term by term: the rows differ only where `v` vanishes.
   conv_rhs => rw [← one_mulVec v]
   refine Finset.sum_congr rfl fun k _ ↦ ?_
@@ -803,9 +929,11 @@ variable {R : Type} [CommRing R] [StarRing R] {𝔰 : Shape} {T : 𝔰.Form R}
 /-- The group H: the floor group H_{ϱ+1}, the fixer of all basis vectors outside `κ`. -/
 abbrev Shape.Form.besselH : Subgroup T.G := T.floorGroup 𝔰.n
 
-/-- The Bessel subgroup S: the group `Q_{ϱ+1}` of the isometries whose columns at the frame vectors
+/--
+The Bessel subgroup S: the group `Q_{ϱ+1}` of the isometries whose columns at the frame vectors
 agree with those of the identity matrix on and below the diagonal blocks. It contains the
-unipotent group `New.Shape.Form.besselU` and H = `New.Shape.Form.besselH`. -/
+unipotent group `New.Shape.Form.besselU` and H = `New.Shape.Form.besselH`.
+-/
 abbrev Shape.Form.besselS : Subgroup T.G := T.partialUnitriangularGroup 𝔰.n
 
 export Shape.Form (besselH besselS)
@@ -823,16 +951,19 @@ instance [h : IsHermitianUnit T] : IsHermitianUnit T.splitGram where
 /-! ### Elements of `H` and the frame -/
 
 omit [StarRing R] in
-/-- A right factor that fixes the basis vectors outside `κ` does not change the image of the
-frame. -/
-lemma frameImage_mul_of_mem_agreeWithOneOn {g : GL 𝔰.BesselIndex R}
-    (hg : g ∈ agreeWithOneOn (fun _ j : 𝔰.BesselIndex ↦ floorOf j < 𝔰.n) R
-      fun _ _ _ hj ↦ Or.inr hj)
-    (x : Matrix 𝔰.BesselIndex 𝔰.BesselIndex R) :
-    frameImage (x * g.val) = frameImage x := by
+/--
+A right factor that fixes the basis vectors outside `κ` does not change the image of the
+frame.
+-/
+lemma frameImage_mul_of_mem_agreeWithOneOn
+    {g : GL 𝔰.BesselIndex R}
+    (hg : g ∈ agreeWithOneOn (fun _ j : 𝔰.BesselIndex ↦ floorOf j < 𝔰.n) R fun _ _ _ hj ↦ Or.inr hj)
+    (x : Matrix 𝔰.BesselIndex 𝔰.BesselIndex R)
+    : frameImage (x * g.val) = frameImage x := by
   ext i b
-  have h_col (k : 𝔰.BesselIndex) : g.val k (𝔰.besselFrame b) =
-      (1 : Matrix 𝔰.BesselIndex 𝔰.BesselIndex R) k (𝔰.besselFrame b) :=
+  have h_col (k : 𝔰.BesselIndex)
+      : g.val k (𝔰.besselFrame b)
+        = (1 : Matrix 𝔰.BesselIndex 𝔰.BesselIndex R) k (𝔰.besselFrame b) :=
     hg k _ (floorOf_besselFrame.trans_lt b.is_lt)
   simp [Matrix.mul_apply, h_col, Matrix.one_apply, -Fintype.sum_sum_type]
 
@@ -840,8 +971,7 @@ lemma frameImage_mul_of_mem_agreeWithOneOn {g : GL 𝔰.BesselIndex R}
 lemma frameMatrix_mul_besselH (s : T.G) (hh : h ∈ besselH) : frameMatrix (s * h) = frameMatrix s :=
   funext fun i ↦ congrFun (frameImage_mul_of_mem_agreeWithOneOn hh s) (𝔰.besselFrame i)
 
-lemma mem_besselFixer_of_mem_besselU0 (hu : u ∈ besselU0) : u ∈ besselFixer :=
-  (mem_inf.1 hu).right
+lemma mem_besselFixer_of_mem_besselU0 (hu : u ∈ besselU0) : u ∈ besselFixer := (mem_inf.1 hu).right
 
 /-- An element of `H` fixes the frame vectors, whose floors are at most `ϱ`. -/
 lemma mem_besselFixer_of_mem_besselH (hh : h ∈ besselH) : h ∈ besselFixer := by
@@ -856,12 +986,14 @@ lemma mem_besselS_of_mem_besselFixer (hs : s ∈ besselFixer) : s ∈ besselS :=
     eq_besselFrame_of_floorOf_eq rfl (by grind)
   exact hs i j ⟨_, h_frame.symm⟩
 
-/-- An isometry `s` lies in the Bessel subgroup `besselS` if and only if, for every vector `f_a` of
+/--
+An isometry `s` lies in the Bessel subgroup `besselS` if and only if, for every vector `f_a` of
 the frame `(e_0, …, e_{ϱ-1}, z)`, the difference `s f_a - f_a` lies in the span of the earlier frame
-vectors. -/
-lemma Filling.mem_besselS_iff_frameImage :
-    s ∈ besselS ↔
-      ∀ (i : SplitIndex 𝔰.ϱ 𝔰.MiddleIndex) (a : Fin (𝔰.ϱ + 1)),
+vectors.
+-/
+lemma Filling.mem_besselS_iff_frameImage
+    : s ∈ besselS
+      ↔ ∀ (i : SplitIndex 𝔰.ϱ 𝔰.MiddleIndex) (a : Fin (𝔰.ϱ + 1)),
         a.val ≤ BesselIndex.level i → frameImage s.val.val i a = frameImage 1 i a := by
   rw [mem_partialUnitriangularGroup]
   constructor
@@ -881,8 +1013,10 @@ lemma Filling.mem_besselS_iff_frameImage :
 
 /-! ### `S` normalises `𝖴` -/
 
-/-- The Bessel subgroup `S`, whose elements are unitriangular in the columns of the frame vectors,
-normalises the group `𝖴` of block unitriangular isometries. -/
+/--
+The Bessel subgroup `S`, whose elements are unitriangular in the columns of the frame vectors,
+normalises the group `𝖴` of block unitriangular isometries.
+-/
 lemma besselS_le_normalizer_besselU : T.besselS ≤ normalizer T.besselU := by
   refine le_normalizer_iff.2 fun s hs u hu ↦ ?_
   -- `s` is block upper triangular for the levels: `partialUnitriangularGroup_apply_eStar` gives the
@@ -902,15 +1036,19 @@ lemma besselS_le_normalizer_besselU : T.besselS ≤ normalizer T.besselU := by
 
 /-! ### The additive character on `S` -/
 
-/-- For s in the unitary group, the sum σ(s) of the entries just above the diagonal of the block
-of s on the frame (e_0, …, e_{ϱ-1}, z). -/
+/--
+For s in the unitary group, the sum σ(s) of the entries just above the diagonal of the block
+of s on the frame (e_0, …, e_{ϱ-1}, z).
+-/
 def simpleRootSum (s : T.G) : R :=
   ∑ a : Fin 𝔰.ϱ, s.val (𝔰.besselFrame (castSucc a)) (𝔰.besselFrame a.succ)
 
-/-- The sum σ of the entries just above the diagonal on the frame is additive on the Bessel
-subgroup S. -/
-lemma simpleRootSum_mul (hh : h ∈ besselS) (hu : u ∈ besselS) :
-    simpleRootSum (h * u) = simpleRootSum h + simpleRootSum u := by
+/--
+The sum σ of the entries just above the diagonal on the frame is additive on the Bessel
+subgroup S.
+-/
+lemma simpleRootSum_mul (hh : h ∈ besselS) (hu : u ∈ besselS)
+    : simpleRootSum (h * u) = simpleRootSum h + simpleRootSum u := by
   rw [simpleRootSum, simpleRootSum, simpleRootSum, ← sum_add_distrib]
   refine sum_congr rfl fun i _ ↦ ?_
   set x : 𝔰.BesselIndex := 𝔰.besselFrame i.castSucc
@@ -926,45 +1064,55 @@ lemma simpleRootSum_mul (hh : h ∈ besselS) (hu : u ∈ besselS) :
 
 /-! ### Principal congruence subgroups and the factor `H` -/
 
-/-- An isometry lies in the congruence subgroup of level `g` over `Q` exactly when it lies in
-`GL(Q)` and `g⁻¹ (u - 1)` has entries in `Q`. -/
-lemma mem_unitaryLevel_splitGram_iff :
-    u ∈ unitaryLevel Q g T.splitGram ↔
-      u.val ∈ intGL 𝔰.BesselIndex Q ∧ IsIntMatrix Q (g⁻¹ • (u.val.val - 1)) :=
+/--
+An isometry lies in the congruence subgroup of level `g` over `Q` exactly when it lies in
+`GL(Q)` and `g⁻¹ (u - 1)` has entries in `Q`.
+-/
+lemma mem_unitaryLevel_splitGram_iff
+    : u ∈ unitaryLevel Q g T.splitGram
+      ↔ u.val ∈ intGL 𝔰.BesselIndex Q ∧ IsIntMatrix Q (g⁻¹ • (u.val.val - 1)) :=
   Iff.rfl
 
-/-- If `u` is integral over `Q` and congruent to `1` modulo `g` (`New.unitaryLevel`), the sum of
-its entries just above the diagonal on the frame is divisible by `g` in `Q`. -/
-lemma inv_mul_simpleRootSum_mem (hu : u ∈ unitaryLevel Q g T.splitGram) :
-    (g⁻¹ : Rˣ) * simpleRootSum u ∈ Q := by
+/--
+If `u` is integral over `Q` and congruent to `1` modulo `g` (`New.unitaryLevel`), the sum of
+its entries just above the diagonal on the frame is divisible by `g` in `Q`.
+-/
+lemma inv_mul_simpleRootSum_mem (hu : u ∈ unitaryLevel Q g T.splitGram)
+    : (g⁻¹ : Rˣ) * simpleRootSum u ∈ Q := by
   rw [simpleRootSum, mul_sum]
   refine sum_mem fun a _ ↦ ?_
-  have h_entry :
-      (g⁻¹ • (u.val.val - 1)) (𝔰.besselFrame a.castSucc) (𝔰.besselFrame a.succ) ∈ Q :=
+  have h_entry : (g⁻¹ • (u.val.val - 1)) (𝔰.besselFrame a.castSucc) (𝔰.besselFrame a.succ) ∈ Q :=
     (mem_unitaryLevel_splitGram_iff.1 hu).right _ _
   have h_ne : 𝔰.besselFrame a.castSucc ≠ 𝔰.besselFrame a.succ :=
     besselFrame_injective.ne castSucc_lt_succ.ne
   rwa [Matrix.smul_apply, Matrix.sub_apply, one_apply_ne h_ne, sub_zero, Units.smul_def,
-    smul_eq_mul] at h_entry
+      smul_eq_mul]
+    at h_entry
 
-/-- The sum of the entries just above the diagonal on the frame vanishes on `H`, whose columns at
-the frame vectors are those of `1`. -/
+/--
+The sum of the entries just above the diagonal on the frame vanishes on `H`, whose columns at
+the frame vectors are those of `1`.
+-/
 lemma simpleRootSum_eq_zero_of_mem_besselH (hh : h ∈ besselH) : simpleRootSum h = 0 :=
   sum_eq_zero (by grind [one_apply_ne])
 
-/-- For `u` in `𝖴` and `h` in `H`, each entry of `h` is the entry at the same place of `u * h` or
-of `1`. -/
-lemma besselH_apply_eq_or (hu : u ∈ besselU) (hh : h ∈ besselH) (i j : 𝔰.BesselIndex) :
-    h.val i j = (u * h).val i j ∨ h.val i j = (1 : Matrix 𝔰.BesselIndex 𝔰.BesselIndex R) i j := by
+/--
+For `u` in `𝖴` and `h` in `H`, each entry of `h` is the entry at the same place of `u * h` or
+of `1`.
+-/
+lemma besselH_apply_eq_or (hu : u ∈ besselU) (hh : h ∈ besselH) (i j : 𝔰.BesselIndex)
+    : h.val i j = (u * h).val i j ∨ h.val i j = (1 : Matrix 𝔰.BesselIndex 𝔰.BesselIndex R) i j := by
   revert i j
   simp [apply_eq_one_apply_of_mem_floorGroup hh, apply_inr_of_mem_besselU hu, Matrix.mul_apply]
 
-/-- Let `u` be block unitriangular (`besselU`) and let `h` fix the basis vectors outside `κ`
+/--
+Let `u` be block unitriangular (`besselU`) and let `h` fix the basis vectors outside `κ`
 (`besselH`). If `u * h` is integral over `Q` and congruent to `1` modulo `g` (`New.unitaryLevel`),
-then so is `h`. -/
-lemma mem_unitaryLevel_of_besselU_mul (hu : u ∈ besselU) (hh : h ∈ besselH)
-    (h_level : u * h ∈ unitaryLevel Q g T.splitGram) :
-    h ∈ unitaryLevel Q g T.splitGram := by
+then so is `h`.
+-/
+lemma mem_unitaryLevel_of_besselU_mul
+    (hu : u ∈ besselU) (hh : h ∈ besselH) (h_level : u * h ∈ unitaryLevel Q g T.splitGram)
+    : h ∈ unitaryLevel Q g T.splitGram := by
   -- Apply `besselH_apply_eq_or` to `h`, and to `h⁻¹`: the inverse `(u * h)⁻¹` is `h⁻¹` multiplied
   -- on the left by the unipotent `h⁻¹ * u⁻¹ * h`.
   have h_normalizer : h⁻¹ ∈ normalizer T.besselU :=
@@ -972,15 +1120,18 @@ lemma mem_unitaryLevel_of_besselU_mul (hu : u ∈ besselU) (hh : h ∈ besselH)
   have h_conj : h⁻¹ * u⁻¹ * h ∈ besselU := by
     simpa using (mem_normalizer_iff.1 h_normalizer u⁻¹).1 (inv_mem hu)
   have h_inv : (u * h)⁻¹ = h⁻¹ * u⁻¹ * h * h⁻¹ := by group
-  have h_inv_entry (i j : 𝔰.BesselIndex) : h⁻¹.val i j = (u * h)⁻¹.val i j ∨
-      h⁻¹.val i j = (1 : Matrix 𝔰.BesselIndex 𝔰.BesselIndex R) i j := by
+  have h_inv_entry (i j : 𝔰.BesselIndex)
+      : h⁻¹.val i j = (u * h)⁻¹.val i j
+        ∨ h⁻¹.val i j = (1 : Matrix 𝔰.BesselIndex 𝔰.BesselIndex R) i j := by
     rw [h_inv]
     exact besselH_apply_eq_or h_conj (inv_mem hh) i j
   have h_one (i j : 𝔰.BesselIndex) : (1 : Matrix 𝔰.BesselIndex 𝔰.BesselIndex R) i j ∈ Q := by
     simp [Matrix.one_apply, apply_ite (· ∈ Q)]
   obtain ⟨h_intGL, h_congr⟩ := mem_unitaryLevel_splitGram_iff.1 h_level
-  obtain ⟨h_int, h_inv_int⟩ : (∀ i j : 𝔰.BesselIndex, (u * h).val i j ∈ Q) ∧
-      ∀ i j : 𝔰.BesselIndex, (u * h)⁻¹.val i j ∈ Q := mem_intGL.1 h_intGL
+  obtain ⟨h_int, h_inv_int⟩
+      : (∀ i j : 𝔰.BesselIndex, (u * h).val i j ∈ Q)
+        ∧ ∀ i j : 𝔰.BesselIndex, (u * h)⁻¹.val i j ∈ Q :=
+    mem_intGL.1 h_intGL
   -- So integrality and the congruence modulo `g` pass from `u * h` to `h`, entry by entry.
   refine mem_unitaryLevel_splitGram_iff.2 ⟨mem_intGL.2 ⟨fun i j ↦ ?_, fun i j ↦ ?_⟩, fun i j ↦ ?_⟩
   · obtain h_eq | h_eq := besselH_apply_eq_or hu hh i j <;> rw [h_eq]
@@ -993,14 +1144,16 @@ lemma mem_unitaryLevel_of_besselU_mul (hu : u ∈ besselU) (hh : h ∈ besselH)
     · exact h_congr i j
     · simp
 
-/-- Let `h` and `h'` lie in `H`. If `u * (h * y)` and `u' * (h' * y)` lie in the congruence subgroup
+/--
+Let `h` and `h'` lie in `H`. If `u * (h * y)` and `u' * (h' * y)` lie in the congruence subgroup
 `K(g)` (`New.unitaryLevel`) for some `u` and `u'` in `𝖴`, then so does `h' / h`. So the `h` in `H`
-with `h * y` in `𝖴 K(g)` lie in one right coset of `H ∩ K(g)`. -/
-lemma div_mem_unitaryLevel_of_besselU_mul {h h' u u' y : T.G} (hh : h ∈ T.besselH)
-    (hh' : h' ∈ T.besselH) (hu : u ∈ T.besselU) (hu' : u' ∈ T.besselU)
-    (h_level : u * (h * y) ∈ unitaryLevel Q g T.splitGram)
-    (h_level' : u' * (h' * y) ∈ unitaryLevel Q g T.splitGram) :
-    h' / h ∈ unitaryLevel Q g T.splitGram := by
+with `h * y` in `𝖴 K(g)` lie in one right coset of `H ∩ K(g)`.
+-/
+lemma div_mem_unitaryLevel_of_besselU_mul
+    {h h' u u' y : T.G} (hh : h ∈ T.besselH) (hh' : h' ∈ T.besselH) (hu : u ∈ T.besselU)
+    (hu' : u' ∈ T.besselU) (h_level : u * (h * y) ∈ unitaryLevel Q g T.splitGram)
+    (h_level' : u' * (h' * y) ∈ unitaryLevel Q g T.splitGram)
+    : h' / h ∈ unitaryLevel Q g T.splitGram := by
   -- `H` normalises `𝖴`, so the quotient of the two elements of `K(g)` lies in `𝖴 (h' / h)`.
   have h_div : h' / h ∈ T.besselH := div_mem hh' hh
   have h_conj : h' / h * u⁻¹ * (h' / h)⁻¹ ∈ T.besselU :=

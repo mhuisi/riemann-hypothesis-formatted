@@ -19,10 +19,12 @@ open Complex DirichletCharacter CharZero Nat.Prime
 variable {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N)
 
 omit [NeZero N] in
-/-- For a Dirichlet character `χ` and `re s ≠ 0`, the product of the inverse Euler factors
-`1 - χ(p) p ^ (-s)` over the primes `p` dividing `M` does not vanish. -/
-lemma New.prod_euler_factor_ne_zero {M : ℕ} {s : ℂ} (h_re : s.re ≠ 0) :
-    ∏ p ∈ M.primeFactors, (1 - χ p * (p : ℂ) ^ (-s)) ≠ 0 := by
+/--
+For a Dirichlet character `χ` and `re s ≠ 0`, the product of the inverse Euler factors
+`1 - χ(p) p ^ (-s)` over the primes `p` dividing `M` does not vanish.
+-/
+lemma New.prod_euler_factor_ne_zero {M : ℕ} {s : ℂ} (h_re : s.re ≠ 0)
+    : ∏ p ∈ M.primeFactors, (1 - χ p * (p : ℂ) ^ (-s)) ≠ 0 := by
   refine Finset.prod_ne_zero_iff.2 fun p hp_mem h_factor ↦ ?_
   have hp : p.Prime := Nat.prime_of_mem_primeFactors hp_mem
   -- A vanishing factor means `χ p = p ^ s`. As `conj (χ p) = (χ p)⁻¹`, comparing norms gives
@@ -33,34 +35,42 @@ lemma New.prod_euler_factor_ne_zero {M : ℕ} {s : ℂ} (h_re : s.re ≠ 0) :
   have h_norm : ‖χ p‖ = (p : ℝ) ^ s.re := by rw [hχp, norm_natCast_cpow_of_pos hp.pos]
   have h_rpow : (p : ℝ) ^ s.re = (p : ℝ) ^ (-s.re) := by
     rw [Real.rpow_neg p.cast_nonneg, ← h_norm, ← norm_inv, ← h_conj, norm_star]
-  have h_neg : s.re = -s.re :=
-    (Real.rpow_right_inj (mod_cast hp.pos) (mod_cast hp.ne_one)).1 h_rpow
+  have h_neg : s.re = -s.re := (Real.rpow_right_inj (mod_cast hp.pos) (mod_cast hp.ne_one)).1 h_rpow
   exact h_re (self_eq_neg.1 h_neg)
 
-/-- Every complex Dirichlet character χ mod N, with N ≥ 1, is induced by a primitive character ψ
-mod M for some divisor M ≥ 1 of N. -/
-lemma New.exists_isPrimitive_changeLevel_eq :
-    ∃ (M : ℕ) (hM : M ∣ N) (ψ : DirichletCharacter ℂ M),
-      NeZero M ∧ IsPrimitive ψ ∧ changeLevel hM ψ = χ :=
-  ⟨χ.conductor, χ.conductor_dvd_level, χ.primitiveCharacter, ⟨χ.conductor_ne_zero⟩,
-    χ.primitiveCharacter_isPrimitive, χ.changeLevel_primitiveCharacter⟩
+/--
+Every complex Dirichlet character χ mod N, with N ≥ 1, is induced by a primitive character ψ
+mod M for some divisor M ≥ 1 of N.
+-/
+lemma New.exists_isPrimitive_changeLevel_eq
+    : ∃ (M : ℕ) (hM : M ∣ N) (ψ : DirichletCharacter ℂ M),
+      NeZero M ∧ IsPrimitive ψ ∧ changeLevel hM ψ = χ := ⟨
+  χ.conductor,
+  χ.conductor_dvd_level,
+  χ.primitiveCharacter,
+  ⟨χ.conductor_ne_zero⟩,
+  χ.primitiveCharacter_isPrimitive,
+  χ.changeLevel_primitiveCharacter
+⟩
 
 /-- A character induced by `ψ` has the parity of `ψ`, hence the same gamma factor. -/
-lemma New.gammaFactor_changeLevel {M L : ℕ} (hM : M ∣ L) (ψ : DirichletCharacter ℂ M) (s : ℂ) :
-    (changeLevel hM ψ).gammaFactor s = ψ.gammaFactor s := by
+lemma New.gammaFactor_changeLevel {M L : ℕ} (hM : M ∣ L) (ψ : DirichletCharacter ℂ M) (s : ℂ)
+    : (changeLevel hM ψ).gammaFactor s = ψ.gammaFactor s := by
   have h_neg_one : changeLevel hM ψ (-1) = ψ (-1) := by
     simpa [hM] using ψ.changeLevel_eq_cast_of_dvd hM (-1)
   rw [gammaFactor, gammaFactor, DirichletCharacter.Even, DirichletCharacter.Even, h_neg_one]
 
-/-- Symmetry of the zeros: if L(s, χ) = 0, re s ≠ 0 and s ≠ 1, then either s is a pole of the gamma
+/--
+Symmetry of the zeros: if L(s, χ) = 0, re s ≠ 0 and s ≠ 1, then either s is a pole of the gamma
 factor of χ (where Mathlib gives it the value 0), or L(1 − s, χ⁻¹) = 0. The character need not be
 primitive, and multiplicities are not compared.
 
 This is a consequence of the functional equation for the primitive character inducing χ; it keeps
-only the reflection s ↦ 1 − s of zeros from χ to χ⁻¹, not the identity itself or the root number. -/
-lemma New.gammaFactor_eq_zero_or_LFunction_one_sub_eq_zero (s : ℂ) (h_re : s.re ≠ 0)
-    (h_ne_one : s ≠ 1) (hs : χ.LFunction s = 0) :
-    χ.gammaFactor s = 0 ∨ LFunction χ⁻¹ (1 - s) = 0 := by
+only the reflection s ↦ 1 − s of zeros from χ to χ⁻¹, not the identity itself or the root number.
+-/
+lemma New.gammaFactor_eq_zero_or_LFunction_one_sub_eq_zero
+    (s : ℂ) (h_re : s.re ≠ 0) (h_ne_one : s ≠ 1) (hs : χ.LFunction s = 0)
+    : χ.gammaFactor s = 0 ∨ LFunction χ⁻¹ (1 - s) = 0 := by
   -- Pass to the primitive character `ψ` inducing `χ` and use its functional equation.
   obtain ⟨M, hM, ψ, _, hψ, rfl⟩ := exists_isPrimitive_changeLevel_eq χ
   -- `L(s, χ)` is `L(s, ψ)` times inverse Euler factors, which do not vanish at `s`.

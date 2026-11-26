@@ -54,44 +54,53 @@ namespace New
 
 open Polynomial IsSepClosed MulAction Subgroup Cohomology Set QuotientGroup Finset
 
-variable {Γ k Ω : Type*} [Group Γ] [Field k] [Field Ω] [Algebra k Ω] [MulSemiringAction Γ Ω]
-  {A : ValuationSubring Ω} {π : kˣ} (hπ : IsUniformiser A π.val) {s : Γ} (hs : s ∈ inertiaGroup Γ A)
-  {n : ℕ} (hn : A.valuation n = 1) {y : Ω} (hy : y ^ n = algebraMap k Ω π)
+variable
+  {Γ k Ω : Type*} [Group Γ] [Field k] [Field Ω] [Algebra k Ω] [MulSemiringAction Γ Ω]
+  {A : ValuationSubring Ω} {π : kˣ} (hπ : IsUniformiser A π.val)
+  {s : Γ} (hs : s ∈ inertiaGroup Γ A)
+  {n : ℕ} (hn : A.valuation n = 1)
+  {y : Ω} (hy : y ^ n = algebraMap k Ω π)
 
 namespace Cohomology
 
 /-! ### Inertia and roots of order prime to the residue characteristic -/
 
 /-- For `s` in inertia and a unit `w` of `A`, `s • w / w ≡ 1` modulo the maximal ideal. -/
-lemma valuation_smul_div_sub_one_lt_one (hs : s ∈ inertiaGroup Γ A) {w : Ω} (hw : A w = 1) :
-    A (s • w / w - 1) < 1 := by
+lemma valuation_smul_div_sub_one_lt_one (hs : s ∈ inertiaGroup Γ A) {w : Ω} (hw : A w = 1)
+    : A (s • w / w - 1) < 1 := by
   have hw_ne : w ≠ 0 := by aesop
   obtain ⟨-, h_frob⟩ := hs
   simpa [div_sub_one hw_ne, hw] using h_frob w
 
-/-- Let `s` lie in the inertia group of `A` and let `n` be a unit of `A`. If `w ^ n = u` is a unit
-of `A` fixed by `s`, then `s` fixes `w`. -/
-lemma inertia_fixes_root_of_unit (hs : s ∈ inertiaGroup Γ A) {n : ℕ} (hn : A.valuation n = 1)
-    {w u : Ω} (hw : w ^ n = u) (hu : A.valuation u = 1) (h_fix : s • u = u) :
-    s • w = w := by
+/--
+Let `s` lie in the inertia group of `A` and let `n` be a unit of `A`. If `w ^ n = u` is a unit
+of `A` fixed by `s`, then `s` fixes `w`.
+-/
+lemma inertia_fixes_root_of_unit
+    (hs : s ∈ inertiaGroup Γ A)
+    {n : ℕ} (hn : A.valuation n = 1)
+    {w u : Ω} (hw : w ^ n = u) (hu : A.valuation u = 1) (h_fix : s • u = u)
+    : s • w = w := by
   -- `s • w / w` is an `n`-th root of unity congruent to `1`, and `n` is a unit, so it is `1`.
   subst hw
   have w_unit : A.valuation w = 1 := by simpa [show n ≠ 0 by aesop] using hu
   have root : (s • w / w) ^ n = 1 := by simp [div_pow, ← smul_pow', h_fix, show w ≠ 0 by aesop]
-  exact eq_of_div_eq_one
-    (eq_of_val_sub_lt_one hn root (one_pow n) (valuation_smul_div_sub_one_lt_one hs w_unit))
+  exact eq_of_div_eq_one (eq_of_val_sub_lt_one hn root (one_pow n)
+    (valuation_smul_div_sub_one_lt_one hs w_unit))
 
 /-- If `n` is a unit of `A` and `y ^ n = π`, then `y ≠ 0` and `n ≠ 0`. -/
-lemma ne_zero_of_tame_root {n : ℕ} (hn : A.valuation n = 1) {y : Ω}
-    (hy : y ^ n = algebraMap k Ω π) : y ≠ 0 ∧ NeZero n := by
+lemma ne_zero_of_tame_root {n : ℕ} (hn : A.valuation n = 1) {y : Ω} (hy : y ^ n = algebraMap k Ω π)
+    : y ≠ 0 ∧ NeZero n := by
   have n_ne : n ≠ 0 := by aesop
   exact ⟨by rintro rfl; simpa [n_ne] using hy.symm, ⟨n_ne⟩⟩
 
 include hs hn hy
 
-/-- Let `n` be a unit of `A`, that is, prime to the residue characteristic, and `y ^ n = π`
+/--
+Let `n` be a unit of `A`, that is, prime to the residue characteristic, and `y ^ n = π`
 (the section hypotheses `hn`, `hy`). An element `s` of inertia (`hs`) multiplies all `n`-th roots
-of `π` by the same `s • y / y`. -/
+of `π` by the same `s • y / y`.
+-/
 lemma smul_root_eq_ratio_mul {b : Ω} (hb : b ^ n = algebraMap k Ω π) : s • b = s • y / y * b := by
   -- `y / b` is an `n`-th root of unity, so inertia fixes it.
   have root : (y / b) ^ n = 1 := by simp [div_pow, hy, hb]
@@ -99,8 +108,10 @@ lemma smul_root_eq_ratio_mul {b : Ω} (hb : b ^ n = algebraMap k Ω π) : s • 
     simpa [smul_div₀'] using inertia_fixes_root_of_unit hs hn root (by simp) (by simp)
   grind [smul_ne_zero_iff_ne, ne_zero_of_tame_root hn hy, ne_zero_of_tame_root hn hb]
 
-/-- Let `s` lie in the inertia group of `A` (`hs`), `n` be a unit of `A` (`hn`) and `y ^ n = π`
-with `π` in `kˣ` (`hy`). Then `s ^ i • y / y = (s • y / y) ^ i` for every natural number `i`. -/
+/--
+Let `s` lie in the inertia group of `A` (`hs`), `n` be a unit of `A` (`hn`) and `y ^ n = π`
+with `π` in `kˣ` (`hy`). Then `s ^ i • y / y = (s • y / y) ^ i` for every natural number `i`.
+-/
 lemma inertia_pow_smul_div [SMulCommClass Γ k Ω] (i : ℕ) : s ^ i • y / y = (s • y / y) ^ i := by
   induction i with
   | zero => simp [ne_zero_of_tame_root hn hy]
@@ -117,11 +128,13 @@ variable [TopologicalSpace Γ] [G : IsLocalGalois Γ k A]
 
 /-! ### Transitivity of inertia on roots of a uniformiser -/
 
-/-- For `y ≠ 0` whose orbit under inertia has `m` elements (the index of its stabiliser), the
+/--
+For `y ≠ 0` whose orbit under inertia has `m` elements (the index of its stabiliser), the
 valuation of `y ^ m` is an integral power of that of the uniformiser `π` (the section hypothesis
-`hπ : IsUniformiser A π`). -/
-lemma IsLocalGalois.exists_valuation_pow_inertia_index (hy_ne : y ≠ 0) :
-    ∃ d : ℤ, A y ^ (stabilizer (inertiaGroup Γ A) y).index = valuationVia k A π ^ d := by
+`hπ : IsUniformiser A π`).
+-/
+lemma IsLocalGalois.exists_valuation_pow_inertia_index (hy_ne : y ≠ 0)
+    : ∃ d : ℤ, A y ^ (stabilizer (inertiaGroup Γ A) y).index = valuationVia k A π ^ d := by
   -- The left side is the valuation of an element `c` of the fixed field of inertia
   -- (`exists_val_eq_pow_index`), and such an element has an integral order `d`.
   have h_decomp (g : inertiaGroup Γ A) : (g : Γ) ∈ decompGroup Γ A := g.property.left
@@ -136,13 +149,15 @@ lemma IsLocalGalois.exists_valuation_pow_inertia_index (hy_ne : y ≠ 0) :
       (by simpa using hd)
   exact ⟨d, by simpa [hc] using h_val⟩
 
-/-- Eisenstein's criterion over the fixed field of inertia: if `x ^ n` has the valuation of the
+/--
+Eisenstein's criterion over the fixed field of inertia: if `x ^ n` has the valuation of the
 uniformiser `π` (the section hypothesis `hπ`) and the inertia orbit of `x` lies in a set `T` of at
-most `n` elements, then every `y` in `T` is `g • x` for some `g` in inertia. -/
-lemma Cohomology.exists_inertia_smul_eq_of_orbit_subset {x y : Ω} {T : Finset Ω} {n : ℕ}
-    (hT_card : #T ≤ n) (hx : valuationVia k A π = A x ^ n)
-    (h_orbit : ∀ g : inertiaGroup Γ A, g.val • x ∈ T) (hy : y ∈ T) :
-    ∃ g ∈ inertiaGroup Γ A, g • x = y := by
+most `n` elements, then every `y` in `T` is `g • x` for some `g` in inertia.
+-/
+lemma Cohomology.exists_inertia_smul_eq_of_orbit_subset
+    {x y : Ω} {T : Finset Ω} {n : ℕ} (hT_card : #T ≤ n) (hx : valuationVia k A π = A x ^ n)
+    (h_orbit : ∀ g : inertiaGroup Γ A, g.val • x ∈ T) (hy : y ∈ T)
+    : ∃ g ∈ inertiaGroup Γ A, g • x = y := by
   -- `A x ^ n` is the valuation of `π`, which is below `1`; so `x ≠ 0` and `A x ≠ 1`.
   have val_lt : valuationVia k A π < 1 := hπ.valuationVia_lt_one
   -- (`n = 0` is impossible: then `π` would have valuation `1`.)
@@ -168,17 +183,19 @@ lemma Cohomology.exists_inertia_smul_eq_of_orbit_subset {x y : Ω} {T : Finset �
   obtain ⟨g, hg⟩ : ∃ g : inertiaGroup Γ A, g • x = y := orbit_eq.ge hy
   exact ⟨g, g.property, hg⟩
 
-/-- Let `Γ` be the Galois group of `Ω / k`, where `Ω` is algebraically closed of characteristic 0,
+/--
+Let `Γ` be the Galois group of `Ω / k`, where `Ω` is algebraically closed of characteristic 0,
 `Γ` stabilises the valuation subring `A`, and `A ∩ k` is a discrete valuation ring with finite
 residue field (`IsLocalGalois`), and let `π` be a uniformiser of `k` for `A`. For `n > 0`, if
 `x ^ n = π` and `y ^ n = x ^ n`, then some element `g` of the inertia group of `A` satisfies
 `g • x = y`, so inertia acts transitively on the `n`-th roots of `π`.
 
 This is the surjectivity in the structure theorem for tame inertia, at each finite level `n > 0`, in
-characteristic 0. -/
-lemma IsLocalGalois.exists_inertia_smul_eq_of_pow_eq {x y : Ω} {n : ℕ} (hn_pos : 0 < n)
-    (hx : x ^ n = algebraMap k Ω π) (hy : y ^ n = x ^ n) :
-    ∃ g ∈ inertiaGroup Γ A, g • x = y := by
+characteristic 0.
+-/
+lemma IsLocalGalois.exists_inertia_smul_eq_of_pow_eq
+    {x y : Ω} {n : ℕ} (hn_pos : 0 < n) (hx : x ^ n = algebraMap k Ω π) (hy : y ^ n = x ^ n)
+    : ∃ g ∈ inertiaGroup Γ A, g • x = y := by
   classical
   -- The orbit of `x` lies in the set of the at most `n` roots of `X ^ n - x ^ n`.
   let R := (nthRoots n (x ^ n)).toFinset
@@ -187,18 +204,21 @@ lemma IsLocalGalois.exists_inertia_smul_eq_of_pow_eq {x y : Ω} {n : ℕ} (hn_po
   have h_orbit (g : inertiaGroup Γ A) : (g : Γ) • x ∈ R := by simp [R, hn_pos, hx, ← smul_pow']
   exact exists_inertia_smul_eq_of_orbit_subset hπ card_le h_val h_orbit (by simp [R, hn_pos, hy])
 
-/-- Let `f` be a homomorphism on inertia with open kernel of index dividing `n ^ M`, with
+/--
+Let `f` be a homomorphism on inertia with open kernel of index dividing `n ^ M`, with
 `f g ^ n = 1` for all `g`; let `n` be a unit of `A` and `y₁ ^ (n ^ M * n) = π` for the
 uniformiser `π` (the section hypothesis `hπ`). Then every element of inertia that fixes `y₁` lies
-in the kernel of `f`. -/
-private lemma IsLocalGalois.stabilizer_le_ker_of_pow_eq {P : Type*} [Monoid P] {n : ℕ}
-    (hn : A.valuation n = 1) (f : inertiaGroup Γ A →* P) (hf : f.ker.IsOpen)
-    (hP : ∀ g : inertiaGroup Γ A, f g ^ n = 1) {M : ℕ} (card_dvd : f.ker.index ∣ n ^ M) {y₁ : Ω}
-    (hy : y₁ ^ (n ^ M * n) = algebraMap k Ω π) :
-    stabilizer (inertiaGroup Γ A) y₁ ≤ f.ker := by
+in the kernel of `f`.
+-/
+private lemma IsLocalGalois.stabilizer_le_ker_of_pow_eq
+    {P : Type*} [Monoid P]
+    {n : ℕ} (hn : A.valuation n = 1)
+    (f : inertiaGroup Γ A →* P) (hf : f.ker.IsOpen) (hP : ∀ g : inertiaGroup Γ A, f g ^ n = 1)
+    {M : ℕ} (card_dvd : f.ker.index ∣ n ^ M)
+    {y₁ : Ω} (hy : y₁ ^ (n ^ M * n) = algebraMap k Ω π)
+    : stabilizer (inertiaGroup Γ A) y₁ ≤ f.ker := by
   have h_fact : Fact f.ker.IsOpen := ⟨hf⟩
-  obtain ⟨y₁_ne, ⟨N_ne⟩⟩ :=
-    ne_zero_of_tame_root (A := A) (n := n ^ M * n) (by aesop) hy
+  obtain ⟨y₁_ne, ⟨N_ne⟩⟩ := ne_zero_of_tame_root (A := A) (n := n ^ M * n) (by aesop) hy
   have hn_ne : NeZero n := ⟨right_ne_zero_of_mul N_ne⟩
   -- By Galois theory it is enough that an `r` fixing `y₁` fixes the fixed field of `f.ker`.
   intro r hr
@@ -207,8 +227,8 @@ private lemma IsLocalGalois.stabilizer_le_ker_of_pow_eq {P : Type*} [Monoid P] {
   by_contra h_ne
   -- Otherwise `r x - x`, which `f.ker` fixes, has an orbit of size dividing `n ^ M * n`. As
   -- `y₁ ^ (n ^ M * n) = π`, it has the valuation of a power of `y₁`.
-  have ker_le : f.ker ≤ stabilizer (inertiaGroup Γ A) (r • x - x) :=
-    fun g hg ↦ mem_stabilizer_iff.2 (sub_mem (smul_mem_fixedPoints_of_normal r hx) hx ⟨g, hg⟩)
+  have ker_le : f.ker ≤ stabilizer (inertiaGroup Γ A) (r • x - x) := fun g hg ↦
+    mem_stabilizer_iff.2 (sub_mem (smul_mem_fixedPoints_of_normal r hx) hx ⟨g, hg⟩)
   obtain ⟨m, hm⟩ : (stabilizer (inertiaGroup Γ A) (r • x - x)).index ∣ n ^ M * n :=
     (index_dvd_of_le ker_le).trans (card_dvd.mul_right n)
   obtain ⟨d, hd⟩ := G.exists_valuation_pow_inertia_index hπ h_ne
@@ -222,7 +242,7 @@ private lemma IsLocalGalois.stabilizer_le_ker_of_pow_eq {P : Type*} [Monoid P] {
   have sum_eq : ∑ i ∈ range n, ((r ^ i).1 • w / w - 1) = -n := by
     -- `↓` rewrites the subgroup action before simp splits the sum
     simp [w, smul_div₀', ← sum_div, smul_sub, smul_smul, smul_eq_self_of_mem_zpowers _ hr,
-      ← pow_succ, ↓← Subgroup.smul_def, sum_range_sub (r ^ · • x), pow_fix]
+      ← pow_succ, ↓ ← Subgroup.smul_def, sum_range_sub (r ^ · • x), pow_fix]
   have h_sum_lt : A.valuation (∑ i ∈ range n, ((r ^ i).1 • w / w - 1)) < 1 :=
     A.valuation.map_sum_lt' one_pos fun i _ ↦ valuation_smul_div_sub_one_lt_one (r ^ i).2 w_unit
   simp only [sum_eq, Valuation.map_neg, hn, lt_self_iff_false] at h_sum_lt
@@ -231,32 +251,40 @@ private lemma IsLocalGalois.stabilizer_le_ker_of_pow_eq {P : Type*} [Monoid P] {
 
 omit hπ [TopologicalSpace Γ] in
 /-- A `q`-Frobenius normalises inertia: it stabilises `A`, so it conjugates inertia into itself. -/
-lemma IsFrob.conj_mem_inertiaGroup {q : ℕ} {φ : Γ} (hφ : IsFrob A q φ) (s : inertiaGroup Γ A) :
-    φ * s * φ⁻¹ ∈ inertiaGroup Γ A := by
+lemma IsFrob.conj_mem_inertiaGroup {q : ℕ} {φ : Γ} (hφ : IsFrob A q φ) (s : inertiaGroup Γ A)
+    : φ * s * φ⁻¹ ∈ inertiaGroup Γ A := by
   have h_conj := s.property.conj φ
-  open Pointwise in rw [MulAction.mem_stabilizer_iff.mp hφ.1] at h_conj
+  open Pointwise in
+    rw [MulAction.mem_stabilizer_iff.mp hφ.1] at h_conj
   exact h_conj
 
 omit hπ in
-/-- If `f` is trivial on the stabiliser of `y` in inertia (where `y ^ n = π`), then `f g = f s ^ i`
-whenever `g` moves `y` by the `i`-th power of the ratio by which `s` moves it. -/
-private lemma map_eq_pow_of_smul_div_eq (hn : A.valuation n = 1) (hy : y ^ n = algebraMap k Ω π)
-    {P : Type*} [Monoid P] {f : inertiaGroup Γ A →* P}
-    (h_stab : stabilizer (inertiaGroup Γ A) y ≤ f.ker) (s g : inertiaGroup Γ A) (i : ℕ)
-    (h_eq : (g : Γ) • y / y = ((s : Γ) • y / y) ^ i) : f g = f s ^ i := by
+/--
+If `f` is trivial on the stabiliser of `y` in inertia (where `y ^ n = π`), then `f g = f s ^ i`
+whenever `g` moves `y` by the `i`-th power of the ratio by which `s` moves it.
+-/
+private lemma map_eq_pow_of_smul_div_eq
+    (hn : A.valuation n = 1) (hy : y ^ n = algebraMap k Ω π)
+    {P : Type*} [Monoid P]
+    {f : inertiaGroup Γ A →* P} (h_stab : stabilizer (inertiaGroup Γ A) y ≤ f.ker)
+    (s g : inertiaGroup Γ A) (i : ℕ) (h_eq : (g : Γ) • y / y = ((s : Γ) • y / y) ^ i)
+    : f g = f s ^ i := by
   obtain ⟨y_ne, _⟩ := ne_zero_of_tame_root hn hy
   refine (f.eq_iff.mpr (h_stab ?_)).trans (map_pow f s i)
   simp_all [mul_smul, ← inertia_pow_smul_div s.property hn hy, Subgroup.smul_def]
 
 omit hπ in
-/-- First part of the tame theorem. Let `k` be a local field (`New.IsLocalGalois Γ k A`), `π` a
+/--
+First part of the tame theorem. Let `k` be a local field (`New.IsLocalGalois Γ k A`), `π` a
 uniformiser of `k`, `n` a unit of `A` and `y ^ n = π`. A homomorphism `f` on inertia with open
 kernel and `f g ^ n = 1` for all `g` is trivial on the stabiliser of `y` in inertia, so `f g`
-depends only on `g y / y`. -/
-lemma IsLocalGalois.stabilizer_le_ker_of_pow_eq_one (hπ : IsUniformiser A π.val)
-    (hn : A.valuation n = 1) (hy : y ^ n = algebraMap k Ω π) {P : Type*} [Monoid P]
-    (f : inertiaGroup Γ A →* P) (hf : f.ker.IsOpen) (hP : ∀ g : inertiaGroup Γ A, f g ^ n = 1) :
-    stabilizer (inertiaGroup Γ A) y ≤ f.ker := by
+depends only on `g y / y`.
+-/
+lemma IsLocalGalois.stabilizer_le_ker_of_pow_eq_one
+    (hπ : IsUniformiser A π.val) (hn : A.valuation n = 1) (hy : y ^ n = algebraMap k Ω π)
+    {P : Type*} [Monoid P]
+    (f : inertiaGroup Γ A →* P) (hf : f.ker.IsOpen) (hP : ∀ g : inertiaGroup Γ A, f g ^ n = 1)
+    : stabilizer (inertiaGroup Γ A) y ≤ f.ker := by
   obtain ⟨y_ne, _⟩ := ne_zero_of_tame_root hn hy
   -- The image of `f` has order dividing some `n ^ M`; pass to a root `y₁` with `y₁ ^ n ^ M = y`.
   obtain ⟨M, card_dvd⟩ : ∃ M : ℕ, f.ker.index ∣ n ^ M := by
@@ -287,37 +315,48 @@ lemma IsLocalGalois.stabilizer_le_ker_of_pow_eq_one (hπ : IsUniformiser A π.va
   rw [MonoidHom.mem_ker, same, map_pow, hP]
 
 omit hπ in
-/-- Second part of the tame theorem. Assume `IsLocalGalois Γ k A`: `Γ` is the Galois group of an
+/--
+Second part of the tame theorem. Assume `IsLocalGalois Γ k A`: `Γ` is the Galois group of an
 algebraically closed field `Ω` of characteristic 0 over `k`, it stabilises the valuation subring
 `A`, and `A ∩ k` is a discrete valuation ring with finite residue field. Let `π` be a uniformiser of
 `k` for `A`, `n` a natural number that is a unit of `A`, `y ^ n = π`, and `f` a monoid homomorphism
 on the inertia group of `A` with open kernel and `f g ^ n = 1` for all `g`. If `s` is in inertia and
-`s • y / y` is a primitive `n`-th root of unity, then every value `f g` is a power `f s ^ i`. -/
-lemma IsLocalGalois.exists_map_eq_pow_of_isPrimitiveRoot (hπ : IsUniformiser A π.val)
-    (hn : A.valuation n = 1) (hy : y ^ n = algebraMap k Ω π) {P : Type*} [Monoid P]
+`s • y / y` is a primitive `n`-th root of unity, then every value `f g` is a power `f s ^ i`.
+-/
+lemma IsLocalGalois.exists_map_eq_pow_of_isPrimitiveRoot
+    (hπ : IsUniformiser A π.val) (hn : A.valuation n = 1) (hy : y ^ n = algebraMap k Ω π)
+    {P : Type*} [Monoid P]
     (f : inertiaGroup Γ A →* P) (hf : f.ker.IsOpen) (hP : ∀ g : inertiaGroup Γ A, f g ^ n = 1)
-    (s : inertiaGroup Γ A) (hs_prim : IsPrimitiveRoot (s • y / y) n) (g : inertiaGroup Γ A) :
-    ∃ i : ℕ, f g = f s ^ i := by
+    (s : inertiaGroup Γ A) (hs_prim : IsPrimitiveRoot (s • y / y) n)
+    (g : inertiaGroup Γ A)
+    : ∃ i : ℕ, f g = f s ^ i := by
   obtain ⟨y_ne, _⟩ := ne_zero_of_tame_root hn hy
   -- `g y / y` is an `n`-th root of unity, hence a power of the primitive one `s y / y`.
   have h_root : ((g : Γ) • y / y) ^ n = 1 := by simp [div_pow, ← smul_pow', hy]
   obtain ⟨i, -, h_pow⟩ := hs_prim.eq_pow_of_pow_eq_one h_root
-  exact ⟨i, map_eq_pow_of_smul_div_eq hn hy (stabilizer_le_ker_of_pow_eq_one hπ hn hy f hf hP) s g i
-    h_pow.symm⟩
+  exact ⟨
+    i,
+    map_eq_pow_of_smul_div_eq hn hy (stabilizer_le_ker_of_pow_eq_one hπ hn hy f hf hP) s g i
+      h_pow.symm
+  ⟩
 
 omit hπ in
-/-- Third part of the tame theorem. Assume `IsLocalGalois Γ k A`: `Γ` is the Galois group of an
+/--
+Third part of the tame theorem. Assume `IsLocalGalois Γ k A`: `Γ` is the Galois group of an
 algebraically closed field `Ω` of characteristic 0 over `k`, it stabilises the valuation subring
 `A`, and `A ∩ k` is a discrete valuation ring with finite residue field. Let `π` be a uniformiser of
 `k` for `A`, `n` a natural number that is a unit of `A`, `y ^ n = π`, and `f` a monoid homomorphism
 on the inertia group of `A` with open kernel and `f g ^ n = 1` for all `g`. If `s` is in inertia and
 `φ` is a `q`-Frobenius (it stabilises `A` and `φ • x ≡ x ^ q` modulo the maximal ideal for all
-`x ∈ A`), then `φ s φ⁻¹` is in inertia and `f (φ s φ⁻¹) = f s ^ q`. -/
-lemma IsLocalGalois.map_conj_eq_pow_of_isFrob (hπ : IsUniformiser A π.val)
-    (hn : A.valuation n = 1) (hy : y ^ n = algebraMap k Ω π) {P : Type*} [Monoid P]
+`x ∈ A`), then `φ s φ⁻¹` is in inertia and `f (φ s φ⁻¹) = f s ^ q`.
+-/
+lemma IsLocalGalois.map_conj_eq_pow_of_isFrob
+    (hπ : IsUniformiser A π.val) (hn : A.valuation n = 1) (hy : y ^ n = algebraMap k Ω π)
+    {P : Type*} [Monoid P]
     (f : inertiaGroup Γ A →* P) (hf : f.ker.IsOpen) (hP : ∀ g : inertiaGroup Γ A, f g ^ n = 1)
-    (s : inertiaGroup Γ A) {q : ℕ} {φ : Γ} (hφ : IsFrob A q φ) :
-    f ⟨φ * s * φ⁻¹, hφ.conj_mem_inertiaGroup s⟩ = f s ^ q := by
+    (s : inertiaGroup Γ A)
+    {q : ℕ} {φ : Γ} (hφ : IsFrob A q φ)
+    : f ⟨φ * s * φ⁻¹, hφ.conj_mem_inertiaGroup s⟩ = f s ^ q := by
   obtain ⟨y_ne, _⟩ := ne_zero_of_tame_root hn hy
   refine map_eq_pow_of_smul_div_eq hn hy (stabilizer_le_ker_of_pow_eq_one hπ hn hy f hf hP) s _ q ?_
   have h_root : ((s : Γ) • y / y) ^ n = 1 := by simp [div_pow, ← smul_pow', hy]
@@ -326,7 +365,8 @@ lemma IsLocalGalois.map_conj_eq_pow_of_isFrob (hπ : IsUniformiser A π.val)
     ← cyclotomicCharMod_eq_iff.mp (hφ.cyclotomicCharMod_eq hn)]
 
 include hn hy in
-/-- The tame theorem. Let `k` be a local field (the section instance `IsLocalGalois Γ k A`), `n` be
+/--
+The tame theorem. Let `k` be a local field (the section instance `IsLocalGalois Γ k A`), `n` be
 a unit of `A`, `y ^ n = π` a uniformiser of `k`, and `f` a homomorphism on inertia with open kernel
 and `f g ^ n = 1` for all `g`. Then (a) `f` is trivial on the stabiliser of `y`, so `f g` depends
 only on `g y / y`; and for `s` in inertia, (b) if `s y / y` is a primitive `n`-th root of unity,
@@ -339,20 +379,26 @@ Here `hπ`, `hn` and `hy` are the section hypotheses. The theorem treats one `n`
 not construct the map onto the inverse limit of roots of unity.
 
 This is a finite-level form of the structure of tame inertia (Serre, Local Fields, IV §2), stated
-for homomorphisms with open kernel that are killed by `n`. -/
-lemma IsLocalGalois.tame_inertia {P : Type*} [Monoid P] (f : inertiaGroup Γ A →* P)
-    (hf : f.ker.IsOpen) (hP : ∀ g : inertiaGroup Γ A, f g ^ n = 1) :
+for homomorphisms with open kernel that are killed by `n`.
+-/
+lemma IsLocalGalois.tame_inertia
+    {P : Type*} [Monoid P]
+    (f : inertiaGroup Γ A →* P) (hf : f.ker.IsOpen) (hP : ∀ g : inertiaGroup Γ A, f g ^ n = 1)
     -- (a)
-    stabilizer (inertiaGroup Γ A) y ≤ f.ker ∧
-    ∀ s : inertiaGroup Γ A,
-      -- (b)
-      (IsPrimitiveRoot (s • y / y) n → ∀ g : inertiaGroup Γ A, ∃ i : ℕ, f g = f s ^ i) ∧
-      -- (c)
-      ∀ (q : ℕ) (φ : Γ), IsFrob A q φ → ∃ h_mem :
-      φ * s * φ⁻¹ ∈ inertiaGroup Γ A, f ⟨φ * s * φ⁻¹, h_mem⟩ = f s ^ q :=
-  ⟨stabilizer_le_ker_of_pow_eq_one hπ hn hy f hf hP, fun s ↦
-    ⟨exists_map_eq_pow_of_isPrimitiveRoot hπ hn hy f hf hP s, fun _ _ hφ ↦
-      ⟨hφ.conj_mem_inertiaGroup s, map_conj_eq_pow_of_isFrob hπ hn hy f hf hP s hφ⟩⟩⟩
+    : stabilizer (inertiaGroup Γ A) y ≤ f.ker
+      ∧ ∀ s : inertiaGroup Γ A,
+        -- (b)
+        (IsPrimitiveRoot (s • y / y) n → ∀ g : inertiaGroup Γ A, ∃ i : ℕ, f g = f s ^ i)
+          -- (c)
+          ∧ ∀ (q : ℕ) (φ : Γ),
+            IsFrob A q φ
+              → ∃ h_mem : φ * s * φ⁻¹ ∈ inertiaGroup Γ A, f ⟨φ * s * φ⁻¹, h_mem⟩ = f s ^ q := ⟨
+  stabilizer_le_ker_of_pow_eq_one hπ hn hy f hf hP,
+  fun s ↦ ⟨
+    exists_map_eq_pow_of_isPrimitiveRoot hπ hn hy f hf hP s,
+    fun _ _ hφ ↦ ⟨hφ.conj_mem_inertiaGroup s, map_conj_eq_pow_of_isFrob hπ hn hy f hf hP s hφ⟩
+  ⟩
+⟩
 
 end New
 
@@ -369,8 +415,10 @@ section FrobeniusOnRoots
 
 variable {ℓ : ℕ} [Fact ℓ.Prime] {φ : Gp ℓ} {q M : ℕ} {z : PadicAlgCl ℓ}
 
-/-- `ℓ` is a uniformiser of `ℚ_ℓ` for the valuation ring `intQpBar ℓ` of `ℚ̄_ℓ`: an element of `ℚ_ℓ`
-has valuation below `1` exactly when its valuation is at most that of `ℓ`. -/
+/--
+`ℓ` is a uniformiser of `ℚ_ℓ` for the valuation ring `intQpBar ℓ` of `ℚ̄_ℓ`: an element of `ℚ_ℓ`
+has valuation below `1` exactly when its valuation is at most that of `ℓ`.
+-/
 lemma isUniformiser_ell : IsUniformiser (intQpBar ℓ) (Units.mk0 (ℓ : ℚ_[ℓ]) NeZero.out).val := by
   -- In `ℚ_[ℓ]`, norm `< 1` means norm `≤ ℓ⁻¹`.
   intro x
@@ -379,24 +427,28 @@ lemma isUniformiser_ell : IsUniformiser (intQpBar ℓ) (Units.mk0 (ℓ : ℚ_[�
     x.norm_lt_pow_iff_norm_le_pow_sub_one 0
 
 /-- A natural number prime to `ℓ` is a unit of the valuation ring of `ℚ̄_ℓ`. -/
-lemma valuation_natCast_eq_one (hM : ¬ℓ ∣ M) : intQpBar ℓ M = 1 := by
+lemma valuation_natCast_eq_one (hM : ¬ ℓ ∣ M) : intQpBar ℓ M = 1 := by
   -- The norm of `M` in `ℚ̄_ℓ` is its norm in `ℚ_ℓ`.
   rw [eq_iff_le_not_lt, valuation_intQpBar_lt_one_iff,
     ← map_natCast (algebraMap ℚ_[ℓ] (PadicAlgCl ℓ)) M, PadicAlgCl.norm_extends]
   simpa using hM
 
-/-- Let `φ` in `G_ℓ` be a Frobenius for `q` in the sense of `New.IsFrob`. Then `φ` sends every
-`M`-th root of unity `z` to `z ^ q`, provided `M` is prime to `ℓ`. -/
-lemma apply_eq_pow_of_isFrob (hφ : IsFrob (intQpBar ℓ) q φ) (hM : ¬ℓ ∣ M) (hz : z ^ M = 1) :
-    φ z = z ^ q := by
+/--
+Let `φ` in `G_ℓ` be a Frobenius for `q` in the sense of `New.IsFrob`. Then `φ` sends every
+`M`-th root of unity `z` to `z ^ q`, provided `M` is prime to `ℓ`.
+-/
+lemma apply_eq_pow_of_isFrob (hφ : IsFrob (intQpBar ℓ) q φ) (hM : ¬ ℓ ∣ M) (hz : z ^ M = 1)
+    : φ z = z ^ q := by
   have hM_neZero : NeZero M := ⟨fun h ↦ hM (by simp [h])⟩
   -- The cyclotomic character modulo `M` takes the value `q` at `φ`.
   exact cyclotomicCharMod_eq_iff.mp (hφ.cyclotomicCharMod_eq (valuation_natCast_eq_one hM)) z hz
 
-/-- Every element `g` of `G_ℓ` raises an `M`-th root of unity `z`, with `M` prime to `ℓ`, to some
-power `ℓ ^ n`. -/
-lemma exists_apply_eq_pow (hM : ¬ℓ ∣ M) (hz : z ^ M = 1) (g : Gp ℓ) :
-    ∃ n : ℕ, g z = z ^ ℓ ^ n := by
+/--
+Every element `g` of `G_ℓ` raises an `M`-th root of unity `z`, with `M` prime to `ℓ`, to some
+power `ℓ ^ n`.
+-/
+lemma exists_apply_eq_pow (hM : ¬ ℓ ∣ M) (hz : z ^ M = 1) (g : Gp ℓ)
+    : ∃ n : ℕ, g z = z ^ ℓ ^ n := by
   -- The condition on `g` is closed, so it is enough to check it on the products `φ ^ n * i` with
   -- `φ` a Frobenius and `i` in inertia, which are dense; these are Frobenii for `ℓ ^ n`.
   obtain ⟨⟨φ, hφ⟩, h_dense, -⟩ := (isLocalGalois_padic (p := ℓ)).frobenius_spec
@@ -422,12 +474,17 @@ open Finset PadicInt Cohomology Units Period HasEnoughRootsOfUnity
 
 variable {p : ℕ} [ThePrime p]
 
-/-- Let `S ⊆ G_p` be closed and `a` a natural number. If for every `k` each primitive
+/--
+Let `S ⊆ G_p` be closed and `a` a natural number. If for every `k` each primitive
 `p ^ (k + 1)`-th root of unity `ζ` is sent to `ζ ^ a` by some element of `S`, then the `p`-adic
-cyclotomic character `cyclotomicGp` takes the value `a` at some `g ∈ S`. -/
-lemma exists_cyclotomicGp_eq_of_isClosed {S : Set (Gp p)} (a : ℕ) (hS : IsClosed S)
-    (h_pow : ∀ (k : ℕ) (ζ : PadicAlgCl p), IsPrimitiveRoot ζ (p ^ (k + 1)) → ∃ g ∈ S, g ζ = ζ ^ a) :
-    ∃ g ∈ S, (cyclotomicGp g).val = a := by
+cyclotomic character `cyclotomicGp` takes the value `a` at some `g ∈ S`.
+-/
+lemma exists_cyclotomicGp_eq_of_isClosed
+    {S : Set (Gp p)}
+    (a : ℕ)
+    (hS : IsClosed S)
+    (h_pow : ∀ (k : ℕ) (ζ : PadicAlgCl p), IsPrimitiveRoot ζ (p ^ (k + 1)) → ∃ g ∈ S, g ζ = ζ ^ a)
+    : ∃ g ∈ S, (cyclotomicGp g).val = a := by
   -- The image of `S` under the cyclotomic character is closed, and `a` is a limit of its points.
   have h_closed : IsClosed ((fun g : Gp p ↦ (cyclotomicGp g).val) '' S) :=
     (continuous_val.comp (continuous_cyclotomicChar p)).isClosedMap _ hS
@@ -441,11 +498,13 @@ lemma exists_cyclotomicGp_eq_of_isClosed {S : Set (Gp p)} (a : ℕ) (hS : IsClos
   exact (pow_dvd_cyclotomicChar_sub_iff k).mpr
     (cyclotomicCharMod_eq_of_dvd ⟨p, rfl⟩ (cyclotomicCharMod_eq_of_isPrimitiveRoot hζ hgζ))
 
-/-- Every natural number `a` prime to `p` is the value of the `p`-adic cyclotomic character at some
+/--
+Every natural number `a` prime to `p` is the value of the `p`-adic cyclotomic character at some
 element of the inertia group of `G_p`; that is, the extension of `ℚ_p` by all `p`-power roots of
-unity is totally ramified. -/
-lemma exists_inertia_cyclotomicGp_eq (a : ℕ) (h_cop : p.Coprime a) :
-    ∃ g ∈ inertiaGroup (Gp p) (intQpBar p), (cyclotomicGp g).val = a := by
+unity is totally ramified.
+-/
+lemma exists_inertia_cyclotomicGp_eq (a : ℕ) (h_cop : p.Coprime a)
+    : ∃ g ∈ inertiaGroup (Gp p) (intQpBar p), (cyclotomicGp g).val = a := by
   classical
   refine exists_cyclotomicGp_eq_of_isClosed a isClosed_inertiaGroup fun s ξ hξ ↦ ?_
   -- `ξ - 1` is a uniformiser of `ℚ_p(ξ)`: its `totient (p ^ (s + 1))`-th power has the valuation of
@@ -479,8 +538,8 @@ namespace New.Period.IsWeilPair
 variable {p : ℕ} [ι : ThePrime p] {m m' : ℕ} {Γ : Type*} {s t : Γ} [Group Γ] {j : Γ →* Gp p}
 
 /-- Weil pairs multiply: the degrees add. -/
-lemma mul (h : IsWeilPair (j s) m) (h' : IsWeilPair (j t) m') :
-    IsWeilPair (j (s * t)) (m + m') := by
+lemma mul (h : IsWeilPair (j s) m) (h' : IsWeilPair (j t) m')
+    : IsWeilPair (j (s * t)) (m + m') := by
   simpa [IsWeilPair, p.pow_add', h'.mul_iff] using h
 
 /-- If `(j s, m)` is a Weil pair, then so is `(j (s ^ n), n * m)`. -/
@@ -489,16 +548,18 @@ lemma pow (h : IsWeilPair (j s) m) (n : ℕ) : IsWeilPair (j (s ^ n)) (n * m) :=
   rw [IsWeilPair, map_pow, ← inv_pow, mul_comm n m, pow_mul]
   exact IsFrob.pow h n
 
-/-- If `(j s, m)` is a Weil pair and `(j s)⁻¹` acts on the residue field as `x ↦ x ^ q`, then
-`q = p ^ m`. -/
-lemma eq_pow_of_isFrob (h : IsWeilPair (j s) m) {q : ℕ} (hq : IsFrob (intQpBar p) q (j s)⁻¹) :
-    q = p ^ m := by
+/--
+If `(j s, m)` is a Weil pair and `(j s)⁻¹` acts on the residue field as `x ↦ x ^ q`, then
+`q = p ^ m`.
+-/
+lemma eq_pow_of_isFrob (h : IsWeilPair (j s) m) {q : ℕ} (hq : IsFrob (intQpBar p) q (j s)⁻¹)
+    : q = p ^ m := by
   -- The `l`-adic cyclotomic character of `(j s)⁻¹`, for a prime `l > p`, is both `q` and `p ^ m`
   -- (`IsFrob.cyclotomicChar_eq`: on `l`-power roots of unity a Frobenius for `q` acts as
   -- `x ↦ x ^ q`).
   obtain ⟨l, hpl, hl⟩ : ∃ l : ℕ, p.succ ≤ l ∧ l.Prime := p.succ.exists_infinite_primes
   have hl_fact : Fact l.Prime := ⟨hl⟩
-  have h_not_dvd : ¬p ∣ l := (Nat.prime_dvd_prime_iff_eq ι.out hl).not.mpr (by omega)
+  have h_not_dvd : ¬ p ∣ l := (Nat.prime_dvd_prime_iff_eq ι.out hl).not.mpr (by omega)
   have hval : (intQpBar p).valuation l = 1 := Selmer.valuation_natCast_eq_one h_not_dvd
   exact_mod_cast (hq.cyclotomicChar_eq l hval).symm.trans (h.cyclotomicChar_eq l hval)
 
@@ -519,16 +580,21 @@ open NeZero ZMod
 variable {p : ℕ} [ThePrime p] {f : ℕ} [NeZero f] {g : Gp p}
 
 omit [NeZero f] in
-/-- Every element of the inertia group of `ℚ̄_p` over `ℚ_p` fixes the `f`-th roots of unity in
-`ℚ̄_p`, for `f` prime to `p`. -/
-lemma apply_eq_self_of_mem_inertiaGroup (hf_coprime : ¬p ∣ f)
-    (hg : g ∈ inertiaGroup (Gp p) (intQpBar p)) (ζ : PadicAlgCl p) (hζ : ζ ^ f = 1) : g ζ = ζ := by
+/--
+Every element of the inertia group of `ℚ̄_p` over `ℚ_p` fixes the `f`-th roots of unity in
+`ℚ̄_p`, for `f` prime to `p`.
+-/
+lemma apply_eq_self_of_mem_inertiaGroup
+    (hf_coprime : ¬ p ∣ f) (hg : g ∈ inertiaGroup (Gp p) (intQpBar p))
+    (ζ : PadicAlgCl p) (hζ : ζ ^ f = 1)
+    : g ζ = ζ := by
   -- An element of inertia is a Frobenius for `1`.
   simpa using apply_eq_pow_of_isFrob (q := 1) hg hf_coprime hζ
 
 instance : NeZero (p ^ f - 1) := by simp [of_pos, Fact.out, ne]
 
 /-- For `f ≠ 0`, the prime `p` does not divide `p ^ f - 1`. -/
-lemma not_dvd_pow_sub_one : ¬p ∣ p ^ f - 1 := by simp [← natCast_eq_zero_iff, pos, ne, natCast_self]
+lemma not_dvd_pow_sub_one : ¬ p ∣ p ^ f - 1 := by
+  simp [← natCast_eq_zero_iff, pos, ne, natCast_self]
 
 end New.Selmer

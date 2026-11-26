@@ -80,58 +80,72 @@ section GluedFormTheta
 
 open Matrix ComplexConjugate Finset Modulus MvPolynomial Sum
 
-variable {E r n N m a : Type} [Field E] [CMType E] [Fintype r] [DecidableEq r] [Fintype n]
-  [DecidableEq n] [Fintype N] [DecidableEq N] [Fintype m]
-  {O : DescentPair E r n} {z : r ↪ m} (V : DividedSplitting N m a O z) {L : DividedLattice O}
+variable
+  {E r n N m a : Type} [Field E] [CMType E] [Fintype r] [DecidableEq r] [Fintype n] [DecidableEq n]
+  [Fintype N] [DecidableEq N] [Fintype m]
+  {O : DescentPair E r n} {z : r ↪ m} (V : DividedSplitting N m a O z)
+  {L : DividedLattice O}
 
 omit [DecidableEq n] in
-/-- The kernel `kernelClassSum` of `c • y` is `c` times that of `y`. It is the sum, over classes `h`
+/--
+The kernel `kernelClassSum` of `c • y` is `c` times that of `y`. It is the sum, over classes `h`
 of the level fixing the rows `w` and the columns off `e`, of the theta kernel of W (signs `O.signs`)
-and the standard space on `m`, with character `b` on the latter and the polynomial of `y h`. -/
-lemma kernelClassSum_smul [DecidableEq m] [WeilData E]
-    (b : AutChar E) (w : Matrix a m O.chosenModulusSq.ResidueRing) (e : r ↪ m)
-    (c : ℂ) (y : Gf E m → WeylIndex m O.colsPlus → ℂ) (g : G E O.signs) :
-    kernelClassSum O b w e (fun h : Gf E m ↦ c • y h) g = c * kernelClassSum O b w e y g := by
+and the standard space on `m`, with character `b` on the latter and the polynomial of `y h`.
+-/
+lemma kernelClassSum_smul
+    [DecidableEq m] [WeilData E]
+    (b : AutChar E) (w : Matrix a m O.chosenModulusSq.ResidueRing) (e : r ↪ m) (c : ℂ)
+    (y : Gf E m → WeylIndex m O.colsPlus → ℂ) (g : G E O.signs)
+    : kernelClassSum O b w e (fun h : Gf E m ↦ c • y h) g = c * kernelClassSum O b w e y g := by
   simp [kernelClassSum, mul_classSum, ← modKernelBilin_apply]
 
 omit [DecidableEq r] in
-/-- Let `f : N → n` map the letters `N` to the letters `n`, and let `κ` satisfy
+/--
+Let `f : N → n` map the letters `N` to the letters `n`, and let `κ` satisfy
 `HasColumnsBelow n N κ`: `#N ≤ #n`, and `κ` has no column of a height `h` with `#N ≤ h < #n`. The
 polynomial `letterPoly` of the image of `y` under the Schur matrix of the inclusion matrix of `f` is
-the polynomial of `y` with the rows of its variables renamed along `f`. -/
-lemma letterPoly_schur_inclMatrix_mulVec {Φ : Type} [Fintype Φ] [DecidableEq Φ] {κ : Φ → ℕ → ℕ}
-    (hκ : HasColumnsBelow n N κ) (s : r → ℤˣ) (ord : r → ℕ) (c : ℤˣ) (f : N → n)
-    (y : WeylIndex N κ → ℂ) :
-    letterPoly s ord c κ (schur κ (fun _ : Φ ↦ inclMatrix ℂ f) *ᵥ y) =
-      renameRowsCols f id (letterPoly s ord c κ y) := by
+the polynomial of `y` with the rows of its variables renamed along `f`.
+-/
+lemma letterPoly_schur_inclMatrix_mulVec
+    {Φ : Type} [Fintype Φ] [DecidableEq Φ]
+    {κ : Φ → ℕ → ℕ} (hκ : HasColumnsBelow n N κ)
+    (s : r → ℤˣ) (ord : r → ℕ) (c : ℤˣ) (f : N → n) (y : WeylIndex N κ → ℂ)
+    : letterPoly s ord c κ (schur κ (fun _ : Φ ↦ inclMatrix ℂ f) *ᵥ y)
+      = renameRowsCols f id (letterPoly s ord c κ y) := by
   -- The Schur matrix acts on polynomials by substituting the transpose, with no determinant factor.
-  have h_toPoly : toPoly (fun _ : Φ ↦ n) κ (schur κ (fun _ : Φ ↦ inclMatrix ℂ f) *ᵥ y) =
-      rowSubst (fun _ : Φ ↦ (inclMatrix ℂ f)ᵀ) (toPoly (fun _ : Φ ↦ N) κ y) := by
+  have h_toPoly
+      : toPoly (fun _ : Φ ↦ n) κ (schur κ (fun _ : Φ ↦ inclMatrix ℂ f) *ᵥ y)
+        = rowSubst (fun _ : Φ ↦ (inclMatrix ℂ f)ᵀ) (toPoly (fun _ : Φ ↦ N) κ y) := by
     rw [toPoly_schur hκ.fitsRanks, hκ.schurDetExp_eq_zero, detPow_zero, mul_one]
   -- This substitution sends the variable in row `i` to that in row `f i`.
   rw [letterPoly, letterPoly, LinearMap.comp_apply, LinearMap.comp_apply, h_toPoly]
   simp [rowSubst, fockLetters, inclMatrix, rename_aeval, comp_aeval_apply, Matrix.one_apply]
 
-/-- Let `ε : N ⊕ m ≃ n` split the indices of `V = V″ ⊕ V°`, and let `O.colsPlus` and `O.colsMinus`
+/--
+Let `ε : N ⊕ m ≃ n` split the indices of `V = V″ ⊕ V°`, and let `O.colsPlus` and `O.colsMinus`
 satisfy `HasColumnsBelow`: each column of height below the rank of `V` has height below the rank of
 `V″`, respectively of `V°`. For `y` of weight `O.colsPlus` on `V″` and `η` of weight `O.colsMinus`
 on `V°`, the polynomial `O.fockPoly` of `cartanProduct ε 1 y η` is the polynomial `letterPoly` of
 `y` in the variables of the basis vectors of `O.W` of sign `1` on the rows of `V″`, times that of
-`η` in the variables of sign `-1` on the rows of `V°`. -/
-lemma fockPoly_cartanProduct [DecidableEq m] (h_plus : HasColumnsBelow n N O.colsPlus)
-    (h_minus : HasColumnsBelow n m O.colsMinus) (ε : N ⊕ m ≃ n)
-    (y : WeylIndex N O.colsPlus → ℂ) (η : WeylIndex m O.colsMinus → ℂ) :
-    O.fockPoly (cartanProduct ε 1 y η) =
-      renameRowsCols (ε ∘ inl) id (letterPoly O.signs O.numbering 1 O.colsPlus y) *
-        renameRowsCols (ε ∘ inr) id (letterPoly O.signs O.numbering (-1) O.colsMinus η) := by
+`η` in the variables of sign `-1` on the rows of `V°`.
+-/
+lemma fockPoly_cartanProduct
+    [DecidableEq m]
+    (h_plus : HasColumnsBelow n N O.colsPlus) (h_minus : HasColumnsBelow n m O.colsMinus)
+    (ε : N ⊕ m ≃ n) (y : WeylIndex N O.colsPlus → ℂ) (η : WeylIndex m O.colsMinus → ℂ)
+    : O.fockPoly (cartanProduct ε 1 y η)
+      = renameRowsCols (ε ∘ inl) id (letterPoly O.signs O.numbering 1 O.colsPlus y)
+        * renameRowsCols (ε ∘ inr) id (letterPoly O.signs O.numbering (-1) O.colsMinus η) := by
   -- The polynomial is read on the image under `mixedCartan`, the tensor of the included vectors.
-  calc O.fockPoly (cartanProduct ε 1 y η)
-    _ = O.tensorPoly ((mixedCartan n O.colsPlus O.colsMinus).matrix.map (↑) *ᵥ
-          cartanProduct ε 1 y η) := rfl
+  calc
+    O.fockPoly (cartanProduct ε 1 y η)
+    _ = O.tensorPoly
+        ((mixedCartan n O.colsPlus O.colsMinus).matrix.map (↑) *ᵥ cartanProduct ε 1 y η) :=
+      rfl
     _ = letterPoly O.signs O.numbering 1 O.colsPlus
-            (schur O.colsPlus (fun _ ↦ inclMatrix ℂ (ε ∘ inl)) *ᵥ y) *
-          letterPoly O.signs O.numbering (-1) O.colsMinus
-            (schur O.colsMinus (fun _ ↦ inclMatrix ℂ (ε ∘ inr)) *ᵥ η) := by
+          (schur O.colsPlus (fun _ ↦ inclMatrix ℂ (ε ∘ inl)) *ᵥ y)
+        * letterPoly O.signs O.numbering (-1) O.colsMinus
+          (schur O.colsMinus (fun _ ↦ inclMatrix ℂ (ε ∘ inr)) *ᵥ η) := by
       rw [mixedCartan_mulVec_cartanProduct h_plus h_minus, transpose_vecMulVec,
         DescentPair.tensorPoly_vecMulVec]
     _ = _ := by
@@ -139,14 +153,17 @@ lemma fockPoly_cartanProduct [DecidableEq m] (h_plus : HasColumnsBelow n N O.col
 
 namespace DividedSplitting
 
-/-- Let `ϖ` generate the product of the chosen places of `O`, let `Q` be the product of its twist
+/--
+Let `ϖ` generate the product of the chosen places of `O`, let `Q` be the product of its twist
 places, and let `idem` be the adele that is `1` at the places dividing `ϖ² Q = O.levelModulus 2` and
 `0` elsewhere. Let `γ = L.point` be a unitary point at the chosen places with `ϖ γ⁻¹` integral. If
-`idem * (γ⁻¹ x)` has integral entries, then so has `idem * x`. -/
-lemma idem_mul_mem_of_inv_mul_mem (x : Matrix n r (𝔸f E))
-    (hx : ∀ (k : n) (j : r),
-      idem (O.levelModulus 2).places * (L.point⁻¹.val.val * x) k j ∈ Ô E) (i : n) (j : r) :
-    idem (O.levelModulus 2).places * x i j ∈ Ô E := by
+`idem * (γ⁻¹ x)` has integral entries, then so has `idem * x`.
+-/
+lemma idem_mul_mem_of_inv_mul_mem
+    (x : Matrix n r (𝔸f E))
+    (hx : ∀ (k : n) (j : r), idem (O.levelModulus 2).places * (L.point⁻¹.val.val * x) k j ∈ Ô E)
+    (i : n) (j : r)
+    : idem (O.levelModulus 2).places * x i j ∈ Ô E := by
   -- By unitarity the conjugate of `ϖ γ⁻¹` is `conj ϖ • γᵀ`, which is integral. Here `conj ϖ` is
   -- `1` at a place `w` of the level, as `star w` is not a chosen place.
   refine idem_mul_mem_Ô.2 fun w hw ↦ ?_
@@ -156,43 +173,52 @@ lemma idem_mul_mem_of_inv_mul_mem (x : Matrix n r (𝔸f E))
   have h_int (k : n) : star (O.genIdele * L.point.val.valᴴ k i) ∈ Ô E := by
     rw [← U.inv_val_eq_conjTranspose]
     exact star_mem_Ô (L.mul_inv_mem k i)
-  have h_sum : ∑ k : n, star (O.genIdele * L.point.val.valᴴ k i) *
-      (idem (O.levelModulus 2).places * (L.point⁻¹.val.val * x) k j) ∈ Ô E :=
+  have h_sum
+      : ∑ k : n, star (O.genIdele * L.point.val.valᴴ k i) *
+          (idem (O.levelModulus 2).places * (L.point⁻¹.val.val * x) k j)
+        ∈ Ô E :=
     sum_mem fun k _ ↦ mul_mem (h_int k) (hx k j)
-  simpa [mul_assoc, mul_left_comm _ (idem _), ← mul_sum, ← Matrix.mul_apply,
-    ← Matrix.mul_assoc, hw, hπ] using mem_Ô.1 h_sum w
+  simpa [mul_assoc, mul_left_comm _ (idem _), ← mul_sum, ← Matrix.mul_apply, ← Matrix.mul_assoc, hw,
+      hπ]
+    using mem_Ô.1 h_sum w
 
 omit [DecidableEq N] in
-/-- Let `ϖ` generate the product of the chosen places, with class `V.genResidue` modulo `ϖ²`, let
+/--
+Let `ϖ` generate the product of the chosen places, with class `V.genResidue` modulo `ϖ²`, let
 `Q` be the product of the twist places, and let `ι` be the inclusion matrix of `O.incl : r ↪ n`. The
 map `liftFn` extends a function on matrices modulo `ϖ² Q` to adelic vectors `x`, by `0` where `x` is
 not integral at the places of `ϖ² Q`. Consider two functions of `T`, supported on `ϖ T ≡ ϖ ι` and on
 `(ϖ γ⁻¹) T ≡ ϖ ι` modulo `ϖ²`, where `γ = L.point` and `L.reducedInverse` is `ϖ γ⁻¹` modulo `ϖ²`. On
 its support each is the product over the twist places of the residue characters `O.tamePart` at the
 determinant of the rows `O.incl` of `T`. Then the extension of the first at `γ⁻¹ x` equals that of
-the second at `x`. -/
-lemma liftFn_datum_point_inv_mul (x : n × r → 𝔸f E) :
-    (O.levelModulus 2).liftFn
+the second at `x`.
+-/
+lemma liftFn_datum_point_inv_mul (x : n × r → 𝔸f E)
+    : (O.levelModulus 2).liftFn
         ((fun T : Matrix n r (O.levelModulus 2).ResidueRing ↦
-          if V.genResidue • T.map reduceToChosenModulusSq =
-              V.genResidue • inclMatrix O.chosenModulusSq.ResidueRing O.incl then
-            ∏ i : O.TwistIndex, O.tamePart (O.placeAt (inr i))
-              ((T.map (levelResidueAt (inr i))).submatrix O.incl id).det
-          else 0) ∘ vecToMatrix)
-        (matrixToVec (L.point⁻¹.val.val * vecToMatrix x)) =
-      (O.levelModulus 2).liftFn
+            if V.genResidue • T.map reduceToChosenModulusSq
+                = V.genResidue • inclMatrix O.chosenModulusSq.ResidueRing O.incl then
+              ∏ i : O.TwistIndex, O.tamePart (O.placeAt (inr i))
+                ((T.map (levelResidueAt (inr i))).submatrix O.incl id).det
+            else
+              0)
+          ∘ vecToMatrix)
+        (matrixToVec (L.point⁻¹.val.val * vecToMatrix x))
+      = (O.levelModulus 2).liftFn
         ((fun T : Matrix n r (O.levelModulus 2).ResidueRing ↦
-          if L.reducedInverse * T.map reduceToChosenModulusSq =
-              V.genResidue • inclMatrix O.chosenModulusSq.ResidueRing O.incl then
-            ∏ i : O.TwistIndex, O.tamePart ((O.chosenPlace ⊕ᵥ O.twistPlace) (inr i))
-              ((T.map (levelResidueAt (inr i))).submatrix O.incl id).det
-          else 0) ∘ vecToMatrix) x := by
+            if L.reducedInverse * T.map reduceToChosenModulusSq
+                = V.genResidue • inclMatrix O.chosenModulusSq.ResidueRing O.incl then
+              ∏ i : O.TwistIndex, O.tamePart ((O.chosenPlace ⊕ᵥ O.twistPlace) (inr i))
+                ((T.map (levelResidueAt (inr i))).submatrix O.incl id).det
+            else
+              0)
+          ∘ vecToMatrix)
+        x := by
   classical
   -- Each side is `0` unless its vector, `γ⁻¹ x` or `x`, is integral on the level.
   simp only [liftFn_apply, vecToMatrix, Function.comp_apply, DividedLattice.reducedInverse,
-    Matrix.map,
-    smul_of, ← ext_iff, of_apply, Pi.smul_apply, smul_eq_mul, Matrix.smul_apply, Gf.coe_inv,
-    Prod.forall, factor_reduction, modulusResidue_reduction, Matrix.mul_apply,
+    Matrix.map, smul_of, ← ext_iff, of_apply, Pi.smul_apply, smul_eq_mul, Matrix.smul_apply,
+    Gf.coe_inv, Prod.forall, factor_reduction, modulusResidue_reduction, Matrix.mul_apply,
     MulMemClass.mk_mul_mk, ← map_mul, ← map_sum]
   split
   next h_inv_mul =>
@@ -200,7 +226,8 @@ lemma liftFn_datum_point_inv_mul (x : n × r → 𝔸f E) :
       idem_mul_mem_of_inv_mul_mem (vecToMatrix x) h_inv_mul
     rw [dite_eq_left hx]
     refine ite_congr (propext (forall₂_congr fun i j ↦ ?_))
-      (fun _ ↦ prod_congr rfl fun l _ ↦ ?_) fun _ ↦ rfl
+      (fun _ ↦ prod_congr rfl fun l _ ↦ ?_)
+      fun _ ↦ rfl
     · -- The two conditions agree, as `genIdele γ⁻¹ x = (genIdele γ⁻¹) x` entrywise.
       congr! 2
       ext
@@ -210,8 +237,9 @@ lemma liftFn_datum_point_inv_mul (x : n × r → 𝔸f E) :
       congrm ⟦⟨_ * ?_, _⟩⟧
       have h_one : L.point⁻¹.val.val.map (evalAt (O.twistPlace l)) = 1 :=
         congrArg Units.val (atPlace_twistPlace_eq_one (inv_mem L.mem_supportedOn) l)
-      have h_comp : (L.point⁻¹.val.val * vecToMatrix x).map (evalAt (O.twistPlace l)) =
-          (vecToMatrix x).map (evalAt (O.twistPlace l)) := by
+      have h_comp
+          : (L.point⁻¹.val.val * vecToMatrix x).map (evalAt (O.twistPlace l))
+            = (vecToMatrix x).map (evalAt (O.twistPlace l)) := by
         rw [Matrix.map_mul, h_one, Matrix.one_mul]
       exact congrFun₂ h_comp i j
   next h_inv_mul =>
@@ -221,14 +249,16 @@ lemma liftFn_datum_point_inv_mul (x : n × r → 𝔸f E) :
       -- `γ⁻¹ x` is integral (`reduction_levelModulus_eq_zero_iff`), against `h_inv_mul`.
       refine (h_inv_mul fun i j ↦ ?_).elim
       simpa [matrixToVec, mul_assoc, Matrix.mul_apply, mul_sum, mul_left_comm, inclMatrix, sq,
-        reduction_levelModulus_eq_zero_iff.2, ← map_mul, reduction_levelModulus_eq_zero_iff,
-        ← map_sum, Matrix.one_apply] using congrArg (V.genResidue * ·) (h_cond i j)
+          reduction_levelModulus_eq_zero_iff.2, ← map_mul, reduction_levelModulus_eq_zero_iff,
+          ← map_sum, Matrix.one_apply]
+        using congrArg (V.genResidue * ·) (h_cond i j)
     all_goals rfl
 
 -- Keeps definitional checks from unfolding the finite sums.
 seal Finset.sum in
 omit [DecidableEq N] in
-/-- Let `v` be a vector of the weight whose columns are counted by `O.columnCount`, and let
+/--
+Let `v` be a vector of the weight whose columns are counted by `O.columnCount`, and let
 `γ = L.point`, so that `L.reducedInverse` is `ϖ γ⁻¹` modulo `ϖ²`, with `ϖ` generating the product of
 the chosen places. The form `classForm O (h γ) v` on the standard definite space of rank `n` is
 supported on the class of `h γ`. Its descent `O.normalizedDescent` to the space `O.W` is, at `g`,
@@ -239,82 +269,91 @@ characters `O.charW`, `O.charV` of the two spaces, the Fock polynomial `O.fockPo
 conjugate vector, and the following function of `S` modulo `ϖ² Q`. It is `0` unless
 `(ϖ γ⁻¹) S ≡ ϖ • inclMatrix _ O.incl` modulo `ϖ²`, and it is then the product over the twist places,
 those of `Q`, of the residue characters `O.tamePart` at the determinant of the rows `O.incl` of
-`S`. -/
-lemma normalizedDescent_classForm_mul [WeilData E]
-    (v : WeylIndex n O.columnCount → ℂ) (g : G E O.signs) (h : Gf E n) :
-    O.normalizedDescent (classForm O (h * L.point) v) g =
-      conj (L.weilScalar * modKernelStdSpace O.W O.charW O.charV (O.levelModulus 2)
-        (fun S : Matrix n r (O.levelModulus 2).ResidueRing ↦
-          if L.reducedInverse * S.map reduceToChosenModulusSq =
-            V.genResidue • inclMatrix O.chosenModulusSq.ResidueRing O.incl then
-          ∏ i : O.TwistIndex, O.tamePart ((O.chosenPlace ⊕ᵥ O.twistPlace) (inr i))
-            ((S.map (levelResidueAt (inr i))).submatrix O.incl id).det
-          else 0)
-        (O.fockPoly (star v)) g h) := by
+`S`.
+-/
+lemma normalizedDescent_classForm_mul
+    [WeilData E] (v : WeylIndex n O.columnCount → ℂ) (g : G E O.signs) (h : Gf E n)
+    : O.normalizedDescent (classForm O (h * L.point) v) g
+      = conj
+        (L.weilScalar * modKernelStdSpace O.W O.charW O.charV (O.levelModulus 2)
+          (fun S : Matrix n r (O.levelModulus 2).ResidueRing ↦
+            if L.reducedInverse * S.map reduceToChosenModulusSq
+                = V.genResidue • inclMatrix O.chosenModulusSq.ResidueRing O.incl then
+              ∏ i : O.TwistIndex, O.tamePart ((O.chosenPlace ⊕ᵥ O.twistPlace) (inr i))
+                ((S.map (levelResidueAt (inr i))).submatrix O.incl id).det
+            else
+              0)
+          (O.fockPoly (star v)) g h) := by
   -- Split off `L.point` from the point `(g, h γ)`. By `pairWeil_schrodingerOp_of_mem_supportedOn`
   -- it acts on the finite datum by the scalar `L.weilScalar` and the substitution `y ↦ γ⁻¹ y`, and
   -- `liftFn_datum_point_inv_mul` compares the data.
   have h_supp_chosen : L.point ∈ Gf.supportedOn n (Set.range O.chosenPlace) := L.mem_supportedOn
   -- `γ` lies at the places of the level and is `1` at those of `Q`, which do not change `det γ`.
-  obtain ⟨h_supp_level, h_det⟩ : L.point ∈ Gf.supportedOn n (O.levelModulus 2).places ∧
-      detOn (O.levelModulus 2).places L.point.val = detOn (Set.range O.chosenPlace)
-        L.point.val := by
+  obtain ⟨h_supp_level, h_det⟩
+      : L.point ∈ Gf.supportedOn n (O.levelModulus 2).places
+        ∧ detOn (O.levelModulus 2).places L.point.val
+          = detOn (Set.range O.chosenPlace) L.point.val := by
     aesop (add simp [places_levelModulus, atPlace_twistPlace_eq_one, Set.Sum.elim_range])
   rw [normalizedDescent_classForm]
   -- `erw`: the kernel has the datum and the two points only up to unfolding their pairings.
   -- Write the point as `(g, h) * (1, γ)`, so that `γ` acts on the datum.
   erw [← mul_one g, ← Prod.one_mk_mul_one_mk, modKernel, ← Prod.mk_mul_mk, pairTheta_mul,
-    pairWeil_integrated_fin, pairWeil_schrodingerOp_of_mem_supportedOn (isConjDisjoint_places _)
-      (one_mem _) h_supp_level, h_det]
+    pairWeil_integrated_fin,
+    pairWeil_schrodingerOp_of_mem_supportedOn (isConjDisjoint_places _) (one_mem _) h_supp_level,
+    h_det]
   simp [pairTheta, DescentPair.residueBlockDatum, ← V.genResidue_smul_eq_inclMatrix_iff,
-    DividedLattice.weilScalar,
-    -elim_inl, -elim_inr, -coe_units_inv]
+    DividedLattice.weilScalar, -elim_inl, -elim_inr, -coe_units_inv]
   congr with x
   exact V.liftFn_datum_point_inv_mul x
 
-/-- Let `Y` be invertible modulo `ϖ²` and `1` modulo `ϖ`, let `k = liftMod Y` be its chosen lift to
+/--
+Let `Y` be invertible modulo `ϖ²` and `1` modulo `ϖ`, let `k = liftMod Y` be its chosen lift to
 an integral unitary point, reduced at a place by `stdLevel.reduceAt`, and let `x` be a matrix modulo
 `ϖ² Q`. Suppose that the rows `S` of `x Y` in `N` satisfy `w S = w ι` modulo `ϖ²`, where
 `w = V.stackOverGenScalar s` is `s` stacked above `ϖ • 1` and `ι` is the inclusion matrix of
 `V.fixedEmb`. Then the product over the twist places of the residue characters `O.tamePart` at the
 determinant of the rows `O.incl` of `x` is `χ` of the determinant of the same rows of `x k`, divided
 by the product of `O.tamePart (det k)` over the twist places. Here `χ = charOfTamePart` is the
-product of the `O.tamePart` over all places dividing `ϖ² Q`. -/
-lemma prod_twist_det_eq_inv_mul_charOfTamePart {s : Matrix a N O.chosenModulusSq.ResidueRing}
+product of the `O.tamePart` over all places dividing `ϖ² Q`.
+-/
+lemma prod_twist_det_eq_inv_mul_charOfTamePart
+    {s : Matrix a N O.chosenModulusSq.ResidueRing}
     (x : Matrix n r (O.levelModulus 2).ResidueRing) (Y : V.congruenceGroup)
-    (h_stack_mul_eq : V.stackOverGenScalar s *
-        (x.map reduceToChosenModulusSq * Y.val.val).submatrix (V.ε ∘ inl) id =
-      V.stackOverGenScalar s * inclMatrix O.chosenModulusSq.ResidueRing V.fixedEmb) :
-    ∏ i : O.TwistIndex, O.tamePart ((O.chosenPlace ⊕ᵥ O.twistPlace) (inr i))
-        ((x.map (levelResidueAt (inr i))).submatrix O.incl id).det =
-      (∏ i : O.TwistIndex, O.tamePart ((O.chosenPlace ⊕ᵥ O.twistPlace) (inr i))
-          (stdLevel.reduceAt ((O.chosenPlace ⊕ᵥ O.twistPlace) (inr i)) (liftMod Y.val)).val.det)⁻¹ *
-        charOfTamePart (O.levelModulus 2) O.tamePart
+    (h_stack_mul_eq : V.stackOverGenScalar s
+        * (x.map reduceToChosenModulusSq * Y.val.val).submatrix (V.ε ∘ inl) id
+      = V.stackOverGenScalar s * inclMatrix O.chosenModulusSq.ResidueRing V.fixedEmb)
+    : ∏ i : O.TwistIndex, O.tamePart ((O.chosenPlace ⊕ᵥ O.twistPlace) (inr i))
+          ((x.map (levelResidueAt (inr i))).submatrix O.incl id).det
+      = (∏ i : O.TwistIndex, O.tamePart ((O.chosenPlace ⊕ᵥ O.twistPlace) (inr i))
+            (stdLevel.reduceAt ((O.chosenPlace ⊕ᵥ O.twistPlace) (inr i)) (liftMod Y.val)).val.det)⁻¹
+        * charOfTamePart (O.levelModulus 2) O.tamePart
           ((x * ((O.levelModulus 2).reductionGL (liftMod Y.val)).val).submatrix
             ((V.ε ∘ inl) ∘ V.fixedEmb) id).det := by
   -- The character modulo `ϖ² Q` is the product of the `O.tamePart` over the places of the level.
-  have h_char (t : (O.levelModulus 2).ResidueRing) :
-      charOfTamePart (O.levelModulus 2) O.tamePart t =
-        ∏ᶠ j, O.tamePart ((O.chosenPlace ⊕ᵥ O.twistPlace) j) (levelResidueAt j t) :=
+  have h_char (t : (O.levelModulus 2).ResidueRing)
+      : charOfTamePart (O.levelModulus 2) O.tamePart t
+        = ∏ᶠ j, O.tamePart ((O.chosenPlace ⊕ᵥ O.twistPlace) j) (levelResidueAt j t) :=
     (finprod_comp_equiv (.trans (.ofInjective _ O.apart.1)
       (.subtypeEquivRight fun _ ↦ by rw [places_levelModulus]))).symm
   -- The rows `V.genResidue • 1` in `V.stackOverGenScalar s` give `S ≡ inclMatrix V.fixedEmb`
   -- modulo `ϖ` for the rows `S` of `x Y` in `N`.
   let S : Matrix N r (O.levelModulus 2).ResidueRing :=
     (x * ((O.levelModulus 2).reductionGL (liftMod Y.val)).val).submatrix (V.ε ∘ inl) id
-  have hS : V.genResidue • S.map reduceToChosenModulusSq =
-      V.genResidue • inclMatrix O.chosenModulusSq.ResidueRing V.fixedEmb := by
+  have hS
+      : V.genResidue • S.map reduceToChosenModulusSq
+        = V.genResidue • inclMatrix O.chosenModulusSq.ResidueRing V.fixedEmb := by
     simpa [S, stackOverGenScalar, ← submatrix_map] using congrArg toRows₂ h_stack_mul_eq
   -- So at the chosen places the rows `V.fixedEmb` of `S` have determinant `1`.
-  have h_tame (i : O.ChosenIndex) :
-      O.tamePart ((O.chosenPlace ⊕ᵥ O.twistPlace) (inl i))
-        (levelResidueAt (inl i) (S.submatrix V.fixedEmb id).det) = 1 := by
+  have h_tame (i : O.ChosenIndex)
+      : O.tamePart ((O.chosenPlace ⊕ᵥ O.twistPlace) (inl i))
+          (levelResidueAt (inl i) (S.submatrix V.fixedEmb id).det)
+        = 1 := by
     simp [RingHom.map_det, ← submatrix_map, (V.genResidue_smul_eq_inclMatrix_iff S V.fixedEmb).1 hS,
       inclMatrix, -elim_inl]
 
   -- At the places of `Q` the lift of `Y` reduces to `1`.
-  have h_lift (i : O.TwistIndex) :
-    stdLevel.reduceAt ((O.chosenPlace ⊕ᵥ O.twistPlace) (inr i)) (liftMod Y.val) = 1 :=
+  have h_lift (i : O.TwistIndex)
+      : stdLevel.reduceAt ((O.chosenPlace ⊕ᵥ O.twistPlace) (inr i)) (liftMod Y.val) = 1 :=
     stdLevel.reduceAt_eq_one_of_atPlace (atPlace_twistPlace_eq_one (liftMod_mem_supportedOn Y.val)
       i)
   change _ = _ * charOfTamePart (O.levelModulus 2) O.tamePart (S.submatrix V.fixedEmb id).det
@@ -325,7 +364,8 @@ lemma prod_twist_det_eq_inv_mul_charOfTamePart {s : Matrix a N O.chosenModulusSq
 variable {s : Matrix a N O.chosenModulusSq.ResidueRing} {b b' : AutChar E}
 
 open scoped Classical in
-/-- Let `V.ε : N ⊕ m ≃ n` split the standard definite space on `n` as `V″ ⊕ V°`, with indices `N`
+/--
+Let `V.ε : N ⊕ m ≃ n` split the standard definite space on `n` as `V″ ⊕ V°`, with indices `N`
 and `m`. Let `ϖ` generate the product of the chosen places, let the lattice `L` with point `γ` be
 glued for `s` (`IsGlued`), and let the characters `b`, `b'` have product `O.charV`. The product form
 is the form supported on the class of `diag(h, h') γ` built from the Cartan product of `y` and `η`.
@@ -339,40 +379,43 @@ determinant of the rows `e = V.fixedEmb` of `σ` if `w σ ≡ w * inclMatrix _ e
 `w = V.stackOverGenScalar s` is `s` above `ϖ • 1`, and `0` otherwise. The polynomial is that of
 `star y` in the basis vectors of `O.W` of sign `1`.
 * On `V°`, at `h'`: the datum is the indicator of the inclusion matrix of `z : r ↪ m`, and the
-polynomial is that of `star η` in the basis vectors of sign `-1`. -/
-lemma normalizedDescent_productForm [DecidableEq m] [Fintype a] [WeilData E]
-    (hL : V.IsGlued s L) (hb : b * b' = O.charV) (h : Gf E N)
-    (h' : Gf E m) (y : WeylIndex N O.colsPlus → ℂ) (η : WeylIndex m O.colsMinus → ℂ)
-    (g : G E O.signs) :
-    O.normalizedDescent (V.productForm L (h, h') y η) g =
-      conj (L.weilScalar * ∑ Y : V.congruenceGroup,
-        modKernelStdSpace O.W O.charW b (O.levelModulus 2)
-            (columnDatum (charOfTamePart (O.levelModulus 2) O.tamePart) reduceToChosenModulusSq
-              (V.stackOverGenScalar s) V.fixedEmb)
-            (letterPoly O.signs O.numbering 1 O.colsPlus (star y)) (g * (liftMod Y.val).val) h *
-          modKernelStdSpace O.W O.charW b' O.chosenModulusSq
-            (Pi.single (inclMatrix O.chosenModulusSq.ResidueRing z) 1)
-            (letterPoly O.signs O.numbering (-1) O.colsMinus (star η))
-            (g * (liftMod Y.val).val) h') := by
+polynomial is that of `star η` in the basis vectors of sign `-1`.
+-/
+lemma normalizedDescent_productForm
+    [DecidableEq m] [Fintype a] [WeilData E]
+    (hL : V.IsGlued s L) (hb : b * b' = O.charV) (h : Gf E N) (h' : Gf E m)
+    (y : WeylIndex N O.colsPlus → ℂ) (η : WeylIndex m O.colsMinus → ℂ) (g : G E O.signs)
+    : O.normalizedDescent (V.productForm L (h, h') y η) g
+      = conj
+        (L.weilScalar
+          * ∑ Y : V.congruenceGroup,
+            modKernelStdSpace O.W O.charW b (O.levelModulus 2)
+                (columnDatum (charOfTamePart (O.levelModulus 2) O.tamePart) reduceToChosenModulusSq
+                  (V.stackOverGenScalar s) V.fixedEmb)
+                (letterPoly O.signs O.numbering 1 O.colsPlus (star y)) (g * (liftMod Y.val).val) h *
+              modKernelStdSpace O.W O.charW b' O.chosenModulusSq
+                (Pi.single (inclMatrix O.chosenModulusSq.ResidueRing z) 1)
+                (letterPoly O.signs O.numbering (-1) O.colsMinus (star η))
+                (g * (liftMod Y.val).val) h') := by
   -- Apply `normalizedDescent_classForm_mul` on the left. On the right, join the two kernels by the
   -- rule for sums `modKernelStdSpace_block` and move the lift of `Y` into the finite datum. Both
   -- sides are then values of the bilinear form `modKernelBilin`, and it remains to compare the
   -- finite data and the polynomials.
   change O.normalizedDescent (classForm O (U.block V.ε (h, h') * L.point) (cartanProduct V.ε 1 y η))
-    g =
-    _
+      g
+    = _
   rw [V.normalizedDescent_classForm_mul]
   simp_rw [← modKernel_factor levelModulus_ideal_le, ← modKernelStdSpace_block V.ε, hb,
     modKernel_mul_stdLevel_left, ← modKernelBilin_apply, ← LinearMap.sum_apply, ← map_sum]
-  refine congrArg conj (congrArg (L.weilScalar * ·)
-    (congrArg₂ (fun Ψ P ↦ modKernelBilin _ _ _ _ _ _ _ Ψ P) ?_ ?_))
+  refine congrArg conj
+    (congrArg (L.weilScalar * ·) (congrArg₂ (fun Ψ P ↦ modKernelBilin _ _ _ _ _ _ _ Ψ P) ?_ ?_))
   · -- The finite data at a matrix `x`. By `hL.indicator_eq_sum` the left datum is a sum over `Y`
     -- with the same support conditions as on the right; compare the values on the support.
     ext x
     simp [← ite_and, ← submatrix_map, columnDatum, reduceAt_liftMod_congruenceGroup,
       hL.indicator_eq_sum, IsBlockNormalised,
-      O.hasWeight.hasWeight_rankTwist.apply_det_eq_prod O.apart.1 O.tame_eq_one,
-      Pi.single_apply, -elim_inl, -elim_inr]
+      O.hasWeight.hasWeight_rankTwist.apply_det_eq_prod O.apart.1 O.tame_eq_one, Pi.single_apply,
+      -elim_inl, -elim_inr]
     refine sum_congr rfl fun Y _ ↦ ite_congr rfl (fun h_supp ↦ ?_) fun _ ↦ rfl
     exact V.prod_twist_det_eq_inv_mul_charOfTamePart x Y h_supp.2
   · -- Conjugation commutes with the product `cartanProduct`, and the polynomial of a product is the
@@ -382,34 +425,38 @@ lemma normalizedDescent_productForm [DecidableEq m] [Fintype a] [WeilData E]
     rw [h_star, fockPoly_cartanProduct V.hasColumnsBelow.1 V.hasColumnsBelow.2]
 
 open scoped Classical in
-/-- Let the lattice `L` with point `γ` be glued for `s`, and let `b * b' = O.charV`. Fix a point
+/--
+Let the lattice `L` with point `γ` be glued for `s`, and let `b * b' = O.charV`. Fix a point
 `h'` of `Gf E m` on `V°`. Sum (`stdClassSum`) the forms supported on the class of `diag(h, h') γ`
 and built from `φ h` and `η` (`productForm`) over the classes `h` of level `rowFixingLevel`. The
 descent `O.normalizedDescent` of this sum to `O.W` is, at `g`, the complex conjugate of
 `L.weilScalar` times a sum over the invertible matrices `Y` modulo `ϖ²` that are `1` modulo `ϖ`. The
 term of `Y` is `kernelClassSum`, the theta kernel of `O.W` and `V″` summed over those classes, times
 the theta kernel `modKernelStdSpace` of `O.W` and `V°` at `h'`. Both are taken at `g` times
-`liftMod Y`, an integral lift of `Y`. -/
-lemma normalizedDescent_stdClassSum_productForm [DecidableEq m] [Fintype a] [WeilData E]
-    (hL : V.IsGlued s L) (hb : b * b' = O.charV)
-    (h' : Gf E m) (φ : Gf E N → WeylIndex N O.colsPlus → ℂ) (η : WeylIndex m O.colsMinus → ℂ)
-    (g : G E O.signs) :
-    O.normalizedDescent
+`liftMod Y`, an integral lift of `Y`.
+-/
+lemma normalizedDescent_stdClassSum_productForm
+    [DecidableEq m] [Fintype a] [WeilData E]
+    (hL : V.IsGlued s L) (hb : b * b' = O.charV) (h' : Gf E m)
+    (φ : Gf E N → WeylIndex N O.colsPlus → ℂ) (η : WeylIndex m O.colsMinus → ℂ) (g : G E O.signs)
+    : O.normalizedDescent
         (stdClassSum (rowFixingLevel O.toLevelPlaces (V.stackOverGenScalar s) V.fixedEmb)
-          fun h : Gf E N ↦ V.productForm L (h, h') (φ h) η) g =
-      conj (L.weilScalar * ∑ Y : V.congruenceGroup,
-        kernelClassSum O b (V.stackOverGenScalar s) V.fixedEmb (fun h : Gf E N ↦ star (φ h))
-            (g * (liftMod Y.val).val) *
-          modKernelStdSpace O.W O.charW b' O.chosenModulusSq
-            (Pi.single (inclMatrix O.chosenModulusSq.ResidueRing z) 1)
-            (letterPoly O.signs O.numbering (-1) O.colsMinus (star η))
-            (g * (liftMod Y.val).val) h') := by
+          fun h : Gf E N ↦ V.productForm L (h, h') (φ h) η)
+        g
+      = conj
+        (L.weilScalar
+          * ∑ Y : V.congruenceGroup,
+            kernelClassSum O b (V.stackOverGenScalar s) V.fixedEmb (fun h : Gf E N ↦ star (φ h))
+                (g * (liftMod Y.val).val) *
+              modKernelStdSpace O.W O.charW b' O.chosenModulusSq
+                (Pi.single (inclMatrix O.chosenModulusSq.ResidueRing z) 1)
+                (letterPoly O.signs O.numbering (-1) O.colsMinus (star η))
+                (g * (liftMod Y.val).val) h') := by
   -- Apply `normalizedDescent_productForm` to each class; `O.normalizedDescent` and evaluation at
   -- `g` are linear.
   change (.proj g ∘ₗ O.normalizedDescent) _ = _
   simp [kernelClassSum, map_classSum, ← classSum_sum, mul_classSum,
-    ↓V.normalizedDescent_productForm hL hb,
-    mul_sum]
+    ↓ V.normalizedDescent_productForm hL hb, mul_sum]
 
 end DividedSplitting
 
@@ -437,53 +484,61 @@ namespace New.Rows.DividedSplitting
 
 open Matrix ComplexConjugate Finset Fintype IsUltrametricDist Ideal Modulus
 
-variable {E r n N m a : Type} {l : Type} [Field E] [CMType E] [Fintype r] [DecidableEq r]
-  [Fintype n] [DecidableEq n] [Fintype N] [Fintype m] [Fintype a] [Fintype l]
+variable
+  {E r n N m a : Type} {l : Type} [Field E] [CMType E] [Fintype r] [DecidableEq r] [Fintype n]
+  [DecidableEq n] [Fintype N] [Fintype m] [Fintype a] [Fintype l]
   {O : DescentPair E r n} {z : r ↪ m} (V : DividedSplitting N m a O z)
-  {p : ℕ} [Fact p.Prime] [ι : PadicPlace p] {M : ℕ} [NeZero M]
+  {p : ℕ} [Fact p.Prime] [ι : PadicPlace p]
+  {M : ℕ} [NeZero M]
 
-/-- The exponent of `M` in the denominator: at each infinite place `τ`, `card a` times the number of
+/--
+The exponent of `M` in the denominator: at each infinite place `τ`, `card a` times the number of
 columns of `O.colsPlus` of height below `card N` (a column has distinct entries, so at most `card a`
 of them lie in the range of `V.dividedEmb`, the copy of `a` in `N`), plus `card m` times the number
 of columns of `O.colsMinus` of height below `card m`, a bound for the number of their boxes. In both
-diagrams the entry at `τ h` counts the columns of height `h`. -/
+diagrams the entry at `τ h` counts the columns of height `h`.
+-/
 noncomputable def denominatorExponent : ℕ :=
   ∑ τ : NumberField.InfinitePlace E,
     (#(univ.map V.dividedEmb) * ∑ h ∈ range (Fintype.card N), O.colsPlus τ h +
       Fintype.card m * ∑ h ∈ range (Fintype.card m), O.colsMinus τ h)
 
 omit [PadicPlace p] in
-/-- For a prime `p`, a natural number `M ≠ 0` and a set `S` of indices, the Schur matrix of weight
+/--
+For a prime `p`, a natural number `M ≠ 0` and a set `S` of indices, the Schur matrix of weight
 `κ` over `ℂ_[p]` of the diagonal matrix that is `M⁻¹` on `S` and `1` elsewhere has entries of p-adic
 norm at most `‖M‖⁻¹ ^ (Σ_τ #S · c_τ)`, with c_τ the number of columns of `κ τ` of height below
-`card l` (`κ τ h` counts those of height `h`). -/
-lemma norm_schur_diagonal_piecewise_inv_le [DecidableEq l] (S : Finset l)
-    (κ : NumberField.InfinitePlace E → ℕ → ℕ) (i j : WeylIndex l κ) :
-    ‖schur κ (fun _ : NumberField.InfinitePlace E ↦
-        diagonal (S.piecewise (M : l → ℂ_[p])⁻¹ 1)) i j‖ ≤
-      ‖(M : ℂ_[p])‖⁻¹ ^
-        (∑ τ : NumberField.InfinitePlace E, #S * (range (card l)).sum (κ τ)) := by
+`card l` (`κ τ h` counts those of height `h`).
+-/
+lemma norm_schur_diagonal_piecewise_inv_le
+    [DecidableEq l] (S : Finset l) (κ : NumberField.InfinitePlace E → ℕ → ℕ) (i j : WeylIndex l κ)
+    : ‖schur κ (fun _ : NumberField.InfinitePlace E ↦
+          diagonal (S.piecewise (M : l → ℂ_[p])⁻¹ 1)) i j‖
+      ≤ ‖(M : ℂ_[p])‖⁻¹ ^ (∑ τ : NumberField.InfinitePlace E, #S * (range (card l)).sum (κ τ)) := by
   -- The diagonal entry at a filling `i` is `M⁻¹` to the number of entries of `i` in `S`. These
   -- number at most the boxes in the first `#S` rows, and a row has one box at most in each column.
   simp only [schur_diagonal, diagonal_apply]
   split_ifs with hij
   swap
   · simp
-  have h_entry : ∏ τ : NumberField.InfinitePlace E, ∏ b : l,
-      S.piecewise (M : l → ℂ_[p])⁻¹ 1 b ^ tableauWeight i τ b =
-        (M : ℂ_[p])⁻¹ ^ ∑ τ : NumberField.InfinitePlace E, ∑ b ∈ S, tableauWeight i τ b := by
+  have h_entry
+      : ∏ τ : NumberField.InfinitePlace E, ∏ b : l,
+          S.piecewise (M : l → ℂ_[p])⁻¹ 1 b ^ tableauWeight i τ b
+        = (M : ℂ_[p])⁻¹ ^ ∑ τ : NumberField.InfinitePlace E, ∑ b ∈ S, tableauWeight i τ b := by
     simp [piecewise, prod_pow_eq_pow_sum, Finset.univ_inter]
   rw [h_entry, norm_pow, norm_inv] -- the exponent is the number of entries in `S`
   gcongr with τ
   · simp [one_le_inv₀, NeZero.ne, norm_natCast_le_one]
   · calc
       _ ≤ ∑ k ∈ range #S, diagramWeight _ κ (τ, k) := (sum_tableauWeight_le i τ S).1
-      _ ≤ ∑ _k ∈ range #S, (range (Fintype.card l)).sum (κ τ) := sum_le_sum fun k _ ↦ by
-        simpa only [diagramWeight_apply] using sum_le_sum_of_subset fun h hh ↦ by simp_all
+      _ ≤ ∑ _k ∈ range #S, (range (Fintype.card l)).sum (κ τ) :=
+        sum_le_sum fun k _ ↦ by
+          simpa only [diagramWeight_apply] using sum_le_sum_of_subset fun h hh ↦ by simp_all
       _ = _ := by simp
 
 omit [Fintype a] in
-/-- The bound for one block of columns `f : l → n`. Let `ι` be a p-adic place, with map
+/--
+The bound for one block of columns `f : l → n`. Let `ι` be a p-adic place, with map
 `ιₚ : ℂ → ℂ_[p]`, and let `M ≠ 0` lie in the ideal `(ϖ) = O.levelModulus 1 false`, the product of
 the chosen places of `O`. Let `κ` have no column of height in `[card l, card n)`. Let `γ = L.point`
 be a point of the finite adelic unitary group `Gf E n` at the chosen places with `ϖ γ⁻¹` integral,
@@ -494,41 +549,49 @@ and `L.reducedInverse` the matrix `ϖ γ⁻¹` modulo `ϖ²`. After an invertibl
 `E` to the finite adeles. Then their Schur matrix sends `ιₚ ∘ v` to a vector of norm at most
 `‖M‖⁻¹ ^ (Σ_τ #S · c_τ)` times `weylGauge κ 0 h v`, the sup norm of `h⁻¹` applied to `ιₚ ∘ v` in
 weight `κ` twisted by the power `0` of the determinant. Here c_τ is the number of columns of `κ τ`
-of height below `card l`. -/
-lemma norm_schur_inv_cols_le_weylGauge [DecidableEq l]
+of height below `card l`.
+-/
+lemma norm_schur_inv_cols_le_weylGauge
+    [DecidableEq l]
     (hM : (M : NumberField.RingOfIntegers E) ∈ (O.levelModulus 1 false).ideal)
-    (L : DividedLattice O) {κ : NumberField.InfinitePlace E → ℕ → ℕ} {h : Gf E l}
-    {v : WeylIndex l κ → ℂ} {g : Gf E n} {S : Finset l} {f : l → n}
-    (hκ_cols : HasColumnsBelow n l κ)
-    (hS : ∃ K : GL l O.chosenModulusSq.ResidueRing, ∀ i : n, ∀ j : l, j ∉ S →
-      V.genResidue * (L.reducedInverse.submatrix id f * K.val) i j = 0)
-    (h_cols : g⁻¹.val.val.submatrix id f = inclMatrix (𝔸f E) f * h⁻¹.val.val) :
-    ‖schur κ (fun τ : NumberField.InfinitePlace E ↦
-        ((g * L.point)⁻¹.val.val.submatrix id f).map
-          (adeleExtension (weightEmbedding ιₚ τ))) *ᵥ ιₚ ∘ v‖ ≤
-      ‖(M : ℂ_[p])‖⁻¹ ^
-          (∑ τ : NumberField.InfinitePlace E, #S * (range (Fintype.card l)).sum (κ τ)) *
-        weylGauge κ 0 h v := by
+    (L : DividedLattice O)
+    {κ : NumberField.InfinitePlace E → ℕ → ℕ} {h : Gf E l} {v : WeylIndex l κ → ℂ} {g : Gf E n}
+    {S : Finset l} {f : l → n} (hκ_cols : HasColumnsBelow n l κ)
+    (hS : ∃ K : GL l O.chosenModulusSq.ResidueRing, ∀ i : n, ∀ j : l,
+      j ∉ S → V.genResidue * (L.reducedInverse.submatrix id f * K.val) i j = 0)
+    (h_cols : g⁻¹.val.val.submatrix id f = inclMatrix (𝔸f E) f * h⁻¹.val.val)
+    : ‖schur κ (fun τ : NumberField.InfinitePlace E ↦
+          ((g * L.point)⁻¹.val.val.submatrix id f).map
+            (adeleExtension (weightEmbedding ιₚ τ))) *ᵥ ιₚ ∘ v‖
+      ≤ ‖(M : ℂ_[p])‖⁻¹
+          ^ (∑ τ : NumberField.InfinitePlace E, #S * (range (Fintype.card l)).sum (κ τ))
+        * weylGauge κ 0 h v := by
   -- Lift `K` to an integral `k` and write `h = h' k⁻¹`; the gauges at `h` and `h'` agree. With
   -- `h'` again called `h`, the `f`-columns of `(g γ)⁻¹` factor as `A * Δ * h⁻¹`, with `A` integral
   -- at all places and `Δ` diagonal (`M⁻¹` on `S`, `1` elsewhere). The Schur matrix of `A` does not
   -- increase norms; that of `Δ` is diagonal.
-  obtain ⟨k, hk⟩ : ∃ k : stdLevel E l, ∀ i : n, ∀ j : l, j ∉ S →
-      V.genResidue *
-        (L.reducedInverse.submatrix id f * (O.chosenModulusSq.reductionGL k).val) i j = 0 :=
+  obtain ⟨k, hk⟩
+      : ∃ k : stdLevel E l, ∀ i : n, ∀ j : l,
+        j ∉ S
+          → V.genResidue
+              * (L.reducedInverse.submatrix id f * (O.chosenModulusSq.reductionGL k).val) i j
+            = 0 :=
     reductionGL_surjective.exists.1 hS
   obtain ⟨h, rfl⟩ := mul_right_surjective k⁻¹.val h
   rw [weylGauge_mul_of_mem_integralAbove h (stdLevel_le_localLevel k⁻¹.2)]
-  let A : Matrix n l (𝔸f E) := of fun (i : n) (j : l) ↦
-    (L.point⁻¹.val.val.submatrix id f * k.val.val.val) i j * if j ∈ S then (M : 𝔸f E) else 1
+  let A : Matrix n l (𝔸f E) :=
+    of fun (i : n) (j : l) ↦
+      (L.point⁻¹.val.val.submatrix id f * k.val.val.val) i j * if j ∈ S then (M : 𝔸f E) else 1
   let Δ : Matrix l l ℂ_[p] := diagonal (S.piecewise (M : l → ℂ_[p])⁻¹ 1)
   -- `A` is integral because the integral matrix `ϖ A` vanishes modulo the chosen places: the
   -- columns in `S` are multiples of `M`, and `ϖ` times the others is 0 modulo `ϖ²` by `hk`.
   have hA (i : n) (j : l) : A i j ∈ Ô E := by
-    have h_red : (O.levelModulus 1 false).reduction
-        ((∑ c : l, ⟨O.genIdele * L.point⁻¹.val.val i (f c), L.mul_inv_mem i (f c)⟩ *
-            ⟨k.val.val.val c j, k.2.isIntMatrix c j⟩) *
-          if j ∈ S then (M : Ô E) else 1) = 0 := by
+    have h_red
+        : (O.levelModulus 1 false).reduction
+            ((∑ c : l, ⟨O.genIdele * L.point⁻¹.val.val i (f c), L.mul_inv_mem i (f c)⟩ *
+                ⟨k.val.val.val c j, k.2.isIntMatrix c j⟩)
+              * if j ∈ S then (M : Ô E) else 1)
+          = 0 := by
       split
       · -- `M` lies in the ideal of the modulus.
         simp_all [← Quotient.eq_zero_iff_mem]
@@ -538,12 +601,13 @@ lemma norm_schur_inv_cols_le_weylGauge [DecidableEq l]
     convert reduction_levelModulus_eq_zero_iff.1 h_red
     by_cases hj : j ∈ S <;> simp [A, hj, Matrix.mul_apply, mul_assoc, ← mul_sum]
   let φ (τ : NumberField.InfinitePlace E) := adeleExtension (E := E) (weightEmbedding ιₚ τ)
-  have h_inv : (g * L.point)⁻¹.val.val.submatrix id f =
-      L.point⁻¹.val.val.submatrix id f * k.val.val.val * h⁻¹.val.val := by
+  have h_inv
+      : (g * L.point)⁻¹.val.val.submatrix id f
+        = L.point⁻¹.val.val.submatrix id f * k.val.val.val * h⁻¹.val.val := by
     simp_all [← Matrix.mul_assoc, mul_inclMatrix, submatrix_mul (e₂ := id)]
-  have h_factor (τ : NumberField.InfinitePlace E) :
-      ((g * L.point)⁻¹.val.val.submatrix id f).map (φ τ) =
-        A.map (φ τ) * Δ * h⁻¹.val.val.map (φ τ) := by
+  have h_factor (τ : NumberField.InfinitePlace E)
+      : ((g * L.point)⁻¹.val.val.submatrix id f).map (φ τ)
+        = A.map (φ τ) * Δ * h⁻¹.val.val.map (φ τ) := by
     rw [h_inv, Matrix.map_mul]
     congr 1 with i j
     by_cases hj : j ∈ S <;> simp [A, Δ, hj, NeZero.ne, Matrix.mul_apply, diagonal_apply]
@@ -560,7 +624,8 @@ lemma norm_schur_inv_cols_le_weylGauge [DecidableEq l]
 
 -- Keeps definitional checks from unfolding the finite sums.
 seal Finset.univ in
-/-- Let `V.ε : N ⊕ m ≃ n` split the indices, let `ι` be a p-adic place, and let `M ≠ 0` lie in the
+/--
+Let `V.ε : N ⊕ m ≃ n` split the indices, let `ι` be a p-adic place, and let `M ≠ 0` lie in the
 ideal of `O.levelModulus 1 false`, the product of the chosen places of `O`. Let the lattice `L` with
 point `γ = L.point` be glued for `s`. The diagrams `O.colsPlus` and `O.colsMinus` count the columns
 of each height at each infinite place. The vector `y` has the first weight in the letters `N` and
@@ -569,59 +634,65 @@ letters `n` (it is moved by `1`) and projects their tensor product to the weight
 `O.columnCount` and determinant exponents `O.detExp`. Then the gauge of the product at
 `U.block V.ε (h, h') * γ`, with `U.block` the block diagonal matrix, is at most
 `‖M‖⁻¹ ^ V.denominatorExponent` times the gauge of `y` at `h` and the gauge of `star η` at `h'`, the
-latter through the conjugate embedding. -/
-lemma weylGauge_cartanProduct_le [DecidableEq m] [DecidableEq N]
+latter through the conjugate embedding.
+-/
+lemma weylGauge_cartanProduct_le
+    [DecidableEq m] [DecidableEq N]
     (hM : (M : NumberField.RingOfIntegers E) ∈ (O.levelModulus 1 false).ideal)
     {s : Matrix a N O.chosenModulusSq.ResidueRing} {L : DividedLattice O} (hL : V.IsGlued s L)
-    (h : Gf E N) (h' : Gf E m) (y : WeylIndex N O.colsPlus → ℂ)
-    (η : WeylIndex m O.colsMinus → ℂ) :
-    weylGauge (ι := ι) O.columnCount O.detExp (U.block V.ε (h, h') * L.point)
-        (cartanProduct V.ε 1 y η) ≤
-      ‖(M : ℂ_[p])‖⁻¹ ^ V.denominatorExponent *
-        (weylGauge (ι := ι) O.colsPlus 0 h y *
-          weylGauge (ι := ⟨ιₚ.comp conj⟩) O.colsMinus 0 h' (star η)) := by
+    (h : Gf E N) (h' : Gf E m) (y : WeylIndex N O.colsPlus → ℂ) (η : WeylIndex m O.colsMinus → ℂ)
+    : weylGauge (ι := ι) O.columnCount O.detExp (U.block V.ε (h, h') * L.point)
+        (cartanProduct V.ε 1 y η)
+      ≤ ‖(M : ℂ_[p])‖⁻¹ ^ V.denominatorExponent
+        * (weylGauge (ι := ι) O.colsPlus 0 h y
+          * weylGauge (ι := ⟨ιₚ.comp conj⟩) O.colsMinus 0 h' (star η)) := by
   -- `cartanProduct` is an integral matrix applied to the tensor product of two Schur images, one
   -- for each block of `V.ε`; so its norm is at most the product of their norms.
   -- `norm_schur_inv_cols_le_weylGauge` bounds each.
   set g : Gf E n := U.block V.ε (h, h') * L.point
   -- The block `N`: only the columns in the image of `V.dividedEmb` cost a power of `M`.
-  have h_big : ‖schur O.colsPlus (fun τ : NumberField.InfinitePlace E ↦
-        (g⁻¹.val.val.submatrix id (V.ε ∘ .inl)).map
-          (adeleExtension (weightEmbedding ιₚ τ))) *ᵥ ιₚ ∘ y‖ ≤
-      ‖(M : ℂ_[p])‖⁻¹ ^ (∑ τ : NumberField.InfinitePlace E,
-          #(univ.map V.dividedEmb) * (range (card N)).sum (O.colsPlus τ)) *
-        weylGauge (ι := ι) O.colsPlus 0 h y :=
-    V.norm_schur_inv_cols_le_weylGauge hM L V.hasColumnsBelow.1 hL.exists_cols_eq_zero
-      (by simp [reindex_equiv V.ε, ← ext_iff, Matrix.mul_apply, inclMatrix, ← map_inv,
+  have h_big
+      : ‖schur O.colsPlus (fun τ : NumberField.InfinitePlace E ↦
+          (g⁻¹.val.val.submatrix id (V.ε ∘ .inl)).map
+            (adeleExtension (weightEmbedding ιₚ τ))) *ᵥ ιₚ ∘ y‖
+        ≤ ‖(M : ℂ_[p])‖⁻¹
+            ^ (∑ τ : NumberField.InfinitePlace E,
+                #(univ.map V.dividedEmb) * (range (card N)).sum (O.colsPlus τ))
+          * weylGauge (ι := ι) O.colsPlus 0 h y :=
+    V.norm_schur_inv_cols_le_weylGauge hM L V.hasColumnsBelow.1 hL.exists_cols_eq_zero (by
+      simp [reindex_equiv V.ε, ← ext_iff, Matrix.mul_apply, inclMatrix, ← map_inv,
         Matrix.one_apply])
   -- The block `m`, read through the conjugate embedding: every column may cost a power of `M`.
-  have h_small : ‖schur O.colsMinus (fun τ : NumberField.InfinitePlace E ↦
-        (g⁻¹.val.val.submatrix id (V.ε ∘ .inr)).map
-          (adeleExtension (weightEmbedding (ιₚ.comp conj) τ))) *ᵥ ιₚ.comp conj ∘ star η‖ ≤
-      ‖(M : ℂ_[p])‖⁻¹ ^ (∑ τ : NumberField.InfinitePlace E,
-          card m * (range (card m)).sum (O.colsMinus τ)) *
-        weylGauge (ι := ⟨ιₚ.comp conj⟩) O.colsMinus 0 h' (star η) :=
+  have h_small
+      : ‖schur O.colsMinus (fun τ : NumberField.InfinitePlace E ↦
+          (g⁻¹.val.val.submatrix id (V.ε ∘ .inr)).map
+            (adeleExtension (weightEmbedding (ιₚ.comp conj) τ))) *ᵥ ιₚ.comp conj ∘ star η‖
+        ≤ ‖(M : ℂ_[p])‖⁻¹
+            ^ (∑ τ : NumberField.InfinitePlace E,
+                card m * (range (card m)).sum (O.colsMinus τ))
+          * weylGauge (ι := ⟨ιₚ.comp conj⟩) O.colsMinus 0 h' (star η) :=
     V.norm_schur_inv_cols_le_weylGauge (ι := ⟨ιₚ.comp conj⟩) (S := univ) hM L V.hasColumnsBelow.2
-      (by simp) (by simp [reindex_equiv V.ε, ← ext_iff, Matrix.mul_apply, inclMatrix, ← map_inv,
-        Matrix.one_apply])
+      (by simp)
+      (by
+        simp [reindex_equiv V.ε, ← ext_iff, Matrix.mul_apply, inclMatrix, ← map_inv,
+          Matrix.one_apply])
   -- Move the action of `g⁻¹` into `cartanProduct` (`weylRep_mulVec_cartanProduct`) and split the
   -- power of `M` by blocks.
   -- `erw`: `O.columnCount` and `O.detExp` are the mixed weight and its twist by unfolding.
   erw [weylGauge, map_cartanProduct V.hasColumnsBelow.1 V.hasColumnsBelow.2 (f := ιₚ),
-    show ιₚ ∘ η = ιₚ.comp conj ∘ star η by
-      aesop, weylRep_mulVec_cartanProduct V.hasColumnsBelow.1 V.hasColumnsBelow.2]
+    show ιₚ ∘ η = ιₚ.comp conj ∘ star η by aesop,
+    weylRep_mulVec_cartanProduct V.hasColumnsBelow.1 V.hasColumnsBelow.2]
   rw [denominatorExponent, sum_add_distrib, pow_add, mul_mul_mul_comm]
-  refine (norm_mulVec_le (c := 1) (by simp [norm_intCast_le_one]) _).trans
-    ((one_mul _).trans_le ?_)
+  refine (norm_mulVec_le (c := 1) (by simp [norm_intCast_le_one]) _).trans ((one_mul _).trans_le ?_)
   -- `g` is unitary, so the transpose of `g` is the conjugate of `g⁻¹`, and conjugation on `E`
   -- turns the conjugate embedding back into the given one.
-  have h_conj (τ : NumberField.InfinitePlace E) :
-      (weightEmbedding (E := E) (ιₚ.comp conj) τ).comp conj = weightEmbedding ιₚ τ :=
+  have h_conj (τ : NumberField.InfinitePlace E)
+      : (weightEmbedding (E := E) (ιₚ.comp conj) τ).comp conj = weightEmbedding ιₚ τ :=
     RingHom.ext (by simp [starRingEnd_apply (R := E)])
-  have h_transpose (τ : NumberField.InfinitePlace E) :
-      ((GeneralLinearGroup.map (adeleExtension (weightEmbedding ιₚ τ))
-          g⁻¹.val)⁻¹).valᵀ.submatrix id (V.ε ∘ .inr) =
-        (g⁻¹.val.val.submatrix id (V.ε ∘ .inr)).map
+  have h_transpose (τ : NumberField.InfinitePlace E)
+      : ((GeneralLinearGroup.map (adeleExtension (weightEmbedding ιₚ τ)) g⁻¹.val)⁻¹).valᵀ.submatrix
+          id (V.ε ∘ .inr)
+        = (g⁻¹.val.val.submatrix id (V.ε ∘ .inr)).map
           (adeleExtension (weightEmbedding (ιₚ.comp conj) τ)) := by
     rw [U.inv_val_eq_conjTranspose]
     ext i j

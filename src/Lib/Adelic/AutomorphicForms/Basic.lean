@@ -59,17 +59,22 @@ open MeasureTheory Submodule
 
 namespace New
 
-variable {E n : Type} [Field E] [CMType E] [Fintype n] [DecidableEq n] {s : n → ℤˣ}
-  (V : Space E n s) (e : GInf E s → ℂ) (F F' : G E s → ℂ)
+variable
+  {E n : Type} [Field E] [CMType E] [Fintype n] [DecidableEq n]
+  {s : n → ℤˣ} (V : Space E n s) (e : GInf E s → ℂ) (F F' : G E s → ℂ)
 
-/-- The function e_λ(x) = ∏_w e_{λ_w}(x_w) on G_∞, for a family of doubled parameters l_w = 2λ_w. It
+/--
+The function e_λ(x) = ∏_w e_{λ_w}(x_w) on G_∞, for a family of doubled parameters l_w = 2λ_w. It
 is the product over the infinite places of the functions `dsKernel` on U(diag s), each the formal
-degree times the conjugate of the discrete series coefficient. -/
+degree times the conjugate of the discrete series coefficient.
+-/
 abbrev typeKernel (l : NumberField.InfinitePlace E → n → ℤ) (s : n → ℤˣ) (x : GInf E s) : ℂ :=
   ∏ w : NumberField.InfinitePlace E, dsKernel (l w) (x w)
 
-/-- Right convolution over the real points: R(k)F(g) = ∫_{G_∞} k(x) F(gx) dx, for k on G_∞ and F
-on G. -/
+/--
+Right convolution over the real points: R(k)F(g) = ∫_{G_∞} k(x) F(gx) dx, for k on G_∞ and F
+on G.
+-/
 def realConv (k : GInf E s → ℂ) (F : G E s → ℂ) (g : G E s) : ℂ :=
   ∫ x : GInf E s, k x * F (g * (x, 1))
 
@@ -78,10 +83,14 @@ variable (E s) in
 abbrev finRightRep : Representation ℂ (Gf E n) (G E s → ℂ) :=
   (rightRegular ℂ (G E s) ℂ).comp (MonoidHom.inr (GInf E s) (Gf E n))
 
-/-- A theta kernel (g, h, φ) ↦ θ(ω(g, h) φ) for the spaces S and T: an action ω of the product of
+/--
+A theta kernel (g, h, φ) ↦ θ(ω(g, h) φ) for the spaces S and T: an action ω of the product of
 their groups on a normed space X and a functional θ on X, such that ω is jointly continuous and the
-kernel is left invariant under Γ_S × Γ_T. -/
-structure ThetaKernel {n' : Type} [Fintype n'] [DecidableEq n'] {t : n' → ℤˣ}
+kernel is left invariant under Γ_S × Γ_T.
+-/
+structure ThetaKernel
+    {n' : Type} [Fintype n'] [DecidableEq n']
+    {t : n' → ℤˣ}
     (X : Type*) [NormedAddCommGroup X] [NormedSpace ℂ X]
     (S : Space E n s) (T : Space E n' t) where
   /-- The action of the product of the groups of S and T on X by continuous linear maps. -/
@@ -91,16 +100,18 @@ structure ThetaKernel {n' : Type} [Fintype n'] [DecidableEq n'] {t : n' → ℤ�
   /-- The action `(p, φ) ↦ ω p φ` is jointly continuous. -/
   continuous : Continuous ↿(ω · ·)
   /-- The kernel is invariant under left multiplication by rational points of both groups. -/
-  rat_mul {γ : G E s} {γ' : G E t} :
-      γ ∈ S.Γ → γ' ∈ T.Γ →
-      ∀ (g : G E s) (k : G E t) (φ : X), θ (ω (γ * g, γ' * k) φ) = θ (ω (g, k) φ)
+  rat_mul {γ : G E s} {γ' : G E t}
+    : γ ∈ S.Γ → γ' ∈ T.Γ
+      → ∀ (g : G E s) (k : G E t) (φ : X), θ (ω (γ * g, γ' * k) φ) = θ (ω (g, k) φ)
 
 attribute [fun_prop] ThetaKernel.continuous
 
 namespace Space
 
-/-- F on G is automorphic: continuous, left Γ-invariant, and right invariant under some open
-subgroup of G_f. -/
+/--
+F on G is automorphic: continuous, left Γ-invariant, and right invariant under some open
+subgroup of G_f.
+-/
 structure IsAutomorphic where
   /-- `F` is continuous. -/
   continuous : Continuous F
@@ -114,14 +125,18 @@ lemma isAutomorphic_const (c : ℂ) : V.IsAutomorphic fun _ : G E s ↦ c where
   rat_mul _ _ _ := rfl
   exists_level := ⟨⊤, fun _ _ _ ↦ rfl⟩
 
-/-- The Petersson product ⟨F, F'⟩ = ∫_{Γ\G} conj(F) F', taken with the measure
-`New.Space.quotMeasure`. -/
+/--
+The Petersson product ⟨F, F'⟩ = ∫_{Γ\G} conj(F) F', taken with the measure
+`New.Space.quotMeasure`.
+-/
 def petersson : ℂ := ∫ g : G E s, starRingEnd ℂ (F g) * F' g ∂V.quotMeasure
 
-/-- F is a form of type e, for a function e on G_∞: F is automorphic, bounded, and fixed by right
+/--
+F is a form of type e, for a function e on G_∞: F is automorphic, bounded, and fixed by right
 convolution with e if e is integrable. For e not integrable the last condition is empty, so that
 every bounded automorphic function is then a form of type e. The forms of parameter λ are those of
-type e_λ = `New.typeKernel l s`, with l = 2λ. -/
+type e_λ = `New.typeKernel l s`, with l = 2λ.
+-/
 structure IsForm extends V.IsAutomorphic F where
   /-- `F` is bounded. -/
   bounded : ∃ C : ℝ, ∀ g : G E s, ‖F g‖ ≤ C
@@ -130,26 +145,30 @@ structure IsForm extends V.IsAutomorphic F where
 
 variable {V e F F'}
 
-/-- For automorphic functions F, F' and a function f of two complex variables that is jointly
+/--
+For automorphic functions F, F' and a function f of two complex variables that is jointly
 continuous, the function g ↦ f(F(g), F'(g)) is automorphic. The continuity may be omitted when
-`fun_prop` proves it. -/
-lemma IsAutomorphic.map₂ (hF : V.IsAutomorphic F) (hF' : V.IsAutomorphic F') (f : ℂ → ℂ → ℂ)
-    (hf : Continuous ↿f := by fun_prop) :
-    V.IsAutomorphic fun g : G E s ↦ f (F g) (F' g) := by
+`fun_prop` proves it.
+-/
+lemma IsAutomorphic.map₂
+    (hF : V.IsAutomorphic F) (hF' : V.IsAutomorphic F')
+    (f : ℂ → ℂ → ℂ) (hf : Continuous ↿f := by fun_prop)
+    : V.IsAutomorphic fun g : G E s ↦ f (F g) (F' g) := by
   obtain ⟨h_cont, h_rat, K, hK⟩ := hF
   obtain ⟨h_cont', h_rat', L, hL⟩ := hF'
-  exact
-    { continuous := by fun_prop
-      rat_mul := fun γ hγ g ↦ by simp only [h_rat γ hγ g, h_rat' γ hγ g]
-      -- the intersection of the two levels is a level
-      exists_level := ⟨K ⊓ L, fun k hk g ↦ by simp only [hK k hk.1 g, hL k hk.2 g]⟩ }
+  exact {
+    continuous := by fun_prop
+    rat_mul := fun γ hγ g ↦ by simp only [h_rat γ hγ g, h_rat' γ hγ g]
+    -- the intersection of the two levels is a level
+    exists_level := ⟨K ⊓ L, fun k hk g ↦ by simp only [hK k hk.1 g, hL k hk.2 g]⟩
+  }
 
 lemma IsAutomorphic.conj (hF : V.IsAutomorphic F) : V.IsAutomorphic (star F) :=
   hF.map₂ hF fun _ z ↦ star z
 
 /-- A right translate g ↦ F(ga) of an automorphic function F by a point a of G is automorphic. -/
-lemma IsAutomorphic.comp_mul_right (hF : V.IsAutomorphic F) (a : G E s) :
-    V.IsAutomorphic fun g : G E s ↦ F (g * a) := by
+lemma IsAutomorphic.comp_mul_right (hF : V.IsAutomorphic F) (a : G E s)
+    : V.IsAutomorphic fun g : G E s ↦ F (g * a) := by
   obtain ⟨h_cont, h_rat, K, hK⟩ := hF
   -- the translate by `a` has the level `K` conjugated by `a.2`
   let conjLevel : OpenSubgroup (Gf E n) :=
@@ -157,14 +176,17 @@ lemma IsAutomorphic.comp_mul_right (hF : V.IsAutomorphic F) (a : G E s) :
   refine ⟨by fun_prop, fun γ hγ g ↦ by rw [mul_assoc, h_rat γ hγ], conjLevel, fun k hk g ↦ ?_⟩
   have h_conj : a.2⁻¹ * k * a.2 ∈ K := hk
   calc
-    F (g * (1, k) * a) = F (g * a * (1, a.2⁻¹ * k * a.2)) := by simp [Prod.mul_def, mul_assoc]
+    F (g * (1, k) * a)
+      = F (g * a * (1, a.2⁻¹ * k * a.2)) := by simp [Prod.mul_def, mul_assoc]
     _ = F (g * a) := hK _ h_conj _
 
-/-- The Petersson product is definite: an automorphic function F that is square integrable on
-Γ\G and has ⟨F, F⟩ = 0 vanishes everywhere. -/
-lemma IsAutomorphic.eq_zero_of_petersson_self (h : V.IsAutomorphic F)
-    (hF : MemLp F 2 V.quotMeasure) (h_pet : V.petersson F F = 0) :
-    F = 0 := by
+/--
+The Petersson product is definite: an automorphic function F that is square integrable on
+Γ\G and has ⟨F, F⟩ = 0 vanishes everywhere.
+-/
+lemma IsAutomorphic.eq_zero_of_petersson_self
+    (h : V.IsAutomorphic F) (hF : MemLp F 2 V.quotMeasure) (h_pet : V.petersson F F = 0)
+    : F = 0 := by
   -- `∫ ‖F‖ ^ 2 = 0`, so `F` vanishes almost everywhere on the quotient
   have h_int : ∫ g, ‖F g‖ ^ 2 ∂V.quotMeasure = 0 := by
     simpa [RCLike.conj_mul, ← Complex.ofReal_pow, integral_complex_ofReal, petersson] using h_pet
@@ -182,10 +204,12 @@ lemma IsForm.isBoundedMeasurable (hF : V.IsForm e F) : IsBoundedMeasurable F :=
 lemma IsForm.memLp (hF : V.IsForm e F) : MemLp F 2 V.quotMeasure :=
   hF.isBoundedMeasurable.memLp_top.mono_exponent le_top
 
-/-- The right translate g ↦ F(g·(1, a)) of a form F of type e by a finite point a is again a form
-of type e. -/
-lemma IsForm.comp_mul_right (hF : V.IsForm e F) (a : Gf E n) :
-    V.IsForm e fun g : G E s ↦ F (g * (1, a)) := by
+/--
+The right translate g ↦ F(g·(1, a)) of a form F of type e by a finite point a is again a form
+of type e.
+-/
+lemma IsForm.comp_mul_right (hF : V.IsForm e F) (a : Gf E n)
+    : V.IsForm e fun g : G E s ↦ F (g * (1, a)) := by
   obtain ⟨h_aut, ⟨C, hC⟩, h_fix⟩ := hF
   refine ⟨h_aut.comp_mul_right _, ⟨C, fun g ↦ hC _⟩, fun he ↦ funext fun g ↦ ?_⟩
   -- the finite point `(1, a)` commutes with the real points over which `realConv` integrates
@@ -199,18 +223,23 @@ lemma isForm_zero : V.IsForm e 0 where
   bounded := ⟨0, by simp⟩
   realConv_eq := by simp [funext_iff, realConv]
 
-/-- A linear combination aF + bF' of two forms F, F' of type e (bounded automorphic functions on G
-fixed by convolution with e if e is integrable) is a form of type e. -/
-lemma IsForm.smul_add_smul (hF : V.IsForm e F) (hF' : V.IsForm e F') (a b : ℂ) :
-    V.IsForm e (a • F + b • F') := by
+/--
+A linear combination aF + bF' of two forms F, F' of type e (bounded automorphic functions on G
+fixed by convolution with e if e is integrable) is a form of type e.
+-/
+lemma IsForm.smul_add_smul (hF : V.IsForm e F) (hF' : V.IsForm e F') (a b : ℂ)
+    : V.IsForm e (a • F + b • F') := by
   obtain ⟨C, hC⟩ := hF.bounded
   obtain ⟨C', hC'⟩ := hF'.bounded
-  refine ⟨hF.toIsAutomorphic.map₂ hF'.toIsAutomorphic fun z w ↦ a * z + b * w,
-    ⟨‖a‖ * C + ‖b‖ * C', fun g ↦ ?_⟩, fun he ↦ funext fun g ↦ ?_⟩
+  refine ⟨
+    hF.toIsAutomorphic.map₂ hF'.toIsAutomorphic fun z w ↦ a * z + b * w,
+    ⟨‖a‖ * C + ‖b‖ * C', fun g ↦ ?_⟩,
+    fun he ↦ funext fun g ↦ ?_
+  ⟩
   · exact norm_add_le_of_le (norm_mul_le_of_le le_rfl (hC g)) (norm_mul_le_of_le le_rfl (hC' g))
   · -- `e` is integrable and forms are bounded, so the integral `realConv e` is linear on them.
-    have h_int {H : G E s → ℂ} (hH : V.IsForm e H) (c : ℂ) :
-        Integrable fun x : GInf E s ↦ c • (e x * H (g * (x, 1))) :=
+    have h_int {H : G E s → ℂ} (hH : V.IsForm e H) (c : ℂ)
+        : Integrable fun x : GInf E s ↦ c • (e x * H (g * (x, 1))) :=
       (hH.isBoundedMeasurable.integrable_mul_comp he fun x ↦ g * (x, 1)).fun_smul c
     calc
       realConv e (a • F + b • F') g
@@ -225,11 +254,12 @@ def formSubmodule : Submodule ℂ (G E s → ℂ) :=
   ofLinearComb {F : G E s → ℂ | V.IsForm e F} ⟨0, isForm_zero V e⟩ fun F hF F' hF' a b ↦
     show V.IsForm e (a • F + b • F') from hF.smul_add_smul V e hF' a b
 
-/-- The complex vector space of forms of type e for V, namely the type of elements of
-`New.Space.formSubmodule`. -/
-def Form : Type :=
-  V.formSubmodule e
-  deriving AddCommGroup, Module ℂ
+/--
+The complex vector space of forms of type e for V, namely the type of elements of
+`New.Space.formSubmodule`.
+-/
+def Form : Type := V.formSubmodule e
+deriving AddCommGroup, Module ℂ
 
 -- A form is read as a function on the adelic points.
 instance : CoeFun (V.Form e) fun _ : V.Form e ↦ G E s → ℂ := ⟨(·.val)⟩
@@ -237,18 +267,22 @@ instance : CoeFun (V.Form e) fun _ : V.Form e ↦ G E s → ℂ := ⟨(·.val)�
 variable {V e} in
 lemma Form.isForm (F : V.Form e) : V.IsForm e F := F.property
 
-/-- The linear map that sends a form of type e to its class in L²(Γ\G), taken for the measure
-`New.Space.quotMeasure`. -/
+/--
+The linear map that sends a form of type e to its class in L²(Γ\G), taken for the measure
+`New.Space.quotMeasure`.
+-/
 def Form.toL2 : V.Form e →ₗ[ℂ] Lp ℂ 2 V.quotMeasure where
   toFun F := F.isForm.memLp.toLp F
   map_add' F F' := F.isForm.memLp.toLp_add F'.isForm.memLp
   map_smul' c F := F.isForm.memLp.toLp_const_smul c
 
 variable {V e} in
-/-- The Petersson product of two forms of type e is the inner product of their classes in
-L²(Γ\G). -/
-lemma Form.petersson_eq_inner_toL2 (F F' : V.Form e) :
-    V.petersson F F' = inner ℂ (toL2 V e F) (toL2 V e F') := by
+/--
+The Petersson product of two forms of type e is the inner product of their classes in
+L²(Γ\G).
+-/
+lemma Form.petersson_eq_inner_toL2 (F F' : V.Form e)
+    : V.petersson F F' = inner ℂ (toL2 V e F) (toL2 V e F') := by
   have hF : toL2 V e F =ᵐ[V.quotMeasure] F := F.isForm.memLp.coeFn_toLp
   have hF' : toL2 V e F' =ᵐ[V.quotMeasure] F' := F'.isForm.memLp.coeFn_toLp
   rw [L2.inner_def, petersson]
@@ -256,9 +290,11 @@ lemma Form.petersson_eq_inner_toL2 (F F' : V.Form e) :
   filter_upwards [hF, hF'] with g hg hg'
   rw [hg, hg', RCLike.inner_apply']
 
-/-- The positive definite inner product on forms of type e given by the Petersson product, the
+/--
+The positive definite inner product on forms of type e given by the Petersson product, the
 integral of conj(F)·F' over Γ\G. Symmetry, positivity and sesquilinearity are those of the inner
-product of L²(Γ\G); definiteness holds because forms are continuous. -/
+product of L²(Γ\G); definiteness holds because forms are continuous.
+-/
 instance peterssonCore : InnerProductSpace.Core ℂ (V.Form e) where
   inner F F' := V.petersson F F'
   conj_inner_symm F F' := by simp only [Form.petersson_eq_inner_toL2, inner_conj_symm]
@@ -273,8 +309,7 @@ instance : InnerProductSpace ℂ (V.Form e) := .ofCore (peterssonCore V e).toCor
 
 /-- The representation of G_f on forms of type e by right translation. -/
 def formRep : Representation ℂ (Gf E n) (V.Form e) :=
-  (finRightRep E s).subrepresentation (V.formSubmodule e)
-    fun a _ hF ↦ IsForm.comp_mul_right hF a
+  (finRightRep E s).subrepresentation (V.formSubmodule e) fun a _ hF ↦ IsForm.comp_mul_right hF a
 
 end Space
 
@@ -295,7 +330,8 @@ open Matrix.Norms.L2Operator
 
 namespace New.Space
 
-variable {E n : Type} [Field E] [CMType E] [Fintype n] [DecidableEq n]
+variable
+  {E n : Type} [Field E] [CMType E] [Fintype n] [DecidableEq n]
   {s : n → ℤˣ} {V : Space E n s} {F M : G E s → ℂ} {B : ℕ} {K : Set (G E s)}
 
 /-! ### The height -/
@@ -307,27 +343,28 @@ theorem one_le_height (g : G E s) : 1 ≤ V.height g :=
 @[simp]
 theorem height_pos (g : G E s) : 0 < V.height g := one_pos.trans_le (one_le_height g)
 
-/-- For compact K ⊆ G there is C ≥ 1 such that ht(k) ≤ C·ht(g) whenever g⁻¹γk ∈ K. Here γ runs over
+/--
+For compact K ⊆ G there is C ≥ 1 such that ht(k) ≤ C·ht(g) whenever g⁻¹γk ∈ K. Here γ runs over
 the rational unitary group U(J)(E) of V, mapped into G by `New.Space.ratEmbed`, and ht is the
-height of V, the inverse of the first minimum cut off at 1. -/
-theorem exists_height_le_mul (hK : IsCompact K) :
-    ∃ C ≥ (1 : ℝ), ∀ (γ : U V.J) (g k : G E s),
+height of V, the inverse of the first minimum cut off at 1.
+-/
+theorem exists_height_le_mul (hK : IsCompact K)
+    : ∃ C ≥ (1 : ℝ), ∀ (γ : U V.J) (g k : G E s),
       g⁻¹ * V.ratEmbed γ * k ∈ K → V.height k ≤ C * V.height g := by
   -- One denominator `c` and one bound `R` of the operator norms at infinity serve all of `K`.
   -- A vector `y` of the lattice at `k` gives the vector `c γ y` of the lattice at `g`, at most
   -- `c * R` times as long; so the first minimum at `g` is at most `max 1 (c * R)` times
   -- that at `k`.
   obtain ⟨c, hc, h_lat⟩ := V.exists_smul_mulVec_mem_latticeBall (hK.image continuous_snd)
-  obtain ⟨R, hR⟩ : ∃ R : ℝ, ∀ x ∈ K, ∀ w : NumberField.InfinitePlace E,
-      ‖(x.1 w).val.val‖ ≤ R := by
-    obtain ⟨R, hR⟩ :=
-      hK.exists_bound_of_continuousOn (f := fun x w ↦ (x.1 w).val.val) (by fun_prop)
+  obtain ⟨R, hR⟩ : ∃ R : ℝ, ∀ x ∈ K, ∀ w : NumberField.InfinitePlace E, ‖(x.1 w).val.val‖ ≤ R := by
+    obtain ⟨R, hR⟩ := hK.exists_bound_of_continuousOn (f := fun x w ↦ (x.1 w).val.val) (by fun_prop)
     exact ⟨R, fun x hx w ↦ (norm_le_pi_norm _ w).trans (hR x hx)⟩
   refine ⟨max 1 (c * R), le_max_left _ _, fun γ g k h_mem ↦ ?_⟩
-  have short_le (y : n → E) (hy : y ∈ (V.move k).baseLattice) (y_ne : y ≠ 0) :
-      (V.move g).firstMinimum ≤ max 1 (c * R) * ‖(V.move k).archCoords y‖ := by
-    obtain ⟨mem_lat, norm_le⟩ : (c : E) • γ.val.val.mulVec y ∈
-        (V.move g).latticeBall (c * R * ‖(V.move k).archCoords y‖) :=
+  have short_le (y : n → E) (hy : y ∈ (V.move k).baseLattice) (y_ne : y ≠ 0)
+      : (V.move g).firstMinimum ≤ max 1 (c * R) * ‖(V.move k).archCoords y‖ := by
+    obtain ⟨mem_lat, norm_le⟩
+        : (c : E) • γ.val.val.mulVec y
+          ∈ (V.move g).latticeBall (c * R * ‖(V.move k).archCoords y‖) :=
       h_lat (Set.mem_image_of_mem Prod.snd h_mem) (hR _ h_mem) y hy
     have mulVec_ne : γ.val.val.mulVec y ≠ 0 := show γ • y ≠ 0 from (smul_ne_zero_iff_ne γ).2 y_ne
     have image_ne : (c : E) • γ.val.val.mulVec y ≠ 0 :=
@@ -339,11 +376,13 @@ theorem exists_height_le_mul (hK : IsCompact K) :
     simpa [le_firstMinimum_iff, height, field] using short_le
   exact inv_le_of_inv_le₀ (by simp) h_min
 
-/-- For a compact set K ⊆ G, a real C and a natural number B, the function g ↦ C·ht(g)^B is bounded
+/--
+For a compact set K ⊆ G, a real C and a natural number B, the function g ↦ C·ht(g)^B is bounded
 above on the set of g that a point of Γ moves into K. Here ht is the height of V, the inverse of
-the first minimum cut off at 1. -/
-theorem exists_mul_height_pow_le (hK : IsCompact K) (C : ℝ) :
-    ∃ D : ℝ, ∀ᵉ (g : G E s) (γ ∈ V.Γ), γ * g ∈ K → C * V.height g ^ B ≤ D := by
+the first minimum cut off at 1.
+-/
+theorem exists_mul_height_pow_le (hK : IsCompact K) (C : ℝ)
+    : ∃ D : ℝ, ∀ᵉ (g : G E s) (γ ∈ V.Γ), γ * g ∈ K → C * V.height g ^ B ≤ D := by
   obtain ⟨C', hC'_one, hC'⟩ := V.exists_height_le_mul hK
   refine ⟨|C| * (C' * V.height 1) ^ B, fun g _ ⟨γ, hγ⟩ hg ↦ ?_⟩
   -- As `γ * g ∈ K`, the height of `g` is comparable to the height of `1`.
@@ -353,11 +392,12 @@ theorem exists_mul_height_pow_le (hK : IsCompact K) (C : ℝ) :
 
 /-! ### Rapidly decaying functions -/
 
-theorem IsRapid.bounded (hF : V.IsRapid F) : ∃ C : ℝ, ∀ g : G E s, ‖F g‖ ≤ C := by
-  simpa using hF 0
+theorem IsRapid.bounded (hF : V.IsRapid F) : ∃ C : ℝ, ∀ g : G E s, ‖F g‖ ≤ C := by simpa using hF 0
 
-/-- The product of a function M of moderate growth (|M| ≤ C·ht^b for some C and b) and a function F
-of rapid decay (|F|·ht^B bounded for every B) has rapid decay. Here ht is the height of V. -/
+/--
+The product of a function M of moderate growth (|M| ≤ C·ht^b for some C and b) and a function F
+of rapid decay (|F|·ht^B bounded for every B) has rapid decay. Here ht is the height of V.
+-/
 lemma IsRapid.mul (hF : V.IsRapid F) (hM : V.IsModerate M) : V.IsRapid (M * F) := by
   intro B
   obtain ⟨C, b, hC⟩ := hM
@@ -365,15 +405,17 @@ lemma IsRapid.mul (hF : V.IsRapid F) (hM : V.IsModerate M) : V.IsRapid (M * F) :
   refine ⟨|C| * D, fun g ↦ ?_⟩
   have h_nonneg : 0 ≤ V.height g := (height_pos g).le
   calc
-    ‖M g * F g‖ * V.height g ^ B ≤ |C| * V.height g ^ b * ‖F g‖ * V.height g ^ B := by
-      grw [norm_mul, hC g, le_abs_self C]
+    ‖M g * F g‖ * V.height g ^ B
+      ≤ |C| * V.height g ^ b * ‖F g‖ * V.height g ^ B := by grw [norm_mul, hC g, le_abs_self C]
     _ = |C| * (‖F g‖ * V.height g ^ (b + B)) := by ring
     _ ≤ |C| * D := by grw [hD g]
 
-/-- If F has rapid decay (|F|·ht^B is bounded for every B), then so has its right translate
-g ↦ F(gx) by any point x of G. -/
-theorem IsRapid.comp_mul_right (hF : V.IsRapid F) {x : G E s} :
-    V.IsRapid fun g : G E s ↦ F (g * x) := by
+/--
+If F has rapid decay (|F|·ht^B is bounded for every B), then so has its right translate
+g ↦ F(gx) by any point x of G.
+-/
+theorem IsRapid.comp_mul_right (hF : V.IsRapid F) {x : G E s}
+    : V.IsRapid fun g : G E s ↦ F (g * x) := by
   intro B
   obtain ⟨D, hD⟩ := hF B
   obtain ⟨C, hC_one, hC⟩ := V.exists_height_le_mul (isCompact_singleton (x := x⁻¹))
@@ -382,20 +424,25 @@ theorem IsRapid.comp_mul_right (hF : V.IsRapid F) {x : G E s} :
   have h_ht : V.height g ≤ C * V.height (g * x) := hC 1 (g * x) g (by simp)
   have h_nonneg : 0 ≤ V.height g := (height_pos g).le
   calc
-    ‖F (g * x)‖ * V.height g ^ B ≤ ‖F (g * x)‖ * (C * V.height (g * x)) ^ B := by gcongr
+    ‖F (g * x)‖ * V.height g ^ B
+      ≤ ‖F (g * x)‖ * (C * V.height (g * x)) ^ B := by gcongr
     _ = C ^ B * (‖F (g * x)‖ * V.height (g * x) ^ B) := by ring
     _ ≤ C ^ B * D := by grw [hD]
 
-/-- A continuous function of rapid decay is integrable for the measure `New.Space.quotMeasure` of
-Γ\G. -/
-theorem IsRapid.integrable (hF : V.IsRapid F) (h_cont : Continuous F) :
-    MeasureTheory.Integrable F V.quotMeasure :=
+/--
+A continuous function of rapid decay is integrable for the measure `New.Space.quotMeasure` of
+Γ\G.
+-/
+theorem IsRapid.integrable (hF : V.IsRapid F) (h_cont : Continuous F)
+    : MeasureTheory.Integrable F V.quotMeasure :=
   (IsBoundedMeasurable.of_continuous hF.bounded h_cont).memLp_top.integrable le_top
 
-/-- A linear combination aF + bF' of two functions of rapid decay (|F|·ht^B bounded for every B,
-with ht the height of V) has rapid decay. -/
-theorem IsRapid.smul_add_smul {F' : G E s → ℂ} (hF : V.IsRapid F) (hF' : V.IsRapid F')
-    (a b : ℂ) : V.IsRapid (a • F + b • F') := by
+/--
+A linear combination aF + bF' of two functions of rapid decay (|F|·ht^B bounded for every B,
+with ht the height of V) has rapid decay.
+-/
+theorem IsRapid.smul_add_smul {F' : G E s → ℂ} (hF : V.IsRapid F) (hF' : V.IsRapid F') (a b : ℂ)
+    : V.IsRapid (a • F + b • F') := by
   intro B
   obtain ⟨C, hC⟩ := hF B
   obtain ⟨C', hC'⟩ := hF' B
@@ -407,8 +454,10 @@ theorem IsRapid.smul_add_smul {F' : G E s → ℂ} (hF : V.IsRapid F) (hF' : V.I
       grw [norm_add_le, norm_smul, norm_smul, add_mul, mul_assoc, mul_assoc]
     _ ≤ ‖a‖ * C + ‖b‖ * C' := by grw [hC, hC']
 
-/-- The automorphic functions of rapid decay for `V`, as a subrepresentation of the functions on G
-under right translation by G_f. -/
+/--
+The automorphic functions of rapid decay for `V`, as a subrepresentation of the functions on G
+under right translation by G_f.
+-/
 noncomputable def rapidFunctions : Subrepresentation (finRightRep E s) where
   toSubmodule :=
     Submodule.ofLinearComb {F : G E s → ℂ | V.IsAutomorphic F ∧ V.IsRapid F}
@@ -431,33 +480,39 @@ end Growth
 
 namespace New.Space
 
-variable {E n : Type} [Field E] [CMType E] [Fintype n] [DecidableEq n]
+variable
+  {E n : Type} [Field E] [CMType E] [Fintype n] [DecidableEq n]
   {s : n → ℤˣ} {V : Space E n s} {F : G E s → ℂ}
 
-/-- If the group Γ of rational points is cocompact, a continuous left Γ-invariant function F has
-rapid decay: |F|·ht^B is bounded for every B, with ht the height of V. -/
-lemma isRapid_of_isCocompact (hF : Continuous F) (h_inv : V.Γ.FixesLeft F)
-    (h_cocompact : V.Γ.IsCocompact) : V.IsRapid F := by
+/--
+If the group Γ of rational points is cocompact, a continuous left Γ-invariant function F has
+rapid decay: |F|·ht^B is bounded for every B, with ht the height of V.
+-/
+lemma isRapid_of_isCocompact
+    (hF : Continuous F) (h_inv : V.Γ.FixesLeft F) (h_cocompact : V.Γ.IsCocompact)
+    : V.IsRapid F := by
   intro B
   obtain ⟨K, hK, h_cover⟩ : ∃ K : Set (G E s), IsCompact K ∧ ∀ g, ∃ γ ∈ V.Γ, γ * g ∈ K :=
     h_cocompact
   -- `F` is bounded on `K`, and the height is bounded on the `Γ`-orbit of `K`, the whole group.
-  obtain ⟨C, hC⟩ : ∃ C : ℝ, ∀ g ∈ K, ‖F g‖ ≤ C :=
-    hK.exists_bound_of_continuousOn hF.continuousOn
+  obtain ⟨C, hC⟩ : ∃ C : ℝ, ∀ g ∈ K, ‖F g‖ ≤ C := hK.exists_bound_of_continuousOn hF.continuousOn
   obtain ⟨D, hD⟩ : ∃ D : ℝ, ∀ g, ∀ γ ∈ V.Γ, γ * g ∈ K → C * V.height g ^ B ≤ D :=
     exists_mul_height_pow_le hK C
   refine ⟨D, fun g ↦ ?_⟩
   obtain ⟨γ, hγ, hγg⟩ := h_cover g
   calc
-    ‖F g‖ * V.height g ^ B = ‖F (γ * g)‖ * V.height g ^ B := by rw [h_inv γ hγ]
+    ‖F g‖ * V.height g ^ B
+      = ‖F (γ * g)‖ * V.height g ^ B := by rw [h_inv γ hγ]
     _ ≤ C * V.height g ^ B := mul_le_mul_of_nonneg_right (hC _ hγg) (pow_pos (height_pos g) B).le
     _ ≤ D := hD g γ hγ hγg
 
-/-- On a definite space (all signs `s i` are equal) every automorphic function F (continuous, left
+/--
+On a definite space (all signs `s i` are equal) every automorphic function F (continuous, left
 Γ-invariant, with a level) has rapid decay (|F|·ht^B is bounded for every B), so it lies in
-`rapidFunctions`. -/
-lemma IsAutomorphic.mem_rapidFunctions (hF : V.IsAutomorphic F)
-    (h_definite : ∀ i j : n, s i = s j) : F ∈ V.rapidFunctions :=
+`rapidFunctions`.
+-/
+lemma IsAutomorphic.mem_rapidFunctions (hF : V.IsAutomorphic F) (h_definite : ∀ i j : n, s i = s j)
+    : F ∈ V.rapidFunctions :=
   ⟨hF, isRapid_of_isCocompact hF.continuous hF.rat_mul (V.isCocompact_of_definite h_definite)⟩
 
 end New.Space

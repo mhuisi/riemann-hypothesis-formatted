@@ -44,129 +44,155 @@ namespace New.Filling
 
 variable {E : Type} [Field E] [CMType E] {𝔰 : Shape} (S : Filling E 𝔰)
 
-/-- The second moment `D_j` against which the size of a term of cell rank `j` is measured:
+/--
+The second moment `D_j` against which the size of a term of cell rank `j` is measured:
 `mainSecondMoment` at the top cell rank `ϱ + 1`, and `τ ^ (-16)` times `identitySecondMoment` below
-it, where `τ` is `tailScale`. -/
+it, where `τ` is `tailScale`.
+-/
 noncomputable def cellRankSecondMoment (j : Fin (𝔰.ϱ + 2)) : ℝ :=
   if 𝔰.ϱ < j then S.mainSecondMoment else S.identitySecondMoment / S.tailScale ^ 16
 
-/-- The bound `τ² (D_j / (n_p (M ^ (2 j' f) x) ^ k)) ^ (1 / 2)`, `j' = min ϱ j`, for one near orbit
+/--
+The bound `τ² (D_j / (n_p (M ^ (2 j' f) x) ^ k)) ^ (1 / 2)`, `j' = min ϱ j`, for one near orbit
 of terms under left and right multiplication by the groups `classUnipotent₀`, of cell rank `j` and
 gauge `x`, in units of the covolume `unipotentCovolume`. Here `τ` is `tailScale`, `D_j` is
 `cellRankSecondMoment j`, `n_p` is `pairCountScale`, `M` is the level `S.M`, `k` is the rank of `X₀`
-and `f` is the number of infinite places. -/
+and `f` is the number of infinite places.
+-/
 noncomputable def orbitBound (j : Fin (𝔰.ϱ + 2)) (x : ℝ) : ℝ :=
-  S.tailScale ^ 2 * √(S.cellRankSecondMoment j /
-    (S.pairCountScale * (S.M ^ (2 * min 𝔰.ϱ j * numInfPlaces E) * x) ^ 𝔰.k))
+  S.tailScale ^ 2 * √(S.cellRankSecondMoment j
+    / (S.pairCountScale * (S.M ^ (2 * min 𝔰.ϱ j * numInfPlaces E) * x) ^ 𝔰.k))
 
 variable {S} {γ : S.G E}
 
-/-- At every infinite place the absolute value of `S.termDisc γ = |D_n|² - N² |D_{n-1}|²` is at most
+/--
+At every infinite place the absolute value of `S.termDisc γ = |D_n|² - N² |D_{n-1}|²` is at most
 `|D_n|²`, where `D_l` is the leading minor of order `l` of the matrix `S.frameProducts γ` of
-products of the frame with its image under `γ`, and `n = ϱ + 1`. -/
-lemma norm_map_termDisc_le (v : NumberField.InfinitePlace E) :
-    ‖Φ v (S.termDisc γ)‖ ≤ ‖Φ v (leadingMinor (S.frameProducts γ) ⊤)‖ ^ 2 := by
+products of the frame with its image under `γ`, and `n = ϱ + 1`.
+-/
+lemma norm_map_termDisc_le (v : NumberField.InfinitePlace E)
+    : ‖Φ v (S.termDisc γ)‖ ≤ ‖Φ v (leadingMinor (S.frameProducts γ) ⊤)‖ ^ 2 := by
   show _ ≤ ‖Φ v (S.frameProducts γ).det‖ ^ 2
-  have h_eq : ‖Φ v (S.termDisc γ)‖ = ‖Φ v (S.frameProducts γ).det‖ ^ 2 -
-      (S.N * ‖Φ v (leadingMinor (S.frameProducts γ) 𝔰.top.castSucc)‖) ^ 2 := by
+  have h_eq
+      : ‖Φ v (S.termDisc γ)‖
+        = ‖Φ v (S.frameProducts γ).det‖ ^ 2
+          - (S.N * ‖Φ v (leadingMinor (S.frameProducts γ) 𝔰.top.castSucc)‖) ^ 2 := by
     rw [← Complex.ofReal_inj, ← map_termDisc_eq_norm]
     simp [frameDisc, Complex.mul_conj', mul_pow]
   exact h_eq.le.trans (sub_le_self _ (sq_nonneg _))
 
-/-- For admissible data with size parameter `b = S.b` and a near term `γ` (see `IsNear`), the
+/--
+For admissible data with size parameter `b = S.b` and a near term `γ` (see `IsNear`), the
 product of the absolute values of `S.termDisc γ` over the `f` infinite places is at most
-`b ^ (270 n² f)`, `n = ϱ + 1`. -/
-lemma IsNear.termDiscNorm_le [S.IsAdmissible] (h_near : S.IsNear γ) :
-    S.termDiscNorm γ ≤ S.b ^ (270 * 𝔰.n ^ 2 * numInfPlaces E) := by
+`b ^ (270 n² f)`, `n = ϱ + 1`.
+-/
+lemma IsNear.termDiscNorm_le [S.IsAdmissible] (h_near : S.IsNear γ)
+    : S.termDiscNorm γ ≤ S.b ^ (270 * 𝔰.n ^ 2 * numInfPlaces E) := by
   grw [termDiscNorm, Finset.prod_le_prod₀ (fun _ _ ↦ norm_nonneg _) fun v _ ↦
     (norm_map_termDisc_le v).trans (h_near.norm_map_leadingMinor_sq_le ⊤ v)]
   rw [prod_const, Finset.card_univ, ← pow_mul]
 
-/-- The second moment `D_j` against which the size of a term of cell rank `j` is measured is
-nonnegative. -/
-lemma cellRankSecondMoment_nonneg [S.IsAdmissible] (j : Fin (𝔰.ϱ + 2)) :
-    0 ≤ S.cellRankSecondMoment j := by
+/--
+The second moment `D_j` against which the size of a term of cell rank `j` is measured is
+nonnegative.
+-/
+lemma cellRankSecondMoment_nonneg [S.IsAdmissible] (j : Fin (𝔰.ϱ + 2))
+    : 0 ≤ S.cellRankSecondMoment j := by
   rw [cellRankSecondMoment]
-  split_ifs <;> positivity [mainSecondMoment_nonneg (S := S), identitySecondMoment_nonneg (S := S),
-    two_le_tailScale (S := S)]
+  split_ifs
+    <;> positivity [mainSecondMoment_nonneg (S := S), identitySecondMoment_nonneg (S := S),
+      two_le_tailScale (S := S)]
 
-/-- At the top cell rank the orbit bound at `x` is
+/--
+At the top cell rank the orbit bound at `x` is
 `τ² (mainSecondMoment / (pairCountScale M ^ (2 ϱ f k) x ^ k)) ^ (1 / 2)`, where `τ` is `tailScale`,
-`M` is the level and `f` is the number of infinite places. -/
-lemma orbitBound_top [S.IsAdmissible] (x : ℝ) : S.orbitBound ⊤ x = S.tailScale ^ 2 *
-    √(S.mainSecondMoment / (S.pairCountScale *
-      (S.M ^ (2 * 𝔰.ϱ * numInfPlaces E * 𝔰.k) * x ^ 𝔰.k))) := by
+`M` is the level and `f` is the number of infinite places.
+-/
+lemma orbitBound_top [S.IsAdmissible] (x : ℝ)
+    : S.orbitBound ⊤ x
+      = S.tailScale ^ 2 * √(S.mainSecondMoment
+        / (S.pairCountScale * (S.M ^ (2 * 𝔰.ϱ * numInfPlaces E * 𝔰.k) * x ^ 𝔰.k))) := by
   rw [orbitBound, cellRankSecondMoment, ite_eq_left (by simp), min_eq_left (by simp), mul_pow,
     ← pow_mul]
 
 /-- For admissible data, `pairCountScale` is at most the main second moment. -/
-lemma pairCountScale_le_mainSecondMoment [S.IsAdmissible] :
-    S.pairCountScale ≤ S.mainSecondMoment := by
+lemma pairCountScale_le_mainSecondMoment [S.IsAdmissible]
+    : S.pairCountScale ≤ S.mainSecondMoment := by
   have : Nonempty 𝔰.κ := ⟨𝔰.k₀⟩
   -- `pairCountScale ≤ identitySecondMoment ≤ τ⁻⁴⁴ mainSecondMoment`, and `τ = tailScale ≥ 1`
   grw [pairCountScale, ← tailScale_pow_mul_identitySecondMoment_le, identitySecondMoment, sourceDim,
     ← S.N_prime.one_le, ← one_le_tailScale, ← NeZero.one_le (n := card S.BesselCoord)]
   simp
 
-/-- Let the data be admissible, with size parameter `b = S.b`. Let `γ` be near, that is, some
+/--
+Let the data be admissible, with size parameter `b = S.b`. Let `γ` be near, that is, some
 archimedean point `y` has both `y` and `γ⁻¹ y` in `boxedPoints`, and let `x = termDiscNorm γ` be the
 product of the absolute values of `termDisc γ` over the infinite places. If `1 ≤ x`, then the bound
-`orbitBound ⊤ x` allotted to an orbit of the top cell rank `ϱ + 1` is at least `b ^ (-k³ f)`. -/
-lemma IsNear.inv_pow_le_orbitBound [S.IsAdmissible] (h_near : S.IsNear γ)
-    (h_one_le : 1 ≤ S.termDiscNorm γ) :
-    (S.b ^ (𝔰.k ^ 3 * numInfPlaces E))⁻¹ ≤ S.orbitBound ⊤ (S.termDiscNorm γ) := by
+`orbitBound ⊤ x` allotted to an orbit of the top cell rank `ϱ + 1` is at least `b ^ (-k³ f)`.
+-/
+lemma IsNear.inv_pow_le_orbitBound
+    [S.IsAdmissible] (h_near : S.IsNear γ) (h_one_le : 1 ≤ S.termDiscNorm γ)
+    : (S.b ^ (𝔰.k ^ 3 * numInfPlaces E))⁻¹ ≤ S.orbitBound ⊤ (S.termDiscNorm γ) := by
   have hb : 1 ≤ S.b := S.one_le_b
   have hM : 2 ≤ S.M := two_le_M
   have h_pairs : 0 < S.pairCountScale := pairCountScale_pos
-  have h_exponent : 23 * (2 * 𝔰.ϱ * numInfPlaces E * 𝔰.k) + 270 * 𝔰.n ^ 2 * numInfPlaces E * 𝔰.k ≤
-      𝔰.k ^ 3 * numInfPlaces E * 2 := by
+  have h_exponent
+      : 23 * (2 * 𝔰.ϱ * numInfPlaces E * 𝔰.k) + 270 * 𝔰.n ^ 2 * numInfPlaces E * 𝔰.k
+        ≤ 𝔰.k ^ 3 * numInfPlaces E * 2 := by
     obtain ⟨k₀, hk₀ : 1000 * (2 * 𝔰.ϱ + 2) ^ 9 + k₀ = 𝔰.k⟩ := S.pow_le_k.dest
     rw [← hk₀]
     lia
   grw [orbitBound_top, ← pairCountScale_le_mainSecondMoment, ← one_le_tailScale, one_pow, one_mul]
   -- compare the squares: the pair count cancels
   refine le_sqrt_of_sq_le ?_
-  have h_den : (S.M : ℝ) ^ (2 * 𝔰.ϱ * numInfPlaces E * 𝔰.k) * S.termDiscNorm γ ^ 𝔰.k ≤
-      S.b ^ (𝔰.k ^ 3 * numInfPlaces E * 2) := by
+  have h_den
+      : (S.M : ℝ) ^ (2 * 𝔰.ϱ * numInfPlaces E * 𝔰.k) * S.termDiscNorm γ ^ 𝔰.k
+        ≤ S.b ^ (𝔰.k ^ 3 * numInfPlaces E * 2) := by
     grw [M_le_b_pow, h_near.termDiscNorm_le, ← pow_mul, ← pow_mul, ← pow_add,
       pow_le_pow_right₀ hb h_exponent]
   rw [div_mul_cancel_left₀ h_pairs.ne', inv_pow, ← pow_mul]
   exact inv_anti₀ (by positivity) h_den
 
 variable (S) in
-/-- The factor of the product over the infinite places of the open-cell bounds `pairingBoundSq` at
+/--
+The factor of the product over the infinite places of the open-cell bounds `pairingBoundSq` at
 `S.ratToInf γ v` that does not depend on `γ`: the product with the absolute values of
-`S.termDisc γ` replaced by `1` (see `prod_pairingBoundSq_eq`). -/
+`S.termDisc γ` replaced by `1` (see `prod_pairingBoundSq_eq`).
+-/
 noncomputable def pairingBoundConst : ℝ :=
   ∏ v : NumberField.InfinitePlace E,
     (S.frameBoxRadius ^ (9 * 𝔰.n) / (∏ a : Fin 𝔰.n, S.frameScaleSq v a) ^ 2) ^ (10 ^ 5 * 𝔰.n ^ 4) *
       ((card (S.besselSystem v).Index : ℝ) ^ 2 / ((S.besselSystem v).deg * 𝔰.openCellConst *
         ((∏ a : Fin 𝔰.n, S.frameScaleSq v a) ^ 2 / 2) ^ (𝔰.k - 1)))
 
-/-- For every rational `γ`, the product over the infinite places `v` of the open-cell bounds
+/--
+For every rational `γ`, the product over the infinite places `v` of the open-cell bounds
 `pairingBoundSq` is `pairingBoundConst / x ^ (10 ^ 5 n ^ 4 + (k - 1))`, where `x = termDiscNorm γ`,
-`n = ϱ + 1` and `k` is the rank of `X₀`. -/
-lemma prod_pairingBoundSq_eq :
-    ∏ v : NumberField.InfinitePlace E,
-        pairingBoundSq (S.ratToInf γ v) (S.besselSystem v).deg S.frameBoxRadius
-          (card (S.besselSystem v).Index) =
-      S.pairingBoundConst / S.termDiscNorm γ ^ (10 ^ 5 * 𝔰.n ^ 4 + (𝔰.k - 1)) := by
+`n = ϱ + 1` and `k` is the rank of `X₀`.
+-/
+lemma prod_pairingBoundSq_eq
+    : ∏ v : NumberField.InfinitePlace E,
+          pairingBoundSq (S.ratToInf γ v) (S.besselSystem v).deg S.frameBoxRadius
+            (card (S.besselSystem v).Index)
+      = S.pairingBoundConst / S.termDiscNorm γ ^ (10 ^ 5 * 𝔰.n ^ 4 + (𝔰.k - 1)) := by
   rw [pairingBoundConst, termDiscNorm, ← prod_pow, ← prod_div_distrib]
   refine prod_congr rfl fun v _ ↦ ?_
   rw [pairingBoundSq, gramDiscReal_realFrameGram_ratToInf]
   simp only [div_eq_mul_inv, mul_inv, mul_pow, pow_add, inv_pow]
   ring
 
-/-- Let the data be admissible, with size parameter `b = S.b`, let `n = ϱ + 1` be the number of
+/--
+Let the data be admissible, with size parameter `b = S.b`, let `n = ϱ + 1` be the number of
 frame vectors and `k` the rank of `X₀`. At an infinite place `v` let
 `s_a = S.frameScaleSq v a = (S.realM v) ^ (2 (ϱ - a)) / N` be the squared scale of the frame vector
 of index `a`. The product `s` of the `s_a` lies between `b ^ (-60 n²)` and `b ^ (46 n²)`, and
-`∏ s_a ^ (k + 2 (ϱ - a))`, the factor of `frameScaleProd` at `v`, is at most `s ^ k b ^ (92 n³)`. -/
-lemma prod_frameScaleSq_bounds [S.IsAdmissible] (v : NumberField.InfinitePlace E) :
-    (S.b ^ (60 * 𝔰.n ^ 2))⁻¹ ≤ ∏ a : Fin 𝔰.n, S.frameScaleSq v a ∧
-    ∏ a : Fin 𝔰.n, S.frameScaleSq v a ≤ S.b ^ (46 * 𝔰.n ^ 2) ∧
-    ∏ a : Fin 𝔰.n, S.frameScaleSq v a ^ (𝔰.k + 2 * (𝔰.ϱ - a)) ≤
-      (∏ a : Fin 𝔰.n, S.frameScaleSq v a) ^ 𝔰.k * S.b ^ (92 * 𝔰.n ^ 3) := by
+`∏ s_a ^ (k + 2 (ϱ - a))`, the factor of `frameScaleProd` at `v`, is at most `s ^ k b ^ (92 n³)`.
+-/
+lemma prod_frameScaleSq_bounds [S.IsAdmissible] (v : NumberField.InfinitePlace E)
+    : (S.b ^ (60 * 𝔰.n ^ 2))⁻¹ ≤ ∏ a : Fin 𝔰.n, S.frameScaleSq v a
+      ∧ ∏ a : Fin 𝔰.n, S.frameScaleSq v a ≤ S.b ^ (46 * 𝔰.n ^ 2)
+      ∧ ∏ a : Fin 𝔰.n, S.frameScaleSq v a ^ (𝔰.k + 2 * (𝔰.ϱ - a))
+        ≤ (∏ a : Fin 𝔰.n, S.frameScaleSq v a) ^ 𝔰.k * S.b ^ (92 * 𝔰.n ^ 3) := by
   have hb : 1 ≤ S.b := S.one_le_b
   have hN : (1 : ℝ) ≤ S.N := Nat.one_le_cast.2 S.N_prime.one_le
   have h_lower (a : Fin 𝔰.n) : (S.b ^ (60 * 𝔰.n))⁻¹ ≤ S.frameScaleSq v a := by
@@ -183,8 +209,7 @@ lemma prod_frameScaleSq_bounds [S.IsAdmissible] (v : NumberField.InfinitePlace E
   · simp only [pow_add, prod_mul_distrib, prod_pow]
     gcongr
     · exact pow_nonneg (prod_nonneg fun a _ ↦ h_pos a) _
-    have h_factor (a : Fin 𝔰.n) :
-        S.frameScaleSq v a ^ (2 * (𝔰.ϱ - a)) ≤ S.b ^ (92 * 𝔰.n ^ 2) := by
+    have h_factor (a : Fin 𝔰.n) : S.frameScaleSq v a ^ (2 * (𝔰.ϱ - a)) ≤ S.b ^ (92 * 𝔰.n ^ 2) := by
       grw [h_upper a, ← pow_mul]
       exacts [pow_le_pow_right₀ hb (by nlinarith [Nat.sub_le 𝔰.ϱ a]), h_pos a]
     grw [prod_le_prod₀ (fun a _ ↦ pow_nonneg (h_pos a) _) fun a _ ↦ h_factor a]
@@ -193,17 +218,21 @@ lemma prod_frameScaleSq_bounds [S.IsAdmissible] (v : NumberField.InfinitePlace E
 -- Lean v4.37.0-rc1: elaborating side goals `0 < S.b ^ (60 * 𝔰.n ^ 2)` (`Shape.n` is an abbrev)
 -- exceeds the default recursion depth.
 set_option maxRecDepth 2000 in
-/-- For admissible data, `pairingBoundConst ≤ 2 ^ (k f) τ d² / (deg c_G ^ f Λ²)`. The left side is
+/--
+For admissible data, `pairingBoundConst ≤ 2 ^ (k f) τ d² / (deg c_G ^ f Λ²)`. The left side is
 the factor of the product over the infinite places of the open-cell bounds `pairingBoundSq` that
 does not depend on the rational element at which they are taken. The numbers `d = card BesselCoord`
 and `deg = besselDegree` are the products of the dimensions and of the degrees of the Bessel systems
 at these places, `c_G = openCellConst` is a quotient of volumes of unitary groups, and
 `Λ = frameScaleProd` is the product over all infinite `v` and all `a ≤ ϱ` of `s ^ (k + 2 (ϱ - a))`,
 with `s = (S.realM v) ^ (2 (ϱ - a)) / N` the squared scale of the frame vector of index `a` at
-`v`. -/
-lemma pairingBoundConst_le_mul [S.IsAdmissible] :
-    S.pairingBoundConst ≤ 2 ^ (𝔰.k * numInfPlaces E) * S.tailScale * (card S.BesselCoord ^ 2 /
-      (S.besselDegree * 𝔰.openCellConst ^ numInfPlaces E * S.frameScaleProd ^ 2)) := by
+`v`.
+-/
+lemma pairingBoundConst_le_mul [S.IsAdmissible]
+    : S.pairingBoundConst
+      ≤ 2 ^ (𝔰.k * numInfPlaces E) * S.tailScale
+        * (card S.BesselCoord ^ 2
+          / (S.besselDegree * 𝔰.openCellConst ^ numInfPlaces E * S.frameScaleProd ^ 2)) := by
   have hb : 1 ≤ S.b := S.one_le_b
   have h_const : 0 < 𝔰.openCellConst := 𝔰.openCellConst_pos
   have h_radius : 0 < S.frameBoxRadius := pow_pos b_pos _
@@ -211,42 +240,45 @@ lemma pairingBoundConst_le_mul [S.IsAdmissible] :
     S.besselDegree_pos
   obtain ⟨k₀, hk₀⟩ : ∃ k₀ : ℕ, 𝔰.k = k₀ + 1 := ⟨𝔰.k - 1, by grind [S.pow_le_k]⟩
   let e : ℕ := 453 * 𝔰.n ^ 2 * (10 ^ 5 * 𝔰.n ^ 4) + (92 * 𝔰.n ^ 2 + 184 * 𝔰.n ^ 3)
-  have h_place (v : NumberField.InfinitePlace E) :
-      (S.frameBoxRadius ^ (9 * 𝔰.n) / (∏ a : Fin 𝔰.n, S.frameScaleSq v a) ^ 2) ^
-          (10 ^ 5 * 𝔰.n ^ 4) *
-        ((card (S.besselSystem v).Index : ℝ) ^ 2 / ((S.besselSystem v).deg * 𝔰.openCellConst *
-          ((∏ a : Fin 𝔰.n, S.frameScaleSq v a) ^ 2 / 2) ^ (𝔰.k - 1))) ≤
-      2 ^ 𝔰.k * S.b ^ e * (card (S.besselSystem v).Index ^ 2 /
-        ((S.besselSystem v).deg * 𝔰.openCellConst *
-          (∏ a : Fin 𝔰.n, S.frameScaleSq v a ^ (𝔰.k + 2 * (𝔰.ϱ - a))) ^ 2)) := by
+  have h_place (v : NumberField.InfinitePlace E)
+      : (S.frameBoxRadius ^ (9 * 𝔰.n) / (∏ a : Fin 𝔰.n, S.frameScaleSq v a) ^ 2)
+            ^ (10 ^ 5 * 𝔰.n ^ 4)
+          * ((card (S.besselSystem v).Index : ℝ) ^ 2
+            / ((S.besselSystem v).deg * 𝔰.openCellConst
+              * ((∏ a : Fin 𝔰.n, S.frameScaleSq v a) ^ 2 / 2) ^ (𝔰.k - 1)))
+        ≤ 2 ^ 𝔰.k * S.b ^ e
+          * (card (S.besselSystem v).Index ^ 2
+            / ((S.besselSystem v).deg * 𝔰.openCellConst
+              * (∏ a : Fin 𝔰.n, S.frameScaleSq v a ^ (𝔰.k + 2 * (𝔰.ϱ - a))) ^ 2)) := by
     obtain ⟨h_lower, h_upper, h_local⟩ := prod_frameScaleSq_bounds (S := S) v
     set s : ℝ := ∏ a : Fin 𝔰.n, S.frameScaleSq v a
     have hs : 0 < s := lt_of_lt_of_le (by positivity) h_lower
     have h_deg : 0 < (S.besselSystem v).deg := (S.besselSystem v).deg_pos
     have h_pos : 0 < ∏ a : Fin 𝔰.n, S.frameScaleSq v a ^ (𝔰.k + 2 * (𝔰.ϱ - a)) :=
-      prod_pos fun a _ ↦ pow_pos (div_pos ((even_two_mul _).pow_pos (by simp))
-        (Nat.cast_pos.2 S.N_prime.pos)) _
+      prod_pos fun a _ ↦
+        pow_pos (div_pos ((even_two_mul _).pow_pos (by simp)) (Nat.cast_pos.2 S.N_prime.pos)) _
     have h_box : S.frameBoxRadius ^ (9 * 𝔰.n) / s ^ 2 ≤ S.b ^ (453 * 𝔰.n ^ 2) := by
       grw [← h_lower, frameBoxRadius]
       exact le_of_eq (by field_simp; ring)
     grw [h_box, h_local]
     calc
-      _ = 2 ^ k₀ * (S.b ^ (453 * 𝔰.n ^ 2)) ^ (10 ^ 5 * 𝔰.n ^ 4) * s ^ 2 *
-          (card (S.besselSystem v).Index ^ 2 /
-            ((S.besselSystem v).deg * 𝔰.openCellConst * (s ^ 𝔰.k) ^ 2)) := by
+      _ = 2 ^ k₀ * (S.b ^ (453 * 𝔰.n ^ 2)) ^ (10 ^ 5 * 𝔰.n ^ 4) * s ^ 2
+          * (card (S.besselSystem v).Index ^ 2
+            / ((S.besselSystem v).deg * 𝔰.openCellConst * (s ^ 𝔰.k) ^ 2)) := by
         rw [hk₀, Nat.add_sub_cancel, div_pow]
         field_simp
         ring
-      _ ≤ 2 ^ 𝔰.k * (S.b ^ (453 * 𝔰.n ^ 2)) ^ (10 ^ 5 * 𝔰.n ^ 4) * (S.b ^ (46 * 𝔰.n ^ 2)) ^ 2 *
-          (card (S.besselSystem v).Index ^ 2 /
-            ((S.besselSystem v).deg * 𝔰.openCellConst * (s ^ 𝔰.k) ^ 2)) := by
+      _ ≤ 2 ^ 𝔰.k * (S.b ^ (453 * 𝔰.n ^ 2)) ^ (10 ^ 5 * 𝔰.n ^ 4) * (S.b ^ (46 * 𝔰.n ^ 2)) ^ 2
+          * (card (S.besselSystem v).Index ^ 2
+            / ((S.besselSystem v).deg * 𝔰.openCellConst * (s ^ 𝔰.k) ^ 2)) := by
         -- `gcongr` hits the maximum recursion depth here (Lean v4.37.0-rc1, see above), so the
         -- monotonicity step is spelled out.
         have h_two : (2 : ℝ) ^ k₀ ≤ 2 ^ 𝔰.k :=
           pow_le_pow_right₀ one_le_two (k₀.le_succ.trans_eq hk₀.symm)
-        refine mul_le_mul_of_nonneg_right (mul_le_mul (mul_le_mul_of_nonneg_right h_two
-          (pow_pos (pow_pos b_pos _) _).le) (pow_le_pow_left₀ hs.le h_upper 2) (by positivity)
-          (by positivity)) (by positivity)
+        refine mul_le_mul_of_nonneg_right
+          (mul_le_mul (mul_le_mul_of_nonneg_right h_two (pow_pos (pow_pos b_pos _) _).le)
+            (pow_le_pow_left₀ hs.le h_upper 2) (by positivity) (by positivity))
+          (by positivity)
       _ = _ := by
         simp only [e, pow_add, ← pow_mul]
         field_simp
@@ -262,26 +294,30 @@ lemma pairingBoundConst_le_mul [S.IsAdmissible] :
     unfold e
     rw [h_six]
     omega
-  refine (prod_le_prod₀ (fun v _ ↦ by
-    have h_deg : 0 < (S.besselSystem v).deg := (S.besselSystem v).deg_pos
-    positivity) fun v _ ↦ h_place v).trans ?_
+  refine (prod_le_prod₀
+    (fun v _ ↦ by
+      have h_deg : 0 < (S.besselSystem v).deg := (S.besselSystem v).deg_pos
+      positivity)
+    fun v _ ↦ h_place v).trans ?_
   simp only [prod_mul_distrib, prod_div_distrib, prod_const, prod_pow, card_univ, ← pow_mul]
   rw [← Nat.cast_prod, ← Fintype.card_pi]
   exact mul_le_mul_of_nonneg_right
     (mul_le_mul_of_nonneg_left (pow_le_tailScale h_exponent) (by positivity))
-      (div_nonneg (sq_nonneg _) (mul_nonneg (mul_nonneg h_degree.le (by positivity)) (sq_nonneg _)))
+    (div_nonneg (sq_nonneg _) (mul_nonneg (mul_nonneg h_degree.le (by positivity)) (sq_nonneg _)))
 
-/-- For admissible data (`S.IsAdmissible`), `2 ^ (k f) n_p M ^ (2 ϱ f k) ≤ τ a_* vol(Ô) ^ n`, where
+/--
+For admissible data (`S.IsAdmissible`), `2 ^ (k f) n_p M ^ (2 ϱ f k) ≤ τ a_* vol(Ô) ^ n`, where
 `n = 𝔰.n = ϱ + 1`. Here `k` is the rank of `X₀`, `f` is the number of infinite places,
 `τ = tailScale = b ^ (k f / 4)` for the size parameter `b`, `M = p₀ p₁` is the level and
 `vol(Ô) = volÔ E = 2 ^ f / √|disc E|`. With `R̄₀` the reduced image of the Bessel subgroup, `n_X`
 the number of classes and `N = -h(z, z)` the prime `S.N`, `n_p = pairCountScale` is
 `#R̄₀ n_X N ^ (-k f)`, and `a_* = scaledSiegelConst` is `#R̄₀ n_X` times
 `unipotentOrder = M ^ (f ϱ (2 k + 2 ϱ + 1))` times `siegelConst = (π ^ k / ((k - 1)! N ^ k)) ^ f
-|disc E| ^ (1 / 4) vol(Ô) ^ k`. -/
-lemma two_pow_mul_pairCountScale_mul_le [S.IsAdmissible] :
-    2 ^ (𝔰.k * numInfPlaces E) * (S.pairCountScale * S.M ^ (2 * 𝔰.ϱ * numInfPlaces E * 𝔰.k)) ≤
-      S.tailScale * (S.scaledSiegelConst * volÔ E ^ 𝔰.n) := by
+|disc E| ^ (1 / 4) vol(Ô) ^ k`.
+-/
+lemma two_pow_mul_pairCountScale_mul_le [S.IsAdmissible]
+    : 2 ^ (𝔰.k * numInfPlaces E) * (S.pairCountScale * S.M ^ (2 * 𝔰.ϱ * numInfPlaces E * 𝔰.k))
+      ≤ S.tailScale * (S.scaledSiegelConst * volÔ E ^ 𝔰.n) := by
   -- With `x = 200 f k rd` we have `x ^ 1000 ≤ b`, so `x ^ (4 k f) ≤ τ`. This absorbs the powers of
   -- `2`, `k` and `rd`, and `unipotentOrder` is at least `M ^ (2 ϱ f k)`.
   set f : ℕ := numInfPlaces E with hf_eq
@@ -314,11 +350,11 @@ lemma two_pow_mul_pairCountScale_mul_le [S.IsAdmissible] :
       exact (half_le_self (by positivity)).trans h_rd_le
     have h_factorial : ((𝔰.k - 1).factorial : ℝ) ≤ x ^ 𝔰.k := by
       grw [Nat.factorial_le tsub_le_self, Nat.factorial_le_pow, Nat.cast_pow, h_k_le]
-    have h_root_discr : 1 ≤ √√|(NumberField.discr E : ℝ)| := by rwa [one_le_sqrt, one_le_sqrt]
+    have h_root_discr : 1 ≤ √ √ |(NumberField.discr E : ℝ)| := by rwa [one_le_sqrt, one_le_sqrt]
     have h_power : (x ^ f)⁻¹ ^ 𝔰.k ≤ volÔ E ^ 𝔰.n := by
       grw [← h_volume]
-      exact pow_le_pow_of_le_one (by positivity)
-        (inv_le_one_of_one_le₀ (one_le_pow₀ (by linarith))) (by grind [S.thousand_mul_le_k])
+      exact pow_le_pow_of_le_one (by positivity) (inv_le_one_of_one_le₀ (one_le_pow₀ (by linarith)))
+        (by grind [S.thousand_mul_le_k])
     grw [siegelConst, ← h_power, ← h_volume, h_factorial, ← h_root_discr,
       ← one_le_pow₀ (one_le_two.trans two_le_pi), ← hf_eq]
     simp only [div_pow, inv_pow]
@@ -329,13 +365,16 @@ lemma two_pow_mul_pairCountScale_mul_le [S.IsAdmissible] :
     pairCountScale]
   exact le_of_eq (by field_simp; ring)
 
-/-- For admissible data, `pairingBoundConst` is at most `(ν τ² / 2)²
+/--
+For admissible data, `pairingBoundConst` is at most `(ν τ² / 2)²
 mainSecondMoment / (pairCountScale M ^ (2 ϱ f k))`. Here `ν` is `unipotentCovolume`, `τ` is
 `tailScale`, `M` is the level, `ϱ` is the number of hyperbolic planes, `k` is the rank of `X₀` and
-`f` is the number of infinite places. -/
-lemma pairingBoundConst_le [S.IsAdmissible] :
-    S.pairingBoundConst ≤ (S.unipotentCovolume * S.tailScale ^ 2 / 2) ^ 2 *
-      (S.mainSecondMoment / (S.pairCountScale * S.M ^ (2 * 𝔰.ϱ * numInfPlaces E * 𝔰.k))) := by
+`f` is the number of infinite places.
+-/
+lemma pairingBoundConst_le [S.IsAdmissible]
+    : S.pairingBoundConst
+      ≤ (S.unipotentCovolume * S.tailScale ^ 2 / 2) ^ 2
+        * (S.mainSecondMoment / (S.pairCountScale * S.M ^ (2 * 𝔰.ϱ * numInfPlaces E * 𝔰.k))) := by
   -- The bound `scaledSiegelConst_le` joins `pairingBoundConst_le_mul` and
   -- `two_pow_mul_pairCountScale_mul_le`.
   have hτ : 2 ≤ S.tailScale := two_le_tailScale
@@ -350,10 +389,11 @@ lemma pairingBoundConst_le [S.IsAdmissible] :
   have h_small : S.b⁻¹ ^ 9 ≤ 1 := pow_le_one₀ (by positivity) (inv_le_one_of_one_le₀ S.one_le_b)
   rw [← mul_div_assoc, le_div_iff₀ (by positivity)]
   calc
-    _ ≤ S.tailScale * (card S.BesselCoord ^ 2 /
-        (S.besselDegree * 𝔰.openCellConst ^ numInfPlaces E * S.frameScaleProd ^ 2)) *
-        (2 ^ (𝔰.k * numInfPlaces E) *
-          (S.pairCountScale * S.M ^ (2 * 𝔰.ϱ * numInfPlaces E * 𝔰.k))) := by
+    _ ≤ S.tailScale
+        * (card S.BesselCoord ^ 2
+          / (S.besselDegree * 𝔰.openCellConst ^ numInfPlaces E * S.frameScaleProd ^ 2))
+        * (2 ^ (𝔰.k * numInfPlaces E)
+          * (S.pairCountScale * S.M ^ (2 * 𝔰.ϱ * numInfPlaces E * 𝔰.k))) := by
       grw [pairingBoundConst_le_mul]
       exact le_of_eq (by ring)
     _ ≤ 2 * S.tailScale ^ 2 * S.unipotentCovolume ^ 2 * S.mainSecondMoment := by
@@ -368,26 +408,28 @@ lemma pairingBoundConst_le [S.IsAdmissible] :
       nlinarith [mul_le_mul_of_nonneg_left h_eight
         (by positivity : 0 ≤ S.tailScale ^ 2 * S.unipotentCovolume ^ 2)]
 
-/-- Let the data be admissible (`S.IsAdmissible`), let `γ` be rational, and let `x = termDiscNorm γ`
+/--
+Let the data be admissible (`S.IsAdmissible`), let `γ` be rational, and let `x = termDiscNorm γ`
 be the product of the absolute values of `termDisc γ` over the infinite places. If `1 ≤ x`, then the
 product over the infinite places `v` of the open-cell bounds `pairingBoundSq` at `S.ratToInf γ v` is
 at most `(ν σ / 2)²`. Here `ν` is `unipotentCovolume`, and `σ = orbitBound ⊤ x` is the value at `x`
-of the bound `orbitBound` for an orbit of the top cell rank `⊤ = ϱ + 1`. -/
-lemma prod_pairingBoundSq_le [S.IsAdmissible] (h_one_le : 1 ≤ S.termDiscNorm γ) :
-    ∏ v : NumberField.InfinitePlace E,
-        pairingBoundSq (S.ratToInf γ v) (S.besselSystem v).deg S.frameBoxRadius
-          (card (S.besselSystem v).Index) ≤
-      (S.unipotentCovolume * S.orbitBound ⊤ (S.termDiscNorm γ) / 2) ^ 2 := by
-  have h_const : 0 ≤ S.mainSecondMoment /
-    (S.pairCountScale * S.M ^ (2 * 𝔰.ϱ * numInfPlaces E * 𝔰.k)) :=
+of the bound `orbitBound` for an orbit of the top cell rank `⊤ = ϱ + 1`.
+-/
+lemma prod_pairingBoundSq_le [S.IsAdmissible] (h_one_le : 1 ≤ S.termDiscNorm γ)
+    : ∏ v : NumberField.InfinitePlace E,
+          pairingBoundSq (S.ratToInf γ v) (S.besselSystem v).deg S.frameBoxRadius
+            (card (S.besselSystem v).Index)
+      ≤ (S.unipotentCovolume * S.orbitBound ⊤ (S.termDiscNorm γ) / 2) ^ 2 := by
+  have h_const
+      : 0 ≤ S.mainSecondMoment / (S.pairCountScale * S.M ^ (2 * 𝔰.ϱ * numInfPlaces E * 𝔰.k)) :=
     div_nonneg mainSecondMoment_nonneg (mul_nonneg pairCountScale_pos.le (by positivity))
   have h_norm : 0 < S.termDiscNorm γ := one_pos.trans_le h_one_le
   have h_exponent : 𝔰.k ≤ 10 ^ 5 * 𝔰.n ^ 4 + (𝔰.k - 1) := by
     grind [Nat.pow_pos (n := 4) 𝔰.ϱ.succ_pos]
   calc
-    _ ≤ (S.unipotentCovolume * S.tailScale ^ 2 / 2) ^ 2 *
-        (S.mainSecondMoment / (S.pairCountScale * S.M ^ (2 * 𝔰.ϱ * numInfPlaces E * 𝔰.k))) /
-          S.termDiscNorm γ ^ 𝔰.k := by
+    _ ≤ (S.unipotentCovolume * S.tailScale ^ 2 / 2) ^ 2
+        * (S.mainSecondMoment / (S.pairCountScale * S.M ^ (2 * 𝔰.ϱ * numInfPlaces E * 𝔰.k)))
+        / S.termDiscNorm γ ^ 𝔰.k := by
       rw [prod_pairingBoundSq_eq]
       exact div_le_div₀ (by positivity) pairingBoundConst_le (by positivity)
         (pow_le_pow_right₀ h_one_le h_exponent)

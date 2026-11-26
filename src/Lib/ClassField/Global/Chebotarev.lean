@@ -22,23 +22,27 @@ reduction); Stevenhagen–Lenstra, Chebotarëv and his density theorem, Math. In
 
 open QuotientGroup Subgroup New QZChar Nat
 
-/-- Chebotarev's theorem, existence form (no density is given). Let `W` be a nonempty open subset of
+/--
+Chebotarev's theorem, existence form (no density is given). Let `W` be a nonempty open subset of
 the absolute Galois group `Gal(Ω/K)` of the number field `K`, and `S` a finite set of finite places
 of `K`. Then (a) some place `v ∉ S` has prime norm `v.q` (the size of its residue field), with a
 place `A` of `Ω` over it (a valuation subring, `New.IsPlaceOver`); (b) some arithmetic Frobenius
-at `A` for `v.q` lies in `W`; (c) every arithmetic Frobenius at `A` for `v.q` lies in `W`. -/
-lemma New.chebotarev {K : Type} [Field K] [NumberField K] [Algebra K Ω] {W : Set Gal(Ω/K)}
-    (hW : IsOpen W) (hW_ne : W.Nonempty) {S : Set (FinPlace K)} (hS : S.Finite) :
+at `A` for `v.q` lies in `W`; (c) every arithmetic Frobenius at `A` for `v.q` lies in `W`.
+-/
+lemma New.chebotarev
+    {K : Type} [Field K] [NumberField K] [Algebra K Ω]
+    {W : Set Gal(Ω/K)} (hW : IsOpen W) (hW_ne : W.Nonempty)
+    {S : Set (FinPlace K)} (hS : S.Finite)
     -- (a)
-    ∃ v : FinPlace K, v ∉ S ∧
-      v.q.Prime ∧
-      ∃ A : ClosurePlace,
-        IsPlaceOver A v ∧
-        -- (b)
-        ∃ σ ∈ W,
-          IsFrob A v.q σ ∧
-          -- (c)
-          ∀ τ : Gal(Ω/K), IsFrob A v.q τ → τ ∈ W := by
+    : ∃ v : FinPlace K,
+      v ∉ S ∧ v.q.Prime
+        ∧ ∃ A : ClosurePlace,
+          IsPlaceOver A v
+            -- (b)
+            ∧ ∃ σ ∈ W,
+              IsFrob A v.q σ
+                -- (c)
+                ∧ ∀ τ : Gal(Ω/K), IsFrob A v.q τ → τ ∈ W := by
   -- Take `g ∈ W`, an open normal `U` with `g U ⊆ W`, and the fixed field `L` of `H = ⟨g⟩ U`. Over
   -- `L` the extension cut out by `U` is cyclic, and the second inequality gives primes `w` of `L`
   -- of prime norm whose Frobenius is `g` modulo `U`. The prime of `K` below `w` has the same norm.
@@ -66,17 +70,19 @@ lemma New.chebotarev {K : Type} [Field K] [NumberField K] [Algebra K Ω] {W : Se
   -- many `w` of prime norm (`ϖ_w` is the uniformiser idele at `w`).
   have h_ker_open : ((abelianLift χ).comp (artinMap H)).ker.IsOpen :=
     continuous_iff_forall_isOpen_ker_comp.mp continuous_artinMap χ
-  have h_ker_pos (x : Lˣ) (hx : IsTotallyPositive x.val) :
-      principalIdele x ∈ ((abelianLift χ).comp (artinMap H)).ker := by
+  have h_ker_pos (x : Lˣ) (hx : IsTotallyPositive x.val)
+      : principalIdele x ∈ ((abelianLift χ).comp (artinMap H)).ker := by
     simp [artinMap_principalIdele_eq_one_of_isTotallyPositive hx]
-  have h_often : ∃ᶠ w : FinPlace L in .cofinite, w.q.Prime ∧
-      locIdele w (uniformizer w) / a⁻¹ ∈ ((abelianLift χ).comp (artinMap H)).ker :=
+  have h_often
+      : ∃ᶠ w : FinPlace L in .cofinite, w.q.Prime ∧
+        locIdele w (uniformizer w) / a⁻¹ ∈ ((abelianLift χ).comp (artinMap H)).ker :=
     frequently_prime_uniformizer_div_mem_of_adeleNorm_mem _ h_ker_open h_ker_pos
       abelianLift_artinMap_adeleNorm a⁻¹
   -- Almost all `w` lie over a prime of `K` outside `S` at which all inertia groups lie in `U`; take
   -- one of them with `ϖ_w a ∈ ker (χ ∘ artinMap)`.
-  have h_almost : ∀ᶠ w : FinPlace L in .cofinite, w.below K ∉ S ∧
-      ∀ A : ClosurePlace, IsPlaceOver A (w.below K) → inertiaGroup Gal(Ω/K) A ≤ U.toSubgroup :=
+  have h_almost
+      : ∀ᶠ w : FinPlace L in .cofinite, w.below K ∉ S ∧
+        ∀ A : ClosurePlace, IsPlaceOver A (w.below K) → inertiaGroup Gal(Ω/K) A ≤ U.toSubgroup :=
     tendsto_place_comap_cofinite (algebraMap K L)
       (hS.eventually_cofinite_notMem.and (finite_ramified U.isOpen'))
   obtain ⟨w, ⟨hw_prime, hw_ker⟩, hw_notMem, hw_unram⟩ := (h_often.and_eventually h_almost).exists
@@ -105,5 +111,14 @@ lemma New.chebotarev {K : Type} [Field K] [NumberField K] [Algebra K Ω] {W : Se
     have h_mem : g * (g⁻¹ * σ * (((σ : H) : Gal(Ω/K))⁻¹ * τ)) ∈ W :=
       hU _ (mul_mem hσU (hw_unram _ hA h_inert))
     simpa using h_mem
-  exact ⟨w.below K, hw_notMem, hw_prime, placeOver w, hA, ((σ : H) : Gal(Ω/K)), h_all _ hσ_frob,
-    hσ_frob, h_all⟩
+  exact ⟨
+    w.below K,
+    hw_notMem,
+    hw_prime,
+    placeOver w,
+    hA,
+    ((σ : H) : Gal(Ω/K)),
+    h_all _ hσ_frob,
+    hσ_frob,
+    h_all
+  ⟩

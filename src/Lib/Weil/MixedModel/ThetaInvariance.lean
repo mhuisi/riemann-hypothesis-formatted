@@ -74,21 +74,27 @@ section MixedModelIntegrable
 
 open MeasureTheory Equiv
 
-variable {E : Type*} [Field E] [CMType E] [WeilData E] {n : Type*} [Fintype n] [DecidableEq n]
+variable
+  {E : Type*} [Field E] [CMType E] [WeilData E]
+  {n : Type*} [Fintype n] [DecidableEq n]
   {s : n → ℤˣ} {n₀ p : Type*} [Fintype n₀] [DecidableEq n₀] [Fintype p] [DecidableEq p]
   {s₀ : n₀ → ℤˣ} {V : Space E n s} {V₀ : Space E n₀ s₀} (D : V.Splitting V₀ p)
 
-/-- For a Witt decomposition `D` of `V` as `(l E^p ⊕ k E^p) ⊥ ι V₀` over a CM field `E` with Weil
+/--
+For a Witt decomposition `D` of `V` as `(l E^p ⊕ k E^p) ⊥ ι V₀` over a CM field `E` with Weil
 data, and any `f` in 𝒮(V), the slice `x ↦ D.slice x f` is a continuous map from 𝔸^p to 𝒮(V₀) with
 its own topology. Here `D.slice x f` is the mixed-model value, namely the zero term along `k` of
-`ϱ(l x) f`. -/
+`ϱ(l x) f`.
+-/
 @[fun_prop]
 lemma continuous_slice (f : 𝒮 V) : Continuous fun x : p → 𝔸 E ↦ D.slice x f := by
   change Continuous fun x : p → 𝔸 E ↦ D.zeroTerm (V.ϱ (D.lAdelic.mulVec x) f)
   fun_prop
 
-/-- For a splitting of V over V₀ with p hyperbolic planes and f in 𝒮(V), the 𝒮(V₀)-valued
-function x ↦ f[x] of the mixed model is integrable on 𝔸^p. -/
+/--
+For a splitting of V over V₀ with p hyperbolic planes and f in 𝒮(V), the 𝒮(V₀)-valued
+function x ↦ f[x] of the mixed model is integrable on 𝔸^p.
+-/
 @[fun_prop]
 lemma integrable_slice (f : 𝒮 V) : Integrable fun x : p → 𝔸 E ↦ D.slice x f := by
   -- The integral of the norm over `𝔸^p` is the integral over the quotient `𝔸^p / E^p`, which has
@@ -99,8 +105,10 @@ lemma integrable_slice (f : 𝒮 V) : Integrable fun x : p → 𝔸 E ↦ D.slic
     simpa [← ofReal_norm, Heisenberg.Rep.norm_map] using! hC (V.ϱ (D.lAdelic.mulVec x) f)
   refine ⟨by fun_prop, ?_⟩
   -- Unfold the integral into an integral over the quotient of sums over the lattice `E^p`.
-  calc ∫⁻ x : p → 𝔸 E, ‖D.slice x f‖ₑ
-    _ ≤ _ := (lintegral_addOrbitMeasure_lintegral (H := New.ratVectors E p) (ν := .count)
+  calc
+    ∫⁻ x : p → 𝔸 E, ‖D.slice x f‖ₑ
+    _ ≤ _ :=
+      (lintegral_addOrbitMeasure_lintegral (H := New.ratVectors E p) (ν := .count)
         (D.continuous_slice f).enorm.measurable).ge
     _ < ⊤ := by
       refine IsFiniteMeasure.lintegral_lt_top_of_bounded_to_ennreal _ ⟨C * ‖f‖₊, fun x ↦ ?_⟩
@@ -123,41 +131,54 @@ on `𝒮`.
 open Exchange MeasureTheory Matrix ComplexOrder WeilData Fock Finset Complex G Circle
   Heisenberg.IsVacuum
 
-variable {E : Type*} [Field E] [CMType E] [WeilData E] {n : Type*} [Fintype n] [DecidableEq n]
+variable
+  {E : Type*} [Field E] [CMType E] [WeilData E]
+  {n : Type*} [Fintype n] [DecidableEq n]
   {s : n → ℤˣ} {n₀ p : Type*} [Fintype n₀] [DecidableEq n₀] [Fintype p] [DecidableEq p]
-  {s₀ : n₀ → ℤˣ} {V : Space E n s} {V₀ : Space E n₀ s₀} (D : V.Splitting V₀ p) {g : G E s}
-  (g₀ : G E s₀) (hi : D.iCoord * (g.adeleMatrix * D.iAdelic) = g₀.adeleMatrix) (a : GL p (𝔸 E))
-  (hk : D.ActsOnFrame g a.val)
+  {s₀ : n₀ → ℤˣ} {V : Space E n s} {V₀ : Space E n₀ s₀} (D : V.Splitting V₀ p)
+  {g : G E s} (g₀ : G E s₀) (hi : D.iCoord * (g.adeleMatrix * D.iAdelic) = g₀.adeleMatrix)
+  (a : GL p (𝔸 E)) (hk : D.ActsOnFrame g a.val)
 
-/-- For a in GL_p(𝔸) and x the point of the space `New.hyperbolicSpace` of p hyperbolic planes
+/--
+For a in GL_p(𝔸) and x the point of the space `New.hyperbolicSpace` of p hyperbolic planes
 (signs `hyperbolicSigns p`: +1 on the first p and −1 on the last p coordinates; x is (1, −1; 1,
 1)/√2 at each infinite place and integral at the finite places), some g₁ in the adelic unitary group
 has matrix x⁻¹ diag(a*⁻¹, a) x. Moreover Δ(g₁)υ(det a) is a nonnegative real number, where Δ is the
-multiplier `weilMultiplier` and υ is the splitting character of the Weil data. -/
-lemma exists_hyperbolic_levi_multiplier_nonneg :
-    ∃ g₁ : G E (hyperbolicSigns p), 0 ≤ weilMultiplier g₁ * υ.val a.det ∧
-      g₁.adeleMatrix = (hyperbolicSpace E p).x⁻¹.val * fromBlocks a⁻¹.valᴴ 0 0 a.val *
-        (hyperbolicSpace E p).x := by
+multiplier `weilMultiplier` and υ is the splitting character of the Weil data.
+-/
+lemma exists_hyperbolic_levi_multiplier_nonneg
+    : ∃ g₁ : G E (hyperbolicSigns p),
+      0 ≤ weilMultiplier g₁ * υ.val a.det
+        ∧ g₁.adeleMatrix
+          = (hyperbolicSpace E p).x⁻¹.val * fromBlocks a⁻¹.valᴴ 0 0 a.val
+            * (hyperbolicSpace E p).x := by
   let g₁ : G E (hyperbolicSigns p) :=
-    (hyperbolicSpace E p).toRatCoords.symm
-      ⟨blockGL (star a⁻¹, a), by simp [U, fromBlocks_conjTranspose,
-      fromBlocks_map, star_eq_conjTranspose, fromBlocks_multiply, ← conjTranspose_mul]⟩
-  have h_mat : g₁.adeleMatrix = (hyperbolicSpace E p).x⁻¹.1 * fromBlocks a⁻¹.1ᴴ 0 0 a.1 *
-    (hyperbolicSpace E p).x := rfl
+    (hyperbolicSpace E p).toRatCoords.symm ⟨
+      blockGL (star a⁻¹, a),
+      by
+        simp [U, fromBlocks_conjTranspose, fromBlocks_map, star_eq_conjTranspose,
+          fromBlocks_multiply, ← conjTranspose_mul]
+    ⟩
+  have h_mat
+      : g₁.adeleMatrix
+        = (hyperbolicSpace E p).x⁻¹.1 * fromBlocks a⁻¹.1ᴴ 0 0 a.1 * (hyperbolicSpace E p).x :=
+    rfl
   refine ⟨g₁, ?_, h_mat⟩
   -- Both `weilMultiplier` and `υ` are products of factors at the infinite places and a finite
   -- factor.
   let a_fin : GL p (𝔸f E) := a.map (RingHom.snd (NumberField.InfinitePlace E → ℂ) (𝔸f E))
-  have h_inf (w : NumberField.InfinitePlace E) :
-      0 ≤ realMultiplier (g₁.1 w) * (a.det.val.1 w / ‖a.det.val.1 w‖) := by
+  have h_inf (w : NumberField.InfinitePlace E)
+      : 0 ≤ realMultiplier (g₁.1 w) * (a.det.val.1 w / ‖a.det.val.1 w‖) := by
     -- At `w` the frame `x` is `(1, -1; 1, 1) / √2`, so the lower right block of
     -- `x⁻¹ diag(a⁻¹ᴴ, a) x` is `(a⁻¹ᴴ + a) / 2`. Its adjoint times `a` is `(1 + aᴴ a) / 2`, whose
     -- determinant is nonnegative.
     have hx : (hyperbolicSpace E p).x.1.map (evalInf w) = (√2 : ℂ)⁻¹ • fromBlocks 1 (-1) 1 1 := rfl
-    have hx_inv : (hyperbolicSpace E p).x⁻¹.1.map (evalInf w) = (√2 : ℂ)⁻¹ • fromBlocks 1 1 (-1)
-      1 := rfl
-    have h_lower : (g₁.adeleMatrix.map (evalInf w)).toBlocks₂₂ =
-        (2 : ℂ)⁻¹ • ((a⁻¹.val.map (evalInf w))ᴴ + a.val.map (evalInf w)) := by
+    have hx_inv
+        : (hyperbolicSpace E p).x⁻¹.1.map (evalInf w) = (√2 : ℂ)⁻¹ • fromBlocks 1 1 (-1) 1 :=
+      rfl
+    have h_lower
+        : (g₁.adeleMatrix.map (evalInf w)).toBlocks₂₂
+          = (2 : ℂ)⁻¹ • ((a⁻¹.val.map (evalInf w))ᴴ + a.val.map (evalInf w)) := by
       have h_star : Function.Semiconj (evalInf w) star star := fun _ ↦ rfl
       simp only [h_mat, Matrix.map_mul, hx, hx_inv]
       simp [-coe_units_inv, fromBlocks_map, fromBlocks_smul, fromBlocks_multiply, smul_smul,
@@ -167,8 +188,8 @@ lemma exists_hyperbolic_levi_multiplier_nonneg :
     have h_det : 0 ≤ (1 + (a.val.map (evalInf w))ᴴ * a.val.map (evalInf w)).det :=
       (PosSemidef.one.add (posSemidef_conjTranspose_mul_self _)).det_nonneg
     -- `realMultiplier` is the conjugate determinant of that block.
-    have h_mult : realMultiplier (g₁.1 w) = star
-      (g₁.adeleMatrix.map (evalInf w)).toBlocks₂₂.det := by
+    have h_mult
+        : realMultiplier (g₁.1 w) = star (g₁.adeleMatrix.map (evalInf w)).toBlocks₂₂.det := by
       let e_neg : {i // hyperbolicSigns p i = -1} ≃ p :=
         (Equiv.subtypeEquivRight (by simp)).trans Equiv.sumIsRight
       rw [realMultiplier, ← star_def, principalMinor, ← det_reindex_self e_neg]
@@ -176,13 +197,14 @@ lemma exists_hyperbolic_levi_multiplier_nonneg :
     rw [h_mult, h_lower, det_smul]
     simp [h_one, h_det, -coe_units_inv, ← det_conjTranspose, ← evalInf_apply, RingHom.map_det,
       add_mul, ← det_mul, field, div_nonneg]
-  have h_fin :
-      finMultiplier g₁.2 = ‖glMultiplier a_fin‖ ^ 2 * starRingEnd ℂ (chiFin a_fin.det) := by
+  have h_fin
+      : finMultiplier g₁.2 = ‖glMultiplier a_fin‖ ^ 2 * starRingEnd ℂ (chiFin a_fin.det) := by
     -- The finite part of `x` is integral, so only the two diagonal blocks count.
     have hx : (hyperbolicSpace E p).x.map (.snd ..) ∈ intGL (p ⊕ p) (Ô E) :=
       mem_intGL.2 (isOrthoIntegral_hyperbolicSpace.imp And.right And.right)
     change glMultiplier (GeneralLinearGroup.map (RingHom.snd ..)
-      ((hyperbolicSpace E p).x⁻¹ * blockGL (star a⁻¹, a) * (hyperbolicSpace E p).x)) = _
+        ((hyperbolicSpace E p).x⁻¹ * blockGL (star a⁻¹, a) * (hyperbolicSpace E p).x))
+      = _
     rw [map_mul, map_mul, map_inv, glMultiplier_mul_of_mem _ (inv_mem hx) hx,
       glMultiplier_fromBlocks (star a_fin⁻¹) a_fin (Equiv.refl _) (fromBlocks_map ..),
       glMultiplier_star_inv_mul]
@@ -193,11 +215,13 @@ lemma exists_hyperbolic_levi_multiplier_nonneg :
   -- In the finite factor, the phases of `conj (chiFin a_fin.det)` and of `υ` cancel.
   simp [chiFin, chiAdelic, field, ← coe_inv_eq_conj]
 
-/-- Let `D` be a Witt decomposition V = (l E^p ⊕ k E^p) ⊥ i V₀, and for f in 𝒮(V) let
+/--
+Let `D` be a Witt decomposition V = (l E^p ⊕ k E^p) ⊥ i V₀, and for f in 𝒮(V) let
 f[x] = `D.slice x f` in 𝒮(V₀) be its slice at x ∈ 𝔸^p. For f, f′ in 𝒮(V), the scalar product ⟨f[x],
-f′[x]⟩ = ∫ conj(f[x]) f′[x] is integrable in x. -/
-lemma integrable_dataInner_slice (f f' : 𝒮 V) :
-    Integrable fun x : p → 𝔸 E ↦ V₀.dataInner (D.slice x f) (D.slice x f') := by
+f′[x]⟩ = ∫ conj(f[x]) f′[x] is integrable in x.
+-/
+lemma integrable_dataInner_slice (f f' : 𝒮 V)
+    : Integrable fun x : p → 𝔸 E ↦ V₀.dataInner (D.slice x f) (D.slice x f') := by
   -- `slice x f` is `zeroTerm` of a translate of `f`, which has norm `‖f‖`; so the integrand has
   -- norm at most `‖dataInner ∘ zeroTerm‖ * ‖f‖ * ‖slice x f'‖`
   refine ((D.integrable_slice f').norm.const_mul (‖V₀.dataInner ∘SL D.zeroTerm‖ * ‖f‖)).mono'
@@ -205,31 +229,39 @@ lemma integrable_dataInner_slice (f f' : 𝒮 V) :
   simpa [Heisenberg.Rep.norm_map, slice] using
     (V₀.dataInner ∘SL D.zeroTerm).le_opNorm₂ (V.ϱ (D.lAdelic *ᵥ x) f) (D.slice x f')
 
-/-- For a Witt splitting `D` of `V` over `V₀` with frames of `p` columns, let f[x] = `D.slice x f`
+/--
+For a Witt splitting `D` of `V` over `V₀` with frames of `p` columns, let f[x] = `D.slice x f`
 in 𝒮(V₀) be the slice at x ∈ 𝔸^p. There is a constant C with ∫ ⟨f[x], f′[x]⟩ dx = C⟨f, f′⟩ for all
-f, f′ in 𝒮(V). The pairing on the left is `dataInner` of 𝒮(V₀) and on the right that of 𝒮(V). -/
-lemma integral_dataInner_slice :
-    ∃ C : ℂ, ∀ f f' : 𝒮 V,
+f, f′ in 𝒮(V). The pairing on the left is `dataInner` of 𝒮(V₀) and on the right that of 𝒮(V).
+-/
+lemma integral_dataInner_slice
+    : ∃ C : ℂ, ∀ f f' : 𝒮 V,
       ∫ x : p → 𝔸 E, V₀.dataInner (D.slice x f) (D.slice x f') = C * V.dataInner f f' := by
   -- The form on the left is invariant under the Heisenberg operators, hence a multiple of
   -- the scalar product.
-  have h_inv (y : n → 𝔸 E) (f f' : 𝒮 V) :
-      ∫ x, V₀.dataInner (D.slice x (V.ϱ y f)) (D.slice x (V.ϱ y f')) =
-        ∫ x, V₀.dataInner (D.slice x f) (D.slice x f') := by
+  have h_inv (y : n → 𝔸 E) (f f' : 𝒮 V)
+      : ∫ x, V₀.dataInner (D.slice x (V.ϱ y f)) (D.slice x (V.ϱ y f'))
+        = ∫ x, V₀.dataInner (D.slice x f) (D.slice x f') := by
     -- `ϱ y` translates `x` by `lCoord *ᵥ y`, up to a character of modulus 1 and a unitary operator.
-    rw [← integral_add_right_eq_self (fun x ↦ V₀.dataInner (D.slice x f) (D.slice x f'))
+    rw [← integral_add_right_eq_self
+      (fun x ↦ V₀.dataInner (D.slice x f) (D.slice x f'))
       (D.lCoord *ᵥ y)]
     simp [← mul_assoc]
-  exact ⟨_, integral_form_eq_mul_modelInner
-    (fun x ↦ V₀.dataInner.bilinearComp (D.slice x) (D.slice x))
-    D.integrable_dataInner_slice h_inv⟩
+  exact ⟨
+    _,
+    integral_form_eq_mul_modelInner
+      (fun x ↦ V₀.dataInner.bilinearComp (D.slice x) (D.slice x))
+      D.integrable_dataInner_slice h_inv
+  ⟩
 
 include hk hi in
-/-- Suppose g sends the frame k to k·a for some a in GL_p(𝔸), and g acts on the V₀-part as g₀. Then
+/--
+Suppose g sends the frame k to k·a for some a in GL_p(𝔸), and g acts on the V₀-part as g₀. Then
 there is a scalar c with ev(ω(g)f) = c·ω(g₀)(ev f) for all f in 𝒮(V), where ev is the zero term
-`New.Space.Splitting.zeroTerm`. -/
-lemma exists_zeroTerm_omega_eq_smul :
-    ∃ c : ℂ, ∀ f : 𝒮 V, D.zeroTerm (V.ω g f) = c • V₀.ω g₀ (D.zeroTerm f) := by
+`New.Space.Splitting.zeroTerm`.
+-/
+lemma exists_zeroTerm_omega_eq_smul
+    : ∃ c : ℂ, ∀ f : 𝒮 V, D.zeroTerm (V.ω g f) = c • V₀.ω g₀ (D.zeroTerm f) := by
   -- With `L = ω(g₀⁻¹) zeroTerm ω(g)`, the family `x ↦ L ϱ(lAdelic x)` obeys the same law as
   -- `slice`. At `ω(k) vacElem`, `k` adapted, both families are multiples of
   -- `‖vacuumFn x‖ ^ 2 • V₀.vacElem`, so they differ by a scalar; and the translates of
@@ -240,72 +272,84 @@ lemma exists_zeroTerm_omega_eq_smul :
     simp_all [L, ← slice_zero, omega_rho]
   have hL_i (w : n₀ → 𝔸 E) (f : 𝒮 V) : L (V.ϱ (D.iAdelic *ᵥ w) f) = V₀.ϱ w (L f) := by
     simp [L, hi, ← adeleMatrix_mul, ← D.lCoord.mul_assoc, D.lCoord_mul_adeleMatrix hk, ← slice_zero,
-      omega_rho,
-      Matrix.mul_assoc]
+      omega_rho, Matrix.mul_assoc]
   have h_law : D.IsMixedLaw fun x : p → 𝔸 E ↦ L ∘L V.ϱ (D.lAdelic *ᵥ x) :=
     D.isMixedLaw_comp_rho L hL_k hL_i
   obtain ⟨c', hc'_ne, hc'⟩ := h_adapted.slice_omega_vacElem
   obtain ⟨c, hc⟩ := h_adapted.exists_omega_vacElem_of_isMixedLaw h_law
   have hL : L = (c / c') • D.zeroTerm := by
-    have hc_ratio (x : p → 𝔸 E) : (L ∘L V.ϱ (D.lAdelic *ᵥ x)) (V.ω k V.vacElem) =
-        (c / c' * (c' * ‖vacuumFn ((1 : GL p (𝔸 E)).valᴴ *ᵥ x)‖ ^ 2)) • V₀.vacElem := by
+    have hc_ratio (x : p → 𝔸 E)
+        : (L ∘L V.ϱ (D.lAdelic *ᵥ x)) (V.ω k V.vacElem)
+          = (c / c' * (c' * ‖vacuumFn ((1 : GL p (𝔸 E)).valᴴ *ᵥ x)‖ ^ 2)) • V₀.vacElem := by
       rw [hc, ← mul_assoc, div_mul_cancel₀ c hc'_ne]
     refine V.ext_of_vacElem k fun y ↦ ?_
-    calc L (V.ω k (V.ϱ y V.vacElem))
+    calc
+      L (V.ω k (V.ϱ y V.vacElem))
       _ = (L ∘L V.ϱ (D.lAdelic *ᵥ 0)) (V.ϱ (k.adeleMatrix *ᵥ y) (V.ω k V.vacElem)) := by
         simp [omega_rho]
       _ = ((c / c') • D.zeroTerm) (V.ω k (V.ϱ y V.vacElem)) := by
         rw [h_law]
-        simp [↓hc_ratio, hc', smul_smul, ← slice_zero, omega_rho, mul_left_comm]
-  exact ⟨c / c', fun f ↦ by
-    simpa [L, rep_apply_apply] using congrArg (V₀.ω g₀) (DFunLike.congr_fun hL f)⟩
+        simp [↓ hc_ratio, hc', smul_smul, ← slice_zero, omega_rho, mul_left_comm]
+  exact ⟨
+    c / c',
+    fun f ↦ by simpa [L, rep_apply_apply] using congrArg (V₀.ω g₀) (DFunLike.congr_fun hL f)
+  ⟩
 
 omit [WeilData E] in
-/-- The push-forward of the volume under `x ↦ aᴴ x` is `|det a|⁻¹` times the volume: for continuous
-F on 𝔸^p, the integral of F(aᴴ x) is |det a|⁻¹ times the integral of F. -/
-lemma integral_comp_conjTranspose_mulVec (a : GL p (𝔸 E)) {F : (p → 𝔸 E) → ℝ} (hF : Continuous F) :
-    ∫ x : p → 𝔸 E, F (a.valᴴ *ᵥ x) = (ideleAbs a.det)⁻¹ * ∫ x : p → 𝔸 E, F x := by
-  simpa [↓volume_map_mulVec_adele, star_eq_conjTranspose] using
-    (integral_map (μ := volume) (φ := fun x ↦ (star a).val *ᵥ x) (by fun_prop)
-      hF.aestronglyMeasurable).symm
+/--
+The push-forward of the volume under `x ↦ aᴴ x` is `|det a|⁻¹` times the volume: for continuous
+F on 𝔸^p, the integral of F(aᴴ x) is |det a|⁻¹ times the integral of F.
+-/
+lemma integral_comp_conjTranspose_mulVec (a : GL p (𝔸 E)) {F : (p → 𝔸 E) → ℝ} (hF : Continuous F)
+    : ∫ x : p → 𝔸 E, F (a.valᴴ *ᵥ x) = (ideleAbs a.det)⁻¹ * ∫ x : p → 𝔸 E, F x := by
+  simpa [↓ volume_map_mulVec_adele, star_eq_conjTranspose] using
+    (integral_map (μ := volume)
+      (φ := fun x ↦ (star a).val *ᵥ x)
+      (by fun_prop) hF.aestronglyMeasurable).symm
 
-/-- Let the group element k have as columns, reordered by e, those of the matrix of D's frames
+/--
+Let the group element k have as columns, reordered by e, those of the matrix of D's frames
 times diag(x, 1) (`frameAt 1 1` is the matrix of the frames; x is the point of hyperbolic space),
 and let g₁ have the matrix x⁻¹ diag(a*⁻¹, a) x. Then the conjugate by k of the Levi element of
-(a, g₀) is block diagonal with blocks g₁, g₀, so its multiplier Δ is the product of theirs. -/
-lemma weilMultiplier_conj_levi {k : G E s} {e : (p ⊕ p) ⊕ n₀ ≃ n} {g₁ : G E (hyperbolicSigns p)}
+(a, g₀) is block diagonal with blocks g₁, g₀, so its multiplier Δ is the product of theirs.
+-/
+lemma weilMultiplier_conj_levi
+    {k : G E s} {e : (p ⊕ p) ⊕ n₀ ≃ n} {g₁ : G E (hyperbolicSigns p)}
     (hs : s ∘ e = hyperbolicSigns p ⊕ᵥ s₀)
-    (h_frame : D.frameAt 1 1 * fromBlocks (o := n₀) (hyperbolicSpace E p).x.val 0 0 1 =
-      k.adeleMatrix.submatrix id e)
-    (hg₁ : g₁.adeleMatrix = (hyperbolicSpace E p).x⁻¹.val * fromBlocks a⁻¹.valᴴ 0 0 a.val *
-      (hyperbolicSpace E p).x) :
-    weilMultiplier (k⁻¹ * D.levi (a, g₀) * k) = weilMultiplier g₁ * weilMultiplier g₀ := by
-  have h_block :
-      (D.levi (a, g₀)).adeleMatrix * (D.frameAt 1 1 * fromBlocks (o := n₀)
-        (hyperbolicSpace E p).x.val 0 0 1) =
-        D.frameAt 1 1 * fromBlocks ((hyperbolicSpace E p).x.val * g₁.adeleMatrix) 0 0
-          g₀.adeleMatrix := by
+    (h_frame : D.frameAt 1 1 * fromBlocks (o := n₀) (hyperbolicSpace E p).x.val 0 0 1
+      = k.adeleMatrix.submatrix id e)
+    (hg₁ : g₁.adeleMatrix
+      = (hyperbolicSpace E p).x⁻¹.val * fromBlocks a⁻¹.valᴴ 0 0 a.val * (hyperbolicSpace E p).x)
+    : weilMultiplier (k⁻¹ * D.levi (a, g₀) * k) = weilMultiplier g₁ * weilMultiplier g₀ := by
+  have h_block
+      : (D.levi (a, g₀)).adeleMatrix
+          * (D.frameAt 1 1 * fromBlocks (o := n₀) (hyperbolicSpace E p).x.val 0 0 1)
+        = D.frameAt 1 1
+          * fromBlocks ((hyperbolicSpace E p).x.val * g₁.adeleMatrix) 0 0 g₀.adeleMatrix := by
     simp [hg₁, frameAt, ← Matrix.mul_assoc, fromCols_mul_fromBlocks, levi_mul_lAdelic,
       actsOnFrame_levi, levi_mul_iAdelic]
   have h_inv : k⁻¹.adeleMatrix.submatrix e id * k.adeleMatrix.submatrix id e = 1 := by
     simp [← submatrix_mul _ _ _ id _ Function.bijective_id, ← G.adeleMatrix_mul]
   refine weilMultiplier_fromBlocks hs ?_
-  calc (k⁻¹ * D.levi (a, g₀) * k).adeleMatrix.submatrix e e
-    _ = k⁻¹.adeleMatrix.submatrix e id * ((D.levi (a, g₀)).adeleMatrix * k.adeleMatrix.submatrix id
-      e) := by
-      simp [↓adeleMatrix_mul, submatrix_mul _ _ _ id, mul_assoc]
-    _ = k⁻¹.adeleMatrix.submatrix e id * (k.adeleMatrix.submatrix id e * fromBlocks g₁.adeleMatrix 0
-      0 g₀.adeleMatrix) := by
+  calc
+    (k⁻¹ * D.levi (a, g₀) * k).adeleMatrix.submatrix e e
+    _ = k⁻¹.adeleMatrix.submatrix e id
+        * ((D.levi (a, g₀)).adeleMatrix * k.adeleMatrix.submatrix id e) := by
+      simp [↓ adeleMatrix_mul, submatrix_mul _ _ _ id, mul_assoc]
+    _ = k⁻¹.adeleMatrix.submatrix e id
+        * (k.adeleMatrix.submatrix id e * fromBlocks g₁.adeleMatrix 0 0 g₀.adeleMatrix) := by
       simp [← h_frame, h_block, Matrix.mul_assoc, fromBlocks_multiply]
     _ = fromBlocks g₁.adeleMatrix 0 0 g₀.adeleMatrix := by
       rw [← Matrix.mul_assoc, h_inv, Matrix.one_mul]
 
-/-- A scalar c with |c|² = |det a| and c J conj(m) = I, for reals I > 0, J ≥ 0 and a complex m with
-m υ(det a) ≥ 0, is χ_𝔸(det a)⁻¹. -/
-lemma eq_inv_chiAdelic_of_norm_sq_of_phase {c m : ℂ} {I J : ℝ} (hI : 0 < I) (hJ : 0 ≤ J)
-    (h_abs : ‖c‖ ^ 2 = ideleAbs a.det) (h_phase : c * J * star m = I)
-    (h_sign : 0 ≤ m * υ.val a.det) :
-    c = (chiAdelic a.det)⁻¹ := by
+/--
+A scalar c with |c|² = |det a| and c J conj(m) = I, for reals I > 0, J ≥ 0 and a complex m with
+m υ(det a) ≥ 0, is χ_𝔸(det a)⁻¹.
+-/
+lemma eq_inv_chiAdelic_of_norm_sq_of_phase
+    {c m : ℂ} {I J : ℝ} (hI : 0 < I) (hJ : 0 ≤ J) (h_abs : ‖c‖ ^ 2 = ideleAbs a.det)
+    (h_phase : c * J * star m = I) (h_sign : 0 ≤ m * υ.val a.det)
+    : c = (chiAdelic a.det)⁻¹ := by
   -- The signs make `c * υ(det a)` positive, so it is `‖c‖`.
   have h_pos : 0 < c * υ.val a.det := by
     refine pos_of_mul_pos_left (b := star (m * υ.val a.det)) ?_ (star_nonneg_iff.2 h_sign)
@@ -316,17 +360,19 @@ lemma eq_inv_chiAdelic_of_norm_sq_of_phase {c m : ℂ} {I J : ℝ} (hI : 0 < I) 
 
 omit [WeilData E] in
 /-- The Levi element attached to `(a, g₀)` sends the vector `l aᴴ x` to `l x`. -/
-lemma levi_mulVec_lAdelic_mulVec_conjTranspose_mulVec (x : p → 𝔸 E) :
-    (D.levi (a, g₀)).adeleMatrix *ᵥ D.lAdelic *ᵥ a.valᴴ *ᵥ x = D.lAdelic *ᵥ x := by
+lemma levi_mulVec_lAdelic_mulVec_conjTranspose_mulVec (x : p → 𝔸 E)
+    : (D.levi (a, g₀)).adeleMatrix *ᵥ D.lAdelic *ᵥ a.valᴴ *ᵥ x = D.lAdelic *ᵥ x := by
   simp [levi_mul_lAdelic, ← Matrix.mul_assoc, Matrix.mul_assoc D.lAdelic, ← conjTranspose_mul]
 
 -- Keeps definitional checks from unfolding the finite sums.
 seal Finset.sum in
-/-- For the Levi element `D.levi (a, g₀)` attached to `a ∈ GL_p(𝔸)` and `g₀` in the group of `V₀`,
+/--
+For the Levi element `D.levi (a, g₀)` attached to `a ∈ GL_p(𝔸)` and `g₀` in the group of `V₀`,
 one has ev ω(`D.levi (a, g₀)`) = χ_𝔸(det a)⁻¹ ω(g₀) ev. Here ev is the zero term
-`New.Space.Splitting.zeroTerm`, and `χ_𝔸 = υ |·|^(-1/2)`. -/
-lemma zeroTerm_omega_levi (f : 𝒮 V) :
-    D.zeroTerm (V.ω (D.levi (a, g₀)) f) = (chiAdelic a.det)⁻¹ • V₀.ω g₀ (D.zeroTerm f) := by
+`New.Space.Splitting.zeroTerm`, and `χ_𝔸 = υ |·|^(-1/2)`.
+-/
+lemma zeroTerm_omega_levi (f : 𝒮 V)
+    : D.zeroTerm (V.ω (D.levi (a, g₀)) f) = (chiAdelic a.det)⁻¹ • V₀.ω g₀ (D.zeroTerm f) := by
   -- The scalar `c` of `exists_zeroTerm_omega_eq_smul` is found from `integral_dataInner_slice`
   -- for `u = ω(k) vacElem`, `k` adapted, and `v = ω(g) u`: the pair `(v, v)` gives
   -- `‖c‖ ^ 2 = |det a|`, the pair `(u, v)` gives its phase.
@@ -353,15 +399,18 @@ lemma zeroTerm_omega_levi (f : 𝒮 V) :
     -- the integrand of the pair `(u, u)` has norm `‖w‖² φ²`, which is not zero at `0`
     simpa [hu, hw, φ, I, mul_mul_mul_comm ‖w‖, integral_const_mul] using
       integral_pos_of_integrable_nonneg_nonzero (x := 0) (by fun_prop)
-        (D.integrable_dataInner_slice u u).norm (fun _ ↦ norm_nonneg _)
+        (D.integrable_dataInner_slice u u).norm
+        (fun _ ↦ norm_nonneg _)
         (by simp [hu, hw, φ, vacuumFn])
   have hφ_cont : Continuous φ := (cont (adelicHeisenberg E 1)).norm.pow 2
   have h_scale : ∫ x, φ (a.valᴴ *ᵥ x) * φ (a.valᴴ *ᵥ x) = (ideleAbs a.det)⁻¹ * I :=
     integral_comp_conjTranspose_mulVec a (hφ_cont.mul hφ_cont)
   -- If the integrand of `hC` is `r * F x` with `F` real, the constant `r` comes out.
-  have pair (f f' : 𝒮 V) {r : ℂ} {F : (p → 𝔸 E) → ℝ}
-      (h : ∀ x : p → 𝔸 E, V₀.dataInner (D.slice x f) (D.slice x f') = r * F x) :
-      r * (∫ x, F x : ℝ) = C * V.dataInner f f' := by
+  have pair
+      (f f' : 𝒮 V)
+      {r : ℂ} {F : (p → 𝔸 E) → ℝ}
+      (h : ∀ x : p → 𝔸 E, V₀.dataInner (D.slice x f) (D.slice x f') = r * F x)
+      : r * (∫ x, F x : ℝ) = C * V.dataInner f f' := by
     simp [← hC, h, integral_const_mul, integral_complex_ofReal]
   have h_uu : w * star w * I = C := by
     refine (pair u u fun x ↦ ?_).trans (by simp [u])
@@ -386,88 +435,100 @@ lemma zeroTerm_omega_levi (f : 𝒮 V) :
     simpa [field, hw, weilMultiplier_ne_zero g₁, weilMultiplier_ne_zero g₀] using h_uv
   have h_abs : ‖c‖ ^ 2 = ideleAbs a.det := by
     simpa [field, mul_conj, hw, normSq_eq_norm_sq, -ofReal_pow] using h_vv
-  rw [hc, eq_inv_chiAdelic_of_norm_sq_of_phase a hI (integral_nonneg fun x ↦ by positivity) h_abs
-    h_phase h_sign]
+  rw [hc,
+    eq_inv_chiAdelic_of_norm_sq_of_phase a hI (integral_nonneg fun x ↦ by positivity) h_abs h_phase
+      h_sign]
 
-/-- The Levi element with parts `a` (on the isotropic frame) and `g₀` (on `V₀`) acts on the slices
+/--
+The Levi element with parts `a` (on the isotropic frame) and `g₀` (on `V₀`) acts on the slices
 `x ↦ D.slice x f` by the substitution `x ↦ aᴴ x`, the operator `ω(g₀)` on the values and the
-factor `(chiAdelic a.det)⁻¹`. -/
-lemma slice_omega_levi (x : p → 𝔸 E) (f : 𝒮 V) :
-    D.slice x (V.ω (D.levi (a, g₀)) f) =
-      (chiAdelic a.det)⁻¹ • V₀.ω g₀ (D.slice (a.valᴴ *ᵥ x) f) := by
+factor `(chiAdelic a.det)⁻¹`.
+-/
+lemma slice_omega_levi (x : p → 𝔸 E) (f : 𝒮 V)
+    : D.slice x (V.ω (D.levi (a, g₀)) f)
+      = (chiAdelic a.det)⁻¹ • V₀.ω g₀ (D.slice (a.valᴴ *ᵥ x) f) := by
   have h_point : (D.levi (a, g₀)).adeleMatrix *ᵥ D.lAdelic *ᵥ a.valᴴ *ᵥ x = D.lAdelic *ᵥ x :=
     D.levi_mulVec_lAdelic_mulVec_conjTranspose_mulVec g₀ a x
-  calc D.slice x (V.ω (D.levi (a, g₀)) f)
+  calc
+    D.slice x (V.ω (D.levi (a, g₀)) f)
     _ = D.zeroTerm (V.ω (D.levi (a, g₀)) (V.ϱ (D.lAdelic *ᵥ a.valᴴ *ᵥ x) f)) := by
       rw [omega_rho, h_point, slice, ContinuousLinearMap.comp_apply]
     _ = _ := D.zeroTerm_omega_levi g₀ a _
 
 include hi in
-/-- Let `D` split `V` as `(l E^p ⊕ k E^p) ⊥ ι V₀`, and let `g` satisfy gk = ka for a p×p adelic
+/--
+Let `D` split `V` as `(l E^p ⊕ k E^p) ⊥ ι V₀`, and let `g` satisfy gk = ka for a p×p adelic
 matrix a whose determinant is the idele d. Suppose also that the V₀-block of g is g₀ in the adelic
 group of V₀. Then ev(ω(g)f) = υ(d)⁻¹ |d|^{1/2} ω(g₀) ev(f) for all f, where ev is the zero term
 along k, υ is the splitting character of the Weil data, and the scalar is the inverse of
 χ_𝔸(d) = υ(d)|d|^{−1/2}. The V₀-block is `iCoord * g * iAdelic`, with `iAdelic` the adelic embedding
 ι of V₀ and `iCoord` the projection to its coordinates. When V₀ is zero, this is the value at the
-origin of the formula for the Siegel parabolic subgroup in the Schrödinger model. -/
-lemma zeroTerm_omega {a : Matrix p p (𝔸 E)} (hk : D.ActsOnFrame g a) (d : (𝔸 E)ˣ)
-    (h_det : a.det = d.val) (f : 𝒮 V) :
-    D.zeroTerm (V.ω g f) = (chiAdelic d)⁻¹ • V₀.ω g₀ (D.zeroTerm f) := by
+origin of the formula for the Siegel parabolic subgroup in the Schrödinger model.
+-/
+lemma zeroTerm_omega
+    {a : Matrix p p (𝔸 E)} (hk : D.ActsOnFrame g a) (d : (𝔸 E)ˣ) (h_det : a.det = d.val) (f : 𝒮 V)
+    : D.zeroTerm (V.ω g f) = (chiAdelic d)⁻¹ • V₀.ω g₀ (D.zeroTerm f) := by
   -- Write `g = radicalElement c b * levi (a, g₀)`. The Levi factor is `zeroTerm_omega_levi`; the
   -- scalar by which `radicalElement c b` acts on `zeroTerm` is trivial, because
   -- `radicalElement c b` is a commutator (`exists_levi_mul_radicalElement_eq`).
   obtain ⟨c, b, a', g₀', rfl, rfl, hg₀⟩ := D.exists_eq_radicalElement_mul_levi hk
   obtain rfl : a'.det = d := Units.ext h_det
   obtain rfl : g₀' = g₀ := ext_adeleMatrix (hg₀.trans hi)
-  have h_scalar (b₁ : Matrix p p (𝔸 E)) :
-      ∃ z : ℂ, ∀ u : 𝒮 V, D.zeroTerm (V.ω (D.radicalElement c b₁) u) = z • D.zeroTerm u := by
-    obtain ⟨h_frame, h_block⟩ : D.ActsOnFrame (D.radicalElement c b₁) 1 ∧
-        D.iCoord * ((D.radicalElement c b₁).adeleMatrix * D.iAdelic) = 1 :=
+  have h_scalar (b₁ : Matrix p p (𝔸 E))
+      : ∃ z : ℂ, ∀ u : 𝒮 V, D.zeroTerm (V.ω (D.radicalElement c b₁) u) = z • D.zeroTerm u := by
+    obtain ⟨h_frame, h_block⟩
+        : D.ActsOnFrame (D.radicalElement c b₁) 1
+          ∧ D.iCoord * ((D.radicalElement c b₁).adeleMatrix * D.iAdelic) = 1 :=
       D.exists_eq_radicalElement_iff.1 ⟨c, b₁, rfl⟩
     simpa using D.exists_zeroTerm_omega_eq_smul 1 (h_block.trans adeleMatrix_one.symm) 1 h_frame
   choose z hz using h_scalar
-  obtain ⟨t, b', h_comm⟩ : ∃ (t : GL p (𝔸 E)) (b' : Matrix p p (𝔸 E)),
-      D.levi (t, 1) * D.radicalElement c b' = D.radicalElement c b' * D.radicalElement c b * D.levi
-        (t, 1) :=
+  obtain ⟨t, b', h_comm⟩
+      : ∃ (t : GL p (𝔸 E)) (b' : Matrix p p (𝔸 E)),
+        D.levi (t, 1) * D.radicalElement c b'
+          = D.radicalElement c b' * D.radicalElement c b * D.levi (t, 1) :=
     D.exists_levi_mul_radicalElement_eq c b
   let m : G E s := D.levi (t, 1) * D.radicalElement c b'
   -- Both sides are `zeroTerm u` times the product of `z b`, `z b'` and `(chiAdelic t.det)⁻¹`.
   have h_unip (u : 𝒮 V) : D.zeroTerm (V.ω (D.radicalElement c b * m) u) = D.zeroTerm (V.ω m u) :=
-    calc D.zeroTerm (V.ω (D.radicalElement c b * m) u)
+    calc
+      D.zeroTerm (V.ω (D.radicalElement c b * m) u)
       _ = z b' • z b • (chiAdelic t.det)⁻¹ • D.zeroTerm u := by
         simp [m, hz, zeroTerm_omega_levi, smul_comm (z b')]
-      _ = D.zeroTerm (V.ω m u) := by
-        simp [m, h_comm, hz, zeroTerm_omega_levi]
+      _ = D.zeroTerm (V.ω m u) := by simp [m, h_comm, hz, zeroTerm_omega_levi]
   -- `ω m` is onto, so `radicalElement c b` can be dropped in front of the Levi factor too.
   rw [← zeroTerm_omega_levi]
   simpa only [rep_apply_apply, mul_assoc, mul_inv_cancel_left] using
     h_unip (V.ω (m⁻¹ * D.levi (a', g₀')) f)
 
-/-- For a Witt splitting `D` of `V` over `V₀` with frames of `p` columns and a hermitian adelic
+/--
+For a Witt splitting `D` of `V` over `V₀` with frames of `p` columns and a hermitian adelic
 `p × p` matrix `z`, consider the element `D.radicalElement 0 z` of the centre of the radical. It
 fixes `k`, fixes `ι`, and sends `l` to `l − k j⁻¹ z`. Acting through the Weil representation `V.ω`,
 it multiplies the slice `D.slice x f = ev(ϱ(lx) f)` in 𝒮(V₀) by the standard additive character at
-`-xᴴ z x / 2`. -/
-lemma slice_omega_radicalElement_zero {z : Matrix p p (𝔸 E)} (hz : zᴴ = z) (x : p → 𝔸 E) (f : 𝒮 V) :
-    D.slice x (V.ω (D.radicalElement 0 z) f) =
-      (stdAddChar E (-(toAdele (2⁻¹ : E) * star x ⬝ᵥ z *ᵥ x)) : ℂ) • D.slice x f := by
+`-xᴴ z x / 2`.
+-/
+lemma slice_omega_radicalElement_zero {z : Matrix p p (𝔸 E)} (hz : zᴴ = z) (x : p → 𝔸 E) (f : 𝒮 V)
+    : D.slice x (V.ω (D.radicalElement 0 z) f)
+      = (stdAddChar E (-(toAdele (2⁻¹ : E) * star x ⬝ᵥ z *ᵥ x)) : ℂ) • D.slice x f := by
   -- The element fixes the zero term, and it sends `l x + k (j⁻¹ z x)` to `l x`.
   let y : n → 𝔸 E := D.lAdelic *ᵥ x + D.kAdelic *ᵥ (toAdele (j⁻¹ : E) • z *ᵥ x)
-  have h_mat : (D.radicalElement 0 z).adeleMatrix = 1 - D.kAdelic * (toAdele (j⁻¹ : E) • z) *
-    D.lCoord := by
+  have h_mat
+      : (D.radicalElement 0 z).adeleMatrix
+        = 1 - D.kAdelic * (toAdele (j⁻¹ : E) • z) * D.lCoord := by
     simp [radicalElement, hz, smul_smul, ← two_smul (𝔸 E), ← map_ofNat (toAdele (E := E)) 2,
-      ← map_mul,
-      mul_left_comm (2⁻¹ : E)]
+      ← map_mul, mul_left_comm (2⁻¹ : E)]
   have h_point : (D.radicalElement 0 z).adeleMatrix *ᵥ y = D.lAdelic *ᵥ x := by
     simp [y, h_mat, mulVec_add, sub_mulVec, Matrix.sub_mul, Matrix.mul_assoc, mulVec_smul,
       smul_mulVec]
-  obtain ⟨h_frame, h_block⟩ : D.ActsOnFrame (D.radicalElement 0 z) 1 ∧
-      D.iCoord * ((D.radicalElement 0 z).adeleMatrix * D.iAdelic) = 1 :=
+  obtain ⟨h_frame, h_block⟩
+      : D.ActsOnFrame (D.radicalElement 0 z) 1
+        ∧ D.iCoord * ((D.radicalElement 0 z).adeleMatrix * D.iAdelic) = 1 :=
     D.exists_eq_radicalElement_iff.1 ⟨0, z, rfl⟩
   have h_fix (f' : 𝒮 V) : D.zeroTerm (V.ω (D.radicalElement 0 z) f') = D.zeroTerm f' := by
     simpa using D.zeroTerm_omega 1 (h_block.trans adeleMatrix_one.symm) h_frame 1 (by simp) f'
   have h_coeff : (j / 2 * j⁻¹ : E) = 2⁻¹ := by field [j_ne_zero]
-  calc D.slice x (V.ω (D.radicalElement 0 z) f)
+  calc
+    D.slice x (V.ω (D.radicalElement 0 z) f)
     _ = D.zeroTerm (V.ω (D.radicalElement 0 z) (V.ϱ y f)) := by
       rw [omega_rho, h_point, slice, ContinuousLinearMap.comp_apply]
     _ = (adelicHeisenberg E 1).β x (toAdele (j⁻¹ : E) • z *ᵥ x) • D.slice x f := by
@@ -487,25 +548,33 @@ section RationalInvariance
 
 open Matrix Splitting Exchange
 
-variable {E : Type*} [Field E] [CMType E] {n p : Type*} [Fintype n] [DecidableEq n]
+variable
+  {E : Type*} [Field E] [CMType E]
+  {n p : Type*} [Fintype n] [DecidableEq n]
   {s : n → ℤˣ} {V : Space E n s} [Fintype p] [WeilData E]
 
 variable (V) in
-/-- The subgroup of the rational unitary γ whose Weil operator ω(γ) fixes the theta functional of
-V. -/
+/--
+The subgroup of the rational unitary γ whose Weil operator ω(γ) fixes the theta functional of
+V.
+-/
 noncomputable def thetaStabilizer : Subgroup (U V.J) where
   carrier := {γ : U V.J | ∀ f : 𝒮 V, V.θ (V.ω (V.ratEmbed γ) f) = V.θ f}
   one_mem' f := by simp
   mul_mem' {γ δ} hγ hδ f := by rw [map_mul, ← rep_apply_apply, hγ, hδ]
   inv_mem' {γ} hγ f := by simpa [rep_apply_apply] using (hγ (V.ω (V.ratEmbed γ⁻¹) f)).symm
 
-/-- Let V be split by D, with isotropic frames k, l and no middle part. A rational unitary γ that
+/--
+Let V be split by D, with isotropic frames k, l and no middle part. A rational unitary γ that
 maps the span of k to itself, γk = ka with a invertible over E, fixes the theta functional θ of V:
-θ(ω(γ)f) = θ(f), where ω is the Weil representation and γ acts through the rational embedding. -/
-lemma theta_omega_ratEmbed_of_mul_k (γ : U V.J) [DecidableEq p]
+θ(ω(γ)f) = θ(f), where ω is the Weil representation and γ acts through the rational embedding.
+-/
+lemma theta_omega_ratEmbed_of_mul_k
+    (γ : U V.J)
+    [DecidableEq p]
     (D : V.Splitting (stdSpace E Empty) p) (a : GL p E) (hk : γ.val.val * D.k = D.k * a.val)
-    (f : 𝒮 V) :
-    V.θ (V.ω (V.ratEmbed γ) f) = V.θ f := by
+    (f : 𝒮 V)
+    : V.θ (V.ω (V.ratEmbed γ) f) = V.θ f := by
   -- Expand `θ (ω γ f)` along the splitting `D' = γ D` and `θ f` along `D` as sums over `x ∈ E^p`
   -- (`hasSum_theta_slice`): the terms agree.
   let D' : V.Splitting (stdSpace E Empty) p :=
@@ -530,11 +599,13 @@ lemma theta_omega_ratEmbed_of_mul_k (γ : U V.J) [DecidableEq p]
   refine (D'.hasSum_theta_slice _).unique ?_
   simpa only [h_term] using D.hasSum_theta_slice f
 
-/-- If V has a splitting with no middle part, every point γ of the rational unitary group fixes the
-theta functional θ under the Weil representation ω: θ(ω(γ)f) = θ(f). -/
-lemma theta_omega_ratEmbed_of_splitting (γ : U V.J) [DecidableEq p]
-    (D : V.Splitting (stdSpace E Empty) p) (f : 𝒮 V) :
-    V.θ (V.ω (V.ratEmbed γ) f) = V.θ f := by
+/--
+If V has a splitting with no middle part, every point γ of the rational unitary group fixes the
+theta functional θ under the Weil representation ω: θ(ω(γ)f) = θ(f).
+-/
+lemma theta_omega_ratEmbed_of_splitting
+    (γ : U V.J) [DecidableEq p] (D : V.Splitting (stdSpace E Empty) p) (f : 𝒮 V)
+    : V.θ (V.ω (V.ratEmbed γ) f) = V.θ f := by
   -- The stabilizer of `θ` contains two opposite parabolic subgroups, which generate the group.
   have h_le (D' : V.Splitting (stdSpace E Empty) p) : D'.siegelParabolic ≤ V.thetaStabilizer :=
     fun δ ⟨a, ha⟩ ↦ theta_omega_ratEmbed_of_mul_k δ D' a ha
@@ -545,8 +616,10 @@ lemma theta_omega_ratEmbed_of_splitting (γ : U V.J) [DecidableEq p]
   exact h_mem f
 
 variable (V) in
-/-- The splitting without middle part of `V ⊕ V⁻`, with `V⁻` the space of the negative form, whose
-frame `k` spans the diagonal `{(v, v)}` and whose frame `l` spans the antidiagonal `{(v, -v)}`. -/
+/--
+The splitting without middle part of `V ⊕ V⁻`, with `V⁻` the space of the negative form, whose
+frame `k` spans the diagonal `{(v, v)}` and whose frame `l` spans the antidiagonal `{(v, -v)}`.
+-/
 noncomputable def diagonalSplitting : (V.sum V.neg).Splitting (stdSpace E Empty) n where
   k := fromRows 1 1
   l := fromRows ((2⁻¹ : E) • V.J⁻¹) (-((2⁻¹ : E) • V.J⁻¹))
@@ -568,34 +641,40 @@ noncomputable def diagonalSplitting : (V.sum V.neg).Splitting (stdSpace E Empty)
 
 variable {m : Type*} [Fintype m] [DecidableEq m] {t : m → ℤˣ} {V' : Space E m t}
 
-/-- For a datum y of a second space V′, the functional f ↦ θ(f ⊠ y) is a multiple of the theta
+/--
+For a datum y of a second space V′, the functional f ↦ θ(f ⊠ y) is a multiple of the theta
 functional of V. Here θ is the theta functional of V ⊕ V′, and ⊠ = `New.Space.boxProd` is the
-tensor product 𝒮(V) × 𝒮(V′) → 𝒮(V ⊕ V′) for the evident splitting of the coordinates. -/
-lemma exists_theta_boxProd_eq_mul (y : 𝒮 V') :
-    ∃ c : ℂ, ∀ f : 𝒮 V, (V.sum V').θ (boxProd signs_comp_refl f y) = c * V.θ f := by
+tensor product 𝒮(V) × 𝒮(V′) → 𝒮(V ⊕ V′) for the evident splitting of the coordinates.
+-/
+lemma exists_theta_boxProd_eq_mul (y : 𝒮 V')
+    : ∃ c : ℂ, ∀ f : 𝒮 V, (V.sum V').θ (boxProd signs_comp_refl f y) = c * V.θ f := by
   -- It is invariant under the rational `ϱ x` of `V`, which act as `ϱ (x, 0)` on `V ⊕ V'`.
   let ℓ : 𝒮 V →L[ℂ] ℂ := (V.sum V').rawTheta ∘L (boxProd signs_comp_refl).flip y
   have h_sum : (V.sum V').IsRatInvariant (V.sum V').rawTheta :=
     (V.sum V').isThetaFunctional_rawTheta.left
   have h_inv : V.IsRatInvariant ℓ := by
     rintro _ ⟨x, rfl⟩ (f : 𝒮 V)
-    have h_act : boxProd signs_comp_refl (V.ϱ (V.vecAtPoint x) f) y =
-        (V.sum V').ϱ ((V.sum V').vecAtPoint (x ⊕ᵥ 0)) (boxProd signs_comp_refl f y) := by
+    have h_act
+        : boxProd signs_comp_refl (V.ϱ (V.vecAtPoint x) f) y
+          = (V.sum V').ϱ ((V.sum V').vecAtPoint (x ⊕ᵥ 0)) (boxProd signs_comp_refl f y) := by
       rw [sum_vecAtPoint, rho_boxProd]
       simp [Function.comp_def, ← Pi.zero_def]
-    calc ℓ (V.ϱ (V.vecAtPoint x) f)
+    calc
+      ℓ (V.ϱ (V.vecAtPoint x) f)
       _ = (V.sum V').rawTheta
-            ((V.sum V').ϱ ((V.sum V').vecAtPoint (x ⊕ᵥ 0)) (boxProd signs_comp_refl f y)) :=
+          ((V.sum V').ϱ ((V.sum V').vecAtPoint (x ⊕ᵥ 0)) (boxProd signs_comp_refl f y)) :=
         congrArg (V.sum V').rawTheta h_act
       _ = ℓ f := h_sum _ ⟨x ⊕ᵥ 0, rfl⟩ _
   obtain ⟨c, hc⟩ : ∃ c : ℂ, ℓ = c • V.rawTheta := V.isThetaFunctional_rawTheta.eq_smul h_inv
   exact ⟨c, fun f ↦ by simpa [ℓ, theta_eq_rawTheta] using DFunLike.congr_fun hc f⟩
 
 variable (V V') in
-/-- The theta functional of V ⊕ V′ does not vanish on all products f ⊠ y (`New.Space.boxProd`) of
-data f of V and y of V′. -/
-lemma exists_theta_boxProd_ne_zero :
-    ∃ (f : 𝒮 V) (y : 𝒮 V'), (V.sum V').θ (boxProd signs_comp_refl f y) ≠ 0 := by
+/--
+The theta functional of V ⊕ V′ does not vanish on all products f ⊠ y (`New.Space.boxProd`) of
+data f of V and y of V′.
+-/
+lemma exists_theta_boxProd_ne_zero
+    : ∃ (f : 𝒮 V) (y : 𝒮 V'), (V.sum V').θ (boxProd signs_comp_refl f y) ≠ 0 := by
   -- Otherwise the theta function of the vacuum `vacElem ⊠ vacElem` would vanish at every point.
   by_contra! h_zero
   have h_vac : (V.sum V').vacElem = 0 := by
@@ -604,11 +683,13 @@ lemma exists_theta_boxProd_ne_zero :
       zero_apply]
   simpa [h_vac] using (V.sum V').dataInner_vacElem_vacElem
 
-/-- The theta functional is invariant under rational points: θ(ω(γ)f) = θ(f) for every γ in the
+/--
+The theta functional is invariant under rational points: θ(ω(γ)f) = θ(f) for every γ in the
 rational unitary group of V and every f in 𝒮(V), where ω is the Weil representation.
 
 A case of Weil's invariance of the theta distribution under rational points, for the unitary group
-of a hermitian space V with a point, with the representation ω and the functional θ on 𝒮(V). -/
+of a hermitian space V with a point, with the representation ω and the functional θ on 𝒮(V).
+-/
 lemma theta_omega_ratEmbed (γ : U V.J) (f : 𝒮 V) : V.θ (V.ω (V.ratEmbed γ) f) = V.θ f := by
   -- Doubling. The space `W = V ⊕ V⁻` is split, so `(γ, 1)` fixes its theta functional, and with it
   -- the functionals `θ (· ⊠ y)`. These are multiples of the `θ` of `V`, not all zero.
@@ -616,22 +697,25 @@ lemma theta_omega_ratEmbed (γ : U V.J) (f : 𝒮 V) : V.θ (V.ω (V.ratEmbed γ
   obtain ⟨f₀, y, h_ne⟩ := exists_theta_boxProd_ne_zero V V.neg
   obtain ⟨c, hc⟩ : ∃ c : ℂ, ∀ f' : 𝒮 V, W.θ (boxProd signs_comp_refl f' y) = c * V.θ f' :=
     exists_theta_boxProd_eq_mul y
-  have h_act : W.ω (W.ratEmbed (U.sum rfl (γ, 1))) (boxProd signs_comp_refl f y) =
-      boxProd signs_comp_refl (V.ω (V.ratEmbed γ) f) y := by
+  have h_act
+      : W.ω (W.ratEmbed (U.sum rfl (γ, 1))) (boxProd signs_comp_refl f y)
+        = boxProd signs_comp_refl (V.ω (V.ratEmbed γ) f) y := by
     rw [sum_ratEmbed, omega_boxProd signs_comp_refl (G.adeleMatrix_sum _)]
     simp
   refine mul_left_cancel₀ (left_ne_zero_of_mul (by rwa [hc] at h_ne) : c ≠ 0) ?_
-  calc c * V.θ (V.ω (V.ratEmbed γ) f)
-    _ = W.θ (W.ω (W.ratEmbed (U.sum rfl (γ, 1))) (boxProd signs_comp_refl f y)) := by
-      rw [h_act, hc]
+  calc
+    c * V.θ (V.ω (V.ratEmbed γ) f)
+    _ = W.θ (W.ω (W.ratEmbed (U.sum rfl (γ, 1))) (boxProd signs_comp_refl f y)) := by rw [h_act, hc]
     _ = W.θ (boxProd signs_comp_refl f y) :=
       theta_omega_ratEmbed_of_splitting _ V.diagonalSplitting _
     _ = c * V.θ f := hc f
 
-/-- A rational point γ acts on a datum f, read as the function f(x) = θ(ϱ(x)f) of the adelic vector
-x, by substitution: (ω(γ)f)(x) = f(γ⁻¹x). -/
-lemma omega_ratEmbed_apply (γ : U V.J) (f : 𝒮 V) (x : n → 𝔸 E) :
-    V.ω (V.ratEmbed γ) f x = f ((V.ratEmbed γ)⁻¹.adeleMatrix *ᵥ x) := by
+/--
+A rational point γ acts on a datum f, read as the function f(x) = θ(ϱ(x)f) of the adelic vector
+x, by substitution: (ω(γ)f)(x) = f(γ⁻¹x).
+-/
+lemma omega_ratEmbed_apply (γ : U V.J) (f : 𝒮 V) (x : n → 𝔸 E)
+    : V.ω (V.ratEmbed γ) f x = f ((V.ratEmbed γ)⁻¹.adeleMatrix *ᵥ x) := by
   rw [← theta_rho, ← theta_rho, ← theta_omega_ratEmbed γ (V.ϱ _ f), omega_rho]
   simp [← G.adeleMatrix_mul]
 

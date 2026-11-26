@@ -67,33 +67,47 @@ open Matrix Valued
 
 namespace New
 
-variable {E R X' ι : Type*} [DecidableEq X'] [Field E] [CMType E] [Fintype ι]
-  [DecidableEq ι] {ε : ι → ℤˣ} {s : ℕ} {N : E} [CommRing R] [StarRing R] {V : Space E ι ε}
+variable
+  {E R X' ι : Type*} [DecidableEq X'] [Field E] [CMType E] [Fintype ι] [DecidableEq ι]
+  {ε : ι → ℤˣ} {s : ℕ} {N : E} [CommRing R] [StarRing R]
+  {V : Space E ι ε}
 
-/-- A basis matrix (the basis vectors are its columns), for `X = X' ⊕ Unit` and a string of `s`
+/--
+A basis matrix (the basis vectors are its columns), for `X = X' ⊕ Unit` and a string of `s`
 vectors, indexed by `ι` through `e`; write `π̄ = star π` and `ā = star a`. For odd `s`: the vectors
 of `X'` are unchanged, the last vector `y` of `X` is replaced by `y / π̄ + u z / (π π̄)` with `z`
 the middle vector of the string, and each string vector is multiplied by `u`. For even `s`:
-diagonal, `1` on `X`, `u a⁻¹` on the first half of the string and `u ā` on the second half. -/
+diagonal, `1` on `X`, `u a⁻¹` on the first half of the string and `u ā` on the second half.
+-/
 def gradedLatticeBasis (e : (X' ⊕ Unit) ⊕ Fin s ≃ ι) (a π : Rˣ) (u : unitary R) : Matrix ι ι R :=
   reindex e e
     (fromBlocks (if Odd s then diagonal (1 ⊕ᵥ fun _ : Unit ↦ ((star π)⁻¹ : Rˣ).val) else 1) 0
       (of fun b : Fin s ↦
         0 ⊕ᵥ fun _ : Unit ↦ if b = b.rev then (u : R) * ((star π * π)⁻¹ : Rˣ).val else 0)
       (diagonal fun b : Fin s ↦
-        (u : R) * if Odd s then 1 else if 2 * (b : ℕ) < s then (a⁻¹ : Rˣ).val else star (a : R)))
+        (u : R)
+          * if Odd s then
+              1
+            else if 2 * (b : ℕ) < s then
+              (a⁻¹ : Rˣ).val
+            else
+              star (a : R)))
 
-/-- Let `Y` present the hermitian space `V` as `X' ⊕ Unit` plus a string of `s` vectors. The
+/--
+Let `Y` present the hermitian space `V` as `X' ⊕ Unit` plus a string of `s` vectors. The
 condition says that the finite frame `V.xFin` spans the same `Ô`-lattice as the basis
-`New.gradedLatticeBasis Y.indexEquiv a π u`: the two differ by some `k` in `GL(Ô)`. -/
-def Grading.SpansLattice (Y : Grading V N (X' ⊕ Unit) s) (a π : (𝔸f E)ˣ) (u : unitary (𝔸f E)) :
-    Prop :=
+`New.gradedLatticeBasis Y.indexEquiv a π u`: the two differ by some `k` in `GL(Ô)`.
+-/
+def Grading.SpansLattice (Y : Grading V N (X' ⊕ Unit) s) (a π : (𝔸f E)ˣ) (u : unitary (𝔸f E))
+    : Prop :=
   ∃ k ∈ intGL ι (Ô E), V.xFin.val = gradedLatticeBasis Y.indexEquiv a π u * k.val
 
 namespace Seesaw
 
-/-- The subring of complex numbers whose image under every ring homomorphism `ℂ → ℂ_l` is
-integral (has norm at most `1`), for every prime `l` coprime to `n`. -/
+/--
+The subring of complex numbers whose image under every ring homomorphism `ℂ → ℂ_l` is
+integral (has norm at most `1`), for every prime `l` coprime to `n`.
+-/
 def integralAway (n : ℕ) : Subring ℂ where
   carrier := {z : ℂ | ∀ (l : ℕ) [Fact l.Prime], l.Coprime n → ∀ ι : ℂ →+* ℂ_[l], ‖ι z‖ ≤ 1}
   mul_mem' hx hy l _ hl ι := by
@@ -104,41 +118,51 @@ def integralAway (n : ℕ) : Subring ℂ where
   zero_mem' := by simp
   neg_mem' := by simp
 
-/-- The conditions on finitely supported coefficients `r`: the support lies in `A`, each `d * r x`
+/--
+The conditions on finitely supported coefficients `r`: the support lies in `A`, each `d * r x`
 is integral away from `n` (`New.Seesaw.integralAway`) and, if `p` holds, `∑ ‖σ (r x)‖ ≤ B` for
-all automorphisms `σ` of `ℂ`. -/
-structure IsAdmissibleCoeffs {X : Type*} (A : Set X) (n d : ℕ) (p : Prop) (B : ℝ) (r : X →₀ ℂ) :
-    Prop where
+all automorphisms `σ` of `ℂ`.
+-/
+structure IsAdmissibleCoeffs {X : Type*} (A : Set X) (n d : ℕ) (p : Prop) (B : ℝ) (r : X →₀ ℂ)
+    : Prop where
   /-- The points with a nonzero coefficient lie in `A`. -/
   support_subset : ∀ x ∈ r.support, x ∈ A
   /-- Every coefficient, multiplied by `d`, is integral away from `n`. -/
   integral (x : X) : d * r x ∈ integralAway n
-  /-- If `p` holds, then for every field automorphism `σ` of `ℂ` the sum of the absolute values of
-  the `σ`-conjugates of the coefficients is at most `B`. -/
+  /--
+  If `p` holds, then for every field automorphism `σ` of `ℂ` the sum of the absolute values of
+  the `σ`-conjugates of the coefficients is at most `B`.
+  -/
   sum_norm_le : p → ∀ σ : ℂ ≃+* ℂ, r.sum (fun (_ : X) (c : ℂ) ↦ ‖σ c‖) ≤ B
 
 section
 
 variable {E : Type*} [Field E] [NumberField E]
 
-/-- The group of finite adelic vectors `x` such that `d i * x i` is integral at every place `w` not
-dividing `q`, for every index `i`. There is no condition at the places dividing `q`. -/
+/--
+The group of finite adelic vectors `x` such that `d i * x i` is integral at every place `w` not
+dividing `q`, for every index `i`. There is no condition at the places dividing `q`.
+-/
 def weightedTranslations (q : ℕ) (d : ι → 𝔸f E) : AddSubgroup (ι → 𝔸f E) where
   carrier := {x : ι → 𝔸f E | ∀ (i : ι) (w : FinPlace E), ↑q ∉ w.asIdeal → v ((d i * x i) w) ≤ 1}
   add_mem' {x y} hx hy i w hw := by simpa [mul_add] using v.map_add_le (hx i w hw) (hy i w hw)
   zero_mem' := by simp
   neg_mem' := by simp
 
-/-- The group of finite adelic vectors `x` indexed by `ι` such that `d * x i` is integral at every
-place `w` not dividing `q`, for every index `i`. -/
+/--
+The group of finite adelic vectors `x` indexed by `ι` such that `d * x i` is integral at every
+place `w` not dividing `q`, for every index `i`.
+-/
 abbrev translations (ι : Type*) (q : ℕ) (d : 𝔸f E) : AddSubgroup (ι → 𝔸f E) :=
   weightedTranslations (E := E) q fun _ : ι ↦ d
 
 end
 
 open scoped Classical in
-/-- The element `N` of `E` factors as `π π̄` for the finite idele `π`, which is a uniformiser at the
-places of `P` and a unit at all other places, and no place of `P` has its conjugate in `P`. -/
+/--
+The element `N` of `E` factors as `π π̄` for the finite idele `π`, which is a uniformiser at the
+places of `P` and a unit at all other places, and no place of `P` has its conjugate in `P`.
+-/
 structure IsSplitSquarefree (P : Finset (FinPlace E)) (N : E) (π : (𝔸f E)ˣ) : Prop where
   /-- In the finite adeles `N = π π̄`. -/
   algebraMap_eq_mul_star : algebraMap E (𝔸f E) N = π * star (π : 𝔸f E)
@@ -167,12 +191,14 @@ open Matrix Fintype Exchange
 
 variable {R X ι : Type _} [DecidableEq X] {s N : ℕ} [CommRing R]
 
-/-- A form on `X ⊕ Unit` plus a string of `s` vectors, by blocks: identity on `X`; string vectors
+/--
+A form on `X ⊕ Unit` plus a string of `s` vectors, by blocks: identity on `X`; string vectors
 paired antidiagonally to `1`, with `-p` in the middle; for odd `s` the vector of `Unit` has norm
 `q` and pairs to `-1` with the middle vector (for even `s` it is a unit vector orthogonal to the
-string). -/
-def gluedGram {K : Type*} [CommRing K] (p q : K) :
-    Matrix ((X ⊕ Unit) ⊕ Fin s) ((X ⊕ Unit) ⊕ Fin s) K :=
+string).
+-/
+def gluedGram {K : Type*} [CommRing K] (p q : K)
+    : Matrix ((X ⊕ Unit) ⊕ Fin s) ((X ⊕ Unit) ⊕ Fin s) K :=
   let C : Matrix (X ⊕ Unit) (Fin s) K := of (0 ⊕ᵥ fun _ b ↦ if b = b.rev then -1 else 0)
   fromBlocks (diagonal (1 ⊕ᵥ fun _ : Unit ↦ if Odd s then q else 1)) C Cᵀ
     (of fun b c ↦ if b = c.rev then (if b = c then -p else 1) else 0)
@@ -184,13 +210,13 @@ lemma eq_rev_iff_of_odd (hs : Odd s) (c : Fin s) : c = c.rev ↔ c = ⟨s / 2, b
 lemma ne_rev_of_not_odd (hs : ¬ Odd s) (c : Fin s) : c ≠ c.rev := by grind
 
 /-- A ring homomorphism carries `gluedGram p q` to the form with parameters `(f p, f q)`. -/
-lemma map_gluedGram {K L : Type*} [CommRing K] [CommRing L] (f : K →+* L) (p q : K) :
-    (gluedGram p q).map f = gluedGram (X := X) (s := s) (f p) (f q) := by
+lemma map_gluedGram {K L : Type*} [CommRing K] [CommRing L] (f : K →+* L) (p q : K)
+    : (gluedGram p q).map f = gluedGram (X := X) (s := s) (f p) (f q) := by
   ext ((i | i) | b) ((j | j) | c) <;> simp [gluedGram, apply_ite f, diagonal_apply, Function.swap]
 
 /-- The matrices `gluedGram p 0` and `gluedGram 0 p` multiply to `1`. -/
-lemma gluedGram_mul_eq_one [Fintype X] {K : Type*} [CommRing K] (p : K) :
-    gluedGram (X := X) (s := s) p 0 * gluedGram 0 p = 1 := by
+lemma gluedGram_mul_eq_one [Fintype X] {K : Type*} [CommRing K] (p : K)
+    : gluedGram (X := X) (s := s) p 0 * gluedGram 0 p = 1 := by
   -- The product is computed block by block, by cases on whether there is a middle vector; `A r`,
   -- `C` and `J r` name the blocks of `gluedGram`.
   let J (r : K) : Matrix (Fin s) (Fin s) K :=
@@ -199,8 +225,8 @@ lemma gluedGram_mul_eq_one [Fintype X] {K : Type*} [CommRing K] (p : K) :
     diagonal (1 ⊕ᵥ fun _ : Unit ↦ if Odd s then r else 1)
   let C : Matrix (X ⊕ Unit) (Fin s) K := of (0 ⊕ᵥ fun _ b ↦ if b = b.rev then -1 else 0)
   change fromBlocks (A 0) C Cᵀ (J p) * fromBlocks (A p) C Cᵀ (J 0) = 1
-  suffices (A 0 * A p + C * Cᵀ = 1 ∧ A 0 * C + C * J 0 = 0 ∧ Cᵀ * C + J p * J 0 = 1) ∧
-      Cᵀ * A p + J p * Cᵀ = 0 by
+  suffices (A 0 * A p + C * Cᵀ = 1 ∧ A 0 * C + C * J 0 = 0 ∧ Cᵀ * C + J p * J 0 = 1)
+      ∧ Cᵀ * A p + J p * Cᵀ = 0 by
     simp only [fromBlocks_multiply, this, fromBlocks_one]
   by_cases hs : Odd s
   · constructor
@@ -215,27 +241,30 @@ lemma gluedGram_mul_eq_one [Fintype X] {K : Type*} [CommRing K] (p : K) :
     grind
 
 /-- A ring homomorphism carries the graded Gram matrix with parameter `r` to the one with `f r`. -/
-lemma map_gradedGram (e : (X ⊕ Unit) ⊕ Fin s ≃ ι) {S : Type*} [CommRing S] (f : S →+* R) (r : S) :
-    (gradedGram e r).map f = gradedGram e (f r) := by
+lemma map_gradedGram (e : (X ⊕ Unit) ⊕ Fin s ≃ ι) {S : Type*} [CommRing S] (f : S →+* R) (r : S)
+    : (gradedGram e r).map f = gradedGram e (f r) := by
   simp [gradedGram, ← ext_iff, reindex_equiv e, apply_ite f, Matrix.one_apply]
 
-/-- The image of the graded Gram matrix `New.gradedGram e N`, with `N` a natural number, under a
-ring homomorphism `f` into a star ring is hermitian. -/
-lemma isHermitian_map_gradedGram_natCast (e : (X ⊕ Unit) ⊕ Fin s ≃ ι) {S : Type*} [CommRing S]
-    [StarRing R] (f : S →+* R) :
-    ((gradedGram e (N : S)).map f).IsHermitian := by
+/--
+The image of the graded Gram matrix `New.gradedGram e N`, with `N` a natural number, under a
+ring homomorphism `f` into a star ring is hermitian.
+-/
+lemma isHermitian_map_gradedGram_natCast
+    (e : (X ⊕ Unit) ⊕ Fin s ≃ ι) {S : Type*} [CommRing S] [StarRing R] (f : S →+* R)
+    : ((gradedGram e (N : S)).map f).IsHermitian := by
   -- The blocks are `1`, `0`, `0` and a symmetric matrix with entries fixed by `star`.
   rw [map_gradedGram, map_natCast]
   refine (isHermitian_one.fromBlocks (by simp) (.ext fun b c ↦ ?_)).submatrix e.symm
   have h_rev : c = b.rev ↔ b = c.rev := by rw [eq_comm, Fin.rev_eq_iff]
   have h_eq : c = b ↔ b = c := eq_comm
-  change star (if c = b.rev then (if c = b then -(N : R) else 1) else 0) =
-    if b = c.rev then (if b = c then -(N : R) else 1) else 0
+  change star (if c = b.rev then (if c = b then -(N : R) else 1) else 0)
+    = if b = c.rev then (if b = c then -(N : R) else 1) else 0
   simp only [h_rev, h_eq, apply_ite star, star_neg, star_natCast, star_one, star_zero]
 
 variable [Fintype X] [Fintype ι]
 
-/-- Let `e` index `X ⊕ Unit` and a string of `s` vectors by `ι`. Let `J = New.gradedGram e N` be the
+/--
+Let `e` index `X ⊕ Unit` and a string of `s` vectors by `ι`. Let `J = New.gradedGram e N` be the
 form that is the identity on `X ⊕ Unit` and pairs string vectors `b` and `s - 1 - b` to `1`, or to
 `-N` if they are equal, carried from `S` to the star ring `R` by `f`; write `π̄ = star π` and
 `ā = star a`. The columns of `B = New.gradedLatticeBasis e a π u` are the basis vectors, changed as
@@ -243,19 +272,32 @@ follows. For odd `s`, the string vectors are multiplied by `u` and the vector `y
 `y / π̄ + u z / (π π̄)`, with `z` the middle string vector. For even `s`, the first half of the
 string is multiplied by `u a⁻¹` and the second half by `u ā`. If `N = π π̄` in `R`, then `Bᴴ J B`
 is `gluedGram N 0`, reindexed by `e`. It agrees with `J` except that, for odd `s`, the vector of
-`Unit` has norm `0` and pairs to `-1` with the middle vector. -/
-lemma gram_gradedLatticeBasis_eq_gluedGram (e : (X ⊕ Unit) ⊕ Fin s ≃ ι) {S : Type*} [CommRing S]
-    [StarRing R] {f : S →+* R} (a : Rˣ) {π : Rˣ} (u : unitary R)
-    (hN : f (N : S) = π * star (π : R)) :
-    (gradedLatticeBasis e a π u)ᴴ * (gradedGram e (N : S)).map f * gradedLatticeBasis e a π u =
-      reindex e e (gluedGram (N : R) 0) := by
+`Unit` has norm `0` and pairs to `-1` with the middle vector.
+-/
+lemma gram_gradedLatticeBasis_eq_gluedGram
+    (e : (X ⊕ Unit) ⊕ Fin s ≃ ι)
+    {S : Type*} [CommRing S] [StarRing R]
+    {f : S →+* R}
+    (a : Rˣ)
+    {π : Rˣ}
+    (u : unitary R) (hN : f (N : S) = π * star (π : R))
+    : (gradedLatticeBasis e a π u)ᴴ * (gradedGram e (N : S)).map f * gradedLatticeBasis e a π u
+      = reindex e e (gluedGram (N : R) 0) := by
   -- The blocks of the basis are `T`, `0`, `Z`, `D`; the form is `G` on the string.
   let T : Matrix (X ⊕ Unit) (X ⊕ Unit) R :=
     if Odd s then diagonal (1 ⊕ᵥ fun _ : Unit ↦ ((star π)⁻¹ : Rˣ).val) else 1
-  let Z : Matrix (Fin s) (X ⊕ Unit) R := of fun b : Fin s ↦
-    0 ⊕ᵥ fun _ : Unit ↦ if b = b.rev then (u : R) * ((star π * π)⁻¹ : Rˣ).val else 0
-  let D : Matrix (Fin s) (Fin s) R := diagonal fun b : Fin s ↦
-    (u : R) * if Odd s then 1 else if 2 * (b : ℕ) < s then (a⁻¹ : Rˣ).val else star (a : R)
+  let Z : Matrix (Fin s) (X ⊕ Unit) R :=
+    of fun b : Fin s ↦
+      0 ⊕ᵥ fun _ : Unit ↦ if b = b.rev then (u : R) * ((star π * π)⁻¹ : Rˣ).val else 0
+  let D : Matrix (Fin s) (Fin s) R :=
+    diagonal fun b : Fin s ↦
+      (u : R)
+        * if Odd s then
+            1
+          else if 2 * (b : ℕ) < s then
+            (a⁻¹ : Rˣ).val
+          else
+            star (a : R)
   let G : Matrix (Fin s) (Fin s) R :=
     of fun b c ↦ f (if b = c.rev then (if b = c then -(N : S) else 1) else 0)
   let C : Matrix (X ⊕ Unit) (Fin s) R := of (0 ⊕ᵥ fun _ b ↦ if b = b.rev then -1 else 0)
@@ -275,36 +317,41 @@ lemma gram_gradedLatticeBasis_eq_gluedGram (e : (X ⊕ Unit) ⊕ Fin s ≃ ι) {
         Matrix.mul_apply, Function.swap]
       grind [star_mul, star_one, Units.mul_inv, map_natCast]
     · simp [Z, C, ne_rev_of_not_odd hs, ← ext_iff, Matrix.mul_apply, Function.swap]
-  have h_string : Dᴴ * G * D =
-      of fun b c ↦ if b = c.rev then (if b = c then -(N : R) else 1) else 0 := by
+  have h_string
+      : Dᴴ * G * D = of fun b c ↦ if b = c.rev then (if b = c then -(N : R) else 1) else 0 := by
     simp [D, G, apply_ite star, diagonal, ← ext_iff, Matrix.mul_apply]
     grind [star_mul, star_one, Units.mul_inv, map_natCast]
   have h_basis : gradedLatticeBasis e a π u = reindex e e (fromBlocks T 0 Z D) := rfl
   have h_form : (gradedGram e (N : S)).map f = reindex e e (fromBlocks 1 0 0 G) := by
     simp [gradedGram, G, ← ext_iff, reindex_equiv e, apply_ite f, Matrix.one_apply]
-  have h_blocks : (fromBlocks T 0 Z D)ᴴ * fromBlocks 1 0 0 G * fromBlocks T 0 Z D =
-      fromBlocks (Tᴴ * T + Zᴴ * G * Z) (Zᴴ * G * D) (Dᴴ * G * Z) (Dᴴ * G * D) := by
+  have h_blocks
+      : (fromBlocks T 0 Z D)ᴴ * fromBlocks 1 0 0 G * fromBlocks T 0 Z D
+        = fromBlocks (Tᴴ * T + Zᴴ * G * Z) (Zᴴ * G * D) (Dᴴ * G * Z) (Dᴴ * G * D) := by
     simp [fromBlocks_conjTranspose, fromBlocks_multiply]
-  have h_gram : (fromBlocks T 0 Z D)ᴴ * fromBlocks 1 0 0 G * fromBlocks T 0 Z D =
-      gluedGram (N : R) 0 := by
+  have h_gram
+      : (fromBlocks T 0 Z D)ᴴ * fromBlocks 1 0 0 G * fromBlocks T 0 Z D = gluedGram (N : R) 0 := by
     simp only [h_blocks, h_X, h_mixed, h_string, gluedGram, C]
   simp [h_basis, h_form, ← h_gram]
 
 variable [DecidableEq ι]
 
-/-- Let `e` index `X ⊕ Unit` and a string of `s` vectors by `ι`. Let `J = New.gradedGram e N` be the
+/--
+Let `e` index `X ⊕ Unit` and a string of `s` vectors by `ι`. Let `J = New.gradedGram e N` be the
 form that is the identity on `X ⊕ Unit` and pairs string vectors `b` and `s - 1 - b` to `1`, or to
 `-N` if they are equal, carried from `S` to the star ring `R` by `f`. For units `a`, `π` and a
 unitary `u` of `R`, the columns of `B = New.gradedLatticeBasis e a π u` are the basis vectors,
 changed as follows. For odd `s`, the string vectors are multiplied by `u` and the vector `y` of
 `Unit` becomes `y / π̄ + u z / (π π̄)`, with `z` the middle string vector. For even `s`, the first
 half of the string is multiplied by `u a⁻¹` and the second half by `u ā`. If `N = π π̄` in `R`,
-then `Bᴴ J B` is unimodular over every subring `O` of `R`: it is hermitian and lies in `GL(O)`. -/
-lemma isUnimodular_gradedLatticeBasis_gram {s N : ℕ} (e : (X ⊕ Unit) ⊕ Fin s ≃ ι) {S : Type*}
-    {O : Subring R} [CommRing S] [StarRing R] {f : S →+* R} {a π : Rˣ} {u : unitary R}
-    (hN : f (N : S) = π * star (π : R)) :
-    IsUnimodular O ((gradedLatticeBasis e a π u)ᴴ * (gradedGram e (N : S)).map f *
-      gradedLatticeBasis e a π u) := by
+then `Bᴴ J B` is unimodular over every subring `O` of `R`: it is hermitian and lies in `GL(O)`.
+-/
+lemma isUnimodular_gradedLatticeBasis_gram
+    {s N : ℕ} (e : (X ⊕ Unit) ⊕ Fin s ≃ ι)
+    {S : Type*} {O : Subring R} [CommRing S] [StarRing R]
+    {f : S →+* R} {a π : Rˣ} {u : unitary R} (hN : f (N : S) = π * star (π : R))
+    : IsUnimodular O
+      ((gradedLatticeBasis e a π u)ᴴ * (gradedGram e (N : S)).map f
+        * gradedLatticeBasis e a π u) := by
   -- The Gram matrix is `gluedGram N 0`, reindexed by `e`; it and its inverse `gluedGram 0 N` have
   -- entries in `O`.
   let B : Matrix ι ι R := gradedLatticeBasis e a π u
@@ -319,28 +366,34 @@ lemma isUnimodular_gradedLatticeBasis_gram {s N : ℕ} (e : (X ⊕ Unit) ⊕ Fin
   let w : GL ι O := .mkOfMulEqOne (H N 0) (H 0 N) h_inv
   exact ⟨h_hermitian, GeneralLinearGroup.map O.subtype w, ⟨w, rfl⟩, h_gram⟩
 
-/-- The signs on a string of `s` vectors: `-1` at the first `⌊(s + 1) / 2⌋` indices and `1` at
-the others. -/
+/--
+The signs on a string of `s` vectors: `-1` at the first `⌊(s + 1) / 2⌋` indices and `1` at
+the others.
+-/
 def stringSign (s : ℕ) (b : Fin s) : ℤˣ := if (b : ℕ) < (s + 1) / 2 then -1 else 1
 
-/-- A complex frame for a string of `s` vectors `e_b`, with `σ = stringSign s`. Column `b` is
+/--
+A complex frame for a string of `s` vectors `e_b`, with `σ = stringSign s`. Column `b` is
 `(σ b • e_b + e_{s - 1 - b}) / √2`. At the middle index `b = s - 1 - b` these two terms cancel,
-as `σ b = -1`, and `e_b / √N` is added. -/
+as `σ b = -1`, and `e_b / √N` is added.
+-/
 def stringFrame (s N : ℕ) : Matrix (Fin s) (Fin s) ℂ :=
   of fun a b : Fin s ↦
-    (if a = b then ((stringSign s b / √2 : ℝ) : ℂ) else 0) +
-      if a = b.rev then ((√2⁻¹ + if a = b then √N⁻¹ else 0 : ℝ) : ℂ) else 0
+    (if a = b then ((stringSign s b / √2 : ℝ) : ℂ) else 0)
+      + if a = b.rev then ((√2⁻¹ + if a = b then √N⁻¹ else 0 : ℝ) : ℂ) else 0
 
-/-- On a string of `s` vectors `e_b`, take the form that pairs `e_b` and `e_{s - 1 - b}` to `1`, or
+/--
+On a string of `s` vectors `e_b`, take the form that pairs `e_b` and `e_{s - 1 - b}` to `1`, or
 to `-N` if they are equal, with `N` a positive integer. Let `σ = stringSign s` be `-1` at the first
 `⌊(s + 1) / 2⌋` indices and `1` at the others. The frame `stringFrame s N` has column `b` equal to
 `(σ b • e_b + e_{s - 1 - b}) / √2`, or to `e_b / √N` if `b = s - 1 - b`. Its Gram matrix is the
-diagonal matrix `New.signMatrix σ` of the signs `σ b`. -/
-lemma gram_stringFrame_eq_signMatrix {s N : ℕ} (hN : 0 < N) :
-    (stringFrame s N)ᴴ *
-        (of fun a b : Fin s ↦ if a = b.rev then (if a = b then -(N : ℂ) else 1) else 0) *
-        stringFrame s N =
-      signMatrix (stringSign s) := by
+diagonal matrix `New.signMatrix σ` of the signs `σ b`.
+-/
+lemma gram_stringFrame_eq_signMatrix {s N : ℕ} (hN : 0 < N)
+    : (stringFrame s N)ᴴ
+        * (of fun a b : Fin s ↦ if a = b.rev then (if a = b then -(N : ℂ) else 1) else 0)
+        * stringFrame s N
+      = signMatrix (stringSign s) := by
   -- Away from the middle, columns `a` and `a.rev` span a hyperbolic plane, are orthogonal as their
   -- signs are opposite, and have norms `± 1`; the middle column has norm `-N / N = -1`.
   let σ (b : Fin s) : ℂ := stringSign s b
@@ -355,17 +408,19 @@ lemma gram_stringFrame_eq_signMatrix {s N : ℕ} (hN : 0 < N) :
     have h_iff : (a.rev : ℕ) < (s + 1) / 2 ↔ ¬ (a : ℕ) < (s + 1) / 2 := by grind
     simp only [σ, stringSign, h_iff]
     by_cases h_lt : (a : ℕ) < (s + 1) / 2 <;> simp [h_lt]
-  have h_col_mid (b : Fin s) (hb : b = b.rev) (i : Fin s) :
-      stringFrame s N i b = if i = b then r else 0 := by
+  have h_col_mid (b : Fin s) (hb : b = b.rev) (i : Fin s)
+      : stringFrame s N i b = if i = b then r else 0 := by
     by_cases hi : i = b <;> simp [stringFrame, ← hb, hi, r, σ, hσ_mid b hb, neg_div]
-  have h_col (b : Fin s) (hb : b ≠ b.rev) (i : Fin s) :
-      stringFrame s N i b = (if i = b then σ b * t else 0) + if i = b.rev then t else 0 := by
+  have h_col (b : Fin s) (hb : b ≠ b.rev) (i : Fin s)
+      : stringFrame s N i b = (if i = b then σ b * t else 0) + if i = b.rev then t else 0 := by
     by_cases hi : i = b <;> simp [stringFrame, hb, hi, t, σ, div_eq_mul_inv]
   have h_star (i b : Fin s) : star (stringFrame s N i b) = stringFrame s N i b := by
     simp [stringFrame, apply_ite star]
   ext a b
-  suffices h_entry : ∑ i : Fin s, stringFrame s N i a *
-      ((if i = i.rev then -(N : ℂ) else 1) * stringFrame s N i.rev b) = if a = b then σ a else 0 by
+  suffices h_entry
+      : ∑ i : Fin s, stringFrame s N i a *
+          ((if i = i.rev then -(N : ℂ) else 1) * stringFrame s N i.rev b)
+        = if a = b then σ a else 0 by
     rw [Matrix.mul_assoc]
     simpa [Matrix.mul_apply, h_star, signMatrix, diagonal_apply, ← Fin.rev_eq_iff] using h_entry
   by_cases ha : a = a.rev
@@ -395,15 +450,18 @@ lemma conjTranspose_stringFrame_one_mul_self : (stringFrame s 1)ᴴ * stringFram
     Finset.sum_add_distrib]
   split_ifs <;> first | lia | (norm_cast; grind)
 
-/-- Let `e` index `X ⊕ Unit` and a string of `s` vectors by `ι`, and let `N` be a positive integer.
+/--
+Let `e` index `X ⊕ Unit` and a string of `s` vectors by `ι`, and let `N` be a positive integer.
 Let `J` be the image under `φ` of `New.gradedGram e N`, the form that is the identity on `X ⊕ Unit`
 and pairs string vectors `b` and `s - 1 - b` to `1`, or to `-N` if they are equal. If exactly
 `⌊(s + 1) / 2⌋` of the signs `ε i` are `-1`, then `yᴴ J y = diag(ε)` (`New.signMatrix ε`) for some
-complex matrix `y`, which is unitary if `N = 1`. -/
-lemma exists_conjTranspose_mul_gradedGram_mul_eq_signMatrix (e : (X ⊕ Unit) ⊕ Fin s ≃ ι)
-    (φ : R →+* ℂ) (hN : 0 < N) {ε : ι → ℤˣ} (hε : negCount ε = (s + 1) / 2) :
-    ∃ y : Matrix ι ι ℂ, yᴴ * (gradedGram e (N : R)).map φ * y = signMatrix ε ∧
-      (N = 1 → yᴴ * y = 1) := by
+complex matrix `y`, which is unitary if `N = 1`.
+-/
+lemma exists_conjTranspose_mul_gradedGram_mul_eq_signMatrix
+    (e : (X ⊕ Unit) ⊕ Fin s ≃ ι) (φ : R →+* ℂ) (hN : 0 < N)
+    {ε : ι → ℤˣ} (hε : negCount ε = (s + 1) / 2)
+    : ∃ y : Matrix ι ι ℂ,
+      yᴴ * (gradedGram e (N : R)).map φ * y = signMatrix ε ∧ (N = 1 → yᴴ * y = 1) := by
   -- Up to a bijection `f` of the indices the signs are `1` on `X ⊕ Unit` and `stringSign s` on
   -- the string. The frame is the identity on `X ⊕ Unit` and `stringFrame s N` on the string.
   let σ : (X ⊕ Unit) ⊕ Fin s → ℤˣ := 1 ⊕ᵥ stringSign s
@@ -425,11 +483,14 @@ end New.Seesaw
 
 namespace New
 
-variable {E : Type} [Field E] [CMType E] {q l c d k : ℕ} {n : Type} [Fintype n] [DecidableEq n]
-  [Fact l.Prime]
+variable
+  {E : Type} [Field E] [CMType E]
+  {q l c d k : ℕ} {n : Type} [Fintype n] [DecidableEq n] [Fact l.Prime]
 
-/-- For natural numbers `c`, `d`, `q` and `k`: if `c` divides `d * q ^ k`, then the complex number
-`d / c` lies in `integralAway q`. -/
+/--
+For natural numbers `c`, `d`, `q` and `k`: if `c` divides `d * q ^ k`, then the complex number
+`d / c` lies in `integralAway q`.
+-/
 lemma Seesaw.div_mem_integralAway (h_dvd : c ∣ d * q ^ k) : (d / c : ℂ) ∈ integralAway q := by
   -- If `d * q ^ k = c * m` then `‖d‖ = ‖c‖ * ‖m‖` in `ℂ_[l]`, since `q` is a unit at `l`.
   -- So `‖d / c‖` is `‖m‖ ≤ 1`, or `0` if `c = 0`.
@@ -440,21 +501,26 @@ lemma Seesaw.div_mem_integralAway (h_dvd : c ∣ d * q ^ k) : (d / c : ℂ) ∈ 
   by_cases hc : c = 0 <;> simp [h_norm, hc, IsUltrametricDist.norm_natCast_le_one]
 
 omit [Fact l.Prime] in
-/-- If `l` is coprime to `q`, a finite adelic unitary point that is integral at all places not
-dividing `q` is integral at the places above `l`. -/
-lemma Seesaw.localLevel_le_integralAbove_of_coprime (hl : l.Coprime q) :
-    localLevel n {w : FinPlace E | ↑q ∉ w.asIdeal} ≤ integralAbove n l :=
+/--
+If `l` is coprime to `q`, a finite adelic unitary point that is integral at all places not
+dividing `q` is integral at the places above `l`.
+-/
+lemma Seesaw.localLevel_le_integralAbove_of_coprime (hl : l.Coprime q)
+    : localLevel n {w : FinPlace E | ↑q ∉ w.asIdeal} ≤ integralAbove n l :=
   -- A place above `l` is not above `q`.
   fun _ hg w hw ↦ hg w (w.isPrime.notMem_of_isCoprime_of_mem hl.cast hw)
 
-/-- Let `E` be a CM field with Weil data, of which only the splitting character `υ` (a Hecke
+/--
+Let `E` be a CM field with Weil data, of which only the splitting character `υ` (a Hecke
 character of `E`) is used. For `g` in the finite adelic unitary group `New.Gf E n` of matrices
 indexed by `n`, the multiplier `New.finMultiplier g` is `υ(det u) |det u|^(-1/2)`, where `u` is a
 chosen invertible finite adelic matrix with `u Ôⁿ = Ôⁿ ∩ g⁻¹ Ôⁿ`. If `g` and `g⁻¹` are integral at
 the places above the prime `l`, its image under every ring homomorphism `ι : ℂ → ℂ_l` has norm
-`1`. -/
-lemma Parameters.norm_finMultiplier_eq_one {ι : ℂ →+* ℂ_[l]} {g : Gf E n} [WeilData E]
-    (hg : g ∈ integralAbove n l) : ‖ι (finMultiplier g)‖ = 1 := by
+`1`.
+-/
+lemma Parameters.norm_finMultiplier_eq_one
+    {ι : ℂ →+* ℂ_[l]} {g : Gf E n} [WeilData E] (hg : g ∈ integralAbove n l)
+    : ‖ι (finMultiplier g)‖ = 1 := by
   -- The factor is the value of the algebraic character `υ |·|^(-1/2)` at `det u`, with `u` the
   -- saturating matrix chosen by `saturatingElem`, so it is enough that `det u` is a unit above `l`.
   -- At such a place `g` is integral, so `1` is saturating as well, and `det u` has the valuation
@@ -465,19 +531,22 @@ lemma Parameters.norm_finMultiplier_eq_one {ι : ℂ →+* ℂ_[l]} {g : Gf E n}
     .of_mem (mem_subring_matrix_iff.2 (mem_intGL.1 (hg w hw)).1)
   simpa using IsSaturating.v_det_saturatingElem (b := g.val) h_one
 
-/-- Let the automorphic character `a` of the norm-one adeles have weight `e` (its exponents at the
+/--
+Let the automorphic character `a` of the norm-one adeles have weight `e` (its exponents at the
 infinite places) and tame part `ψ` (its characters of the residue fields), and let the finite adelic
 unitary point `g` be integral above `l`. Then the value of `a` at `New.detFin s g`, the determinant
 of `(1, g)` in the unitary group of signature `s`, has norm `1` under every ring homomorphism
-`ι : ℂ → ℂ_l`. -/
-lemma AutChar.HasWeight.norm_apply_detFin_eq_one {ι : ℂ →+* ℂ_[l]} {g : Gf E n} {a : AutChar E}
-    {e : NumberField.InfinitePlace E → ℤ} {ψ : (w : FinPlace E) → MulChar (ResField w) ℂ}
-    {s : n → ℤˣ} [ha : a.HasWeight e ψ] (hg : g ∈ integralAbove n l) :
-    ‖ι (a.val (detFin s g))‖ = 1 := by
+`ι : ℂ → ℂ_l`.
+-/
+lemma AutChar.HasWeight.norm_apply_detFin_eq_one
+    {ι : ℂ →+* ℂ_[l]} {g : Gf E n} {a : AutChar E} {e : NumberField.InfinitePlace E → ℤ}
+    {ψ : (w : FinPlace E) → MulChar (ResField w) ℂ} {s : n → ℤˣ} [ha : a.HasWeight e ψ]
+    (hg : g ∈ integralAbove n l)
+    : ‖ι (a.val (detFin s g))‖ = 1 := by
   -- By `norm_padic_eq_prod` the norm is a product of powers of the norms of `det g` at primes above
   -- `l`, where `det g` is a unit.
-  have h_unit (τ : NumberField.InfinitePlace E) :
-      ‖adeleExtension (ι.comp (Φ τ)) (detFin s g).val.2‖ = 1 := by
+  have h_unit (τ : NumberField.InfinitePlace E)
+      : ‖adeleExtension (ι.comp (Φ τ)) (detFin s g).val.2‖ = 1 := by
     let w : FinPlace E := placeOfEmb (ι.comp (Φ τ))
     have h_val : Valued.v ((detFin s g).val.2 w) = Valued.v ((1 : 𝔸f E) w) := by
       simp [mem_intGL_iff_det.1 (hg w (natCast_mem_placeOfEmb _))]
@@ -497,12 +566,14 @@ section AdmissibleComb
 
 open Finsupp Function
 
-variable {α α' Z Z' : Type*} [AddCommGroup Z] [Module ℂ Z] [AddCommGroup Z'] [Module ℂ Z']
-  (v : α → Z)
+variable
+  {α α' Z Z' : Type*} [AddCommGroup Z] [Module ℂ Z] [AddCommGroup Z'] [Module ℂ Z'] (v : α → Z)
 
-/-- The statement that `z = ∑ r x • v x` for some finitely supported `r` with support in `A`,
+/--
+The statement that `z = ∑ r x • v x` for some finitely supported `r` with support in `A`,
 denominator `d` away from `n` and, if `p` holds, size at most `B`
-(`New.Seesaw.IsAdmissibleCoeffs`). -/
+(`New.Seesaw.IsAdmissibleCoeffs`).
+-/
 def New.Seesaw.IsAdmissibleCombination (A : Set α) (n d : ℕ) (p : Prop) (B : ℝ) (z : Z) : Prop :=
   ∃ r : α →₀ ℂ, IsAdmissibleCoeffs A n d p B r ∧ z = r.sum fun (x : α) (c : ℂ) ↦ c • v x
 
@@ -511,47 +582,63 @@ namespace New.Seesaw.IsAdmissibleCombination
 variable {v} {A : Set α} {A' : Set α'} {n d : ℕ} {p : Prop} {B : ℝ} {z : Z}
 
 open scoped Classical in
-/-- A finite sum `∑ i ∈ s, c i • v i` is an admissible combination over `s`, with denominator `d`
+/--
+A finite sum `∑ i ∈ s, c i • v i` is an admissible combination over `s`, with denominator `d`
 away from `n` and size `B` under `p`, if each `d * c i` is integral at the primes coprime to `n`
-and, if `p` holds, `∑ i ∈ s, ‖σ (c i)‖ ≤ B` for all automorphisms `σ` of `ℂ`. -/
-lemma of_sum {s : Finset α} {c : α → ℂ} (hc : ∀ i ∈ s, (d : ℂ) * c i ∈ integralAway n)
-    (hB : p → ∀ σ : ℂ ≃+* ℂ, ∑ i ∈ s, ‖σ (c i)‖ ≤ B) :
-    IsAdmissibleCombination v s n d p B (∑ i ∈ s, c i • v i) := by
+and, if `p` holds, `∑ i ∈ s, ‖σ (c i)‖ ≤ B` for all automorphisms `σ` of `ℂ`.
+-/
+lemma of_sum
+    {s : Finset α} {c : α → ℂ}
+    (hc : ∀ i ∈ s, (d : ℂ) * c i ∈ integralAway n) (hB : p → ∀ σ : ℂ ≃+* ℂ, ∑ i ∈ s, ‖σ (c i)‖ ≤ B)
+    : IsAdmissibleCombination v s n d p B (∑ i ∈ s, c i • v i) := by
   refine ⟨indicator s fun i _ ↦ c i, ⟨support_indicator_subset _ _, fun x ↦ ?_, fun hp σ ↦ ?_⟩, ?_⟩
   · by_cases hx : x ∈ s <;> simp [hx, hc]
   · exact (sum_indicator_index _ (by simp)).trans_le (hB hp σ)
   · rw [sum_indicator_index _ (by simp)]
 
-/-- A single term `c • v x` with `x ∈ A` is an admissible combination of size `1` if `d · c` is
-integral away from `n` and, under `p`, all conjugates `σ c` have absolute value at most `1`. -/
-lemma smul_single {c : ℂ} {x : α} (hx : x ∈ A) (hc_int : (d : ℂ) * c ∈ integralAway n)
-    (hc_size : p → ∀ σ : ℂ ≃+* ℂ, ‖σ c‖ ≤ 1) : IsAdmissibleCombination v A n d p 1 (c • v x) := by
+/--
+A single term `c • v x` with `x ∈ A` is an admissible combination of size `1` if `d · c` is
+integral away from `n` and, under `p`, all conjugates `σ c` have absolute value at most `1`.
+-/
+lemma smul_single
+    {c : ℂ} {x : α}
+    (hx : x ∈ A) (hc_int : (d : ℂ) * c ∈ integralAway n) (hc_size : p → ∀ σ : ℂ ≃+* ℂ, ‖σ c‖ ≤ 1)
+    : IsAdmissibleCombination v A n d p 1 (c • v x) := by
   classical
   refine ⟨.single x c, ⟨fun y hy ↦ ?_, fun y ↦ ?_, by simpa using hc_size⟩, by simp⟩
   · rwa [Finset.mem_singleton.1 (support_single_subset hy)]
   · by_cases hy : x = y <;> simp [hy, hc_int]
 
-/-- Each vector `v x` with `x ∈ A` is an admissible combination of size `1`, for any
-denominator `d`. -/
+/--
+Each vector `v x` with `x ∈ A` is an admissible combination of size `1`, for any
+denominator `d`.
+-/
 lemma single (x : α) (hx : x ∈ A) : IsAdmissibleCombination v A n d p 1 (v x) := by
   simpa using smul_single (v := v) (c := 1) hx (by simp) (by simp)
 
-/-- Substitution. Fix a natural number `n` and a proposition `p`. A vector is an admissible
+/--
+Substitution. Fix a natural number `n` and a proposition `p`. A vector is an admissible
 combination of the `v x`, `x ∈ A`, with denominator `d` and size `B` if it is a finite sum
 `∑ r x • v x` over points of `A` in which each `d * r x` is integral at the primes coprime to `n`
 and, if `p` holds, `∑ ‖σ (r x)‖ ≤ B` for all automorphisms `σ` of `ℂ`. Let `z` be such a
 combination, and let each `v x`, `x ∈ A`, be an admissible combination of the `v' y`, `y ∈ A'`, with
 denominator `d'` and size `B'`. Then `z` is an admissible combination of the `v' y`, `y ∈ A'`, with
-any denominator `e` divisible by `d d'` and any size `C` that is at least `B |B'|` if `p` holds. -/
-lemma bind {v' : α' → Z} {e : ℕ} {C : ℝ} (hz : IsAdmissibleCombination v A n d p B z) (d' : ℕ)
-    (B' : ℝ) (hv : ∀ x ∈ A, IsAdmissibleCombination v' A' n d' p B' (v x)) (hd : d * d' ∣ e)
-    (hB : p → B * |B'| ≤ C) : IsAdmissibleCombination v' A' n e p C z := by
+any denominator `e` divisible by `d d'` and any size `C` that is at least `B |B'|` if `p` holds.
+-/
+lemma bind
+    {v' : α' → Z} {e : ℕ} {C : ℝ}
+    (hz : IsAdmissibleCombination v A n d p B z)
+    (d' : ℕ) (B' : ℝ) (hv : ∀ x ∈ A, IsAdmissibleCombination v' A' n d' p B' (v x))
+    (hd : d * d' ∣ e) (hB : p → B * |B'| ≤ C)
+    : IsAdmissibleCombination v' A' n e p C z := by
   classical
   -- If `z = ∑ c x • v x` and `v x = ∑ r x y • v' y`, take the coefficients `∑ c x • r x`.
   obtain ⟨c, hc, rfl⟩ := hz
   obtain ⟨k, rfl⟩ := hd
-  have h_coeffs : ∀ x ∈ c.support, ∃ r : α' →₀ ℂ, IsAdmissibleCoeffs A' n d' p B' r ∧
-      v x = linearCombination ℂ v' r := fun x hx ↦ hv x (hc.support_subset x hx)
+  have h_coeffs
+      : ∀ x ∈ c.support, ∃ r : α' →₀ ℂ,
+        IsAdmissibleCoeffs A' n d' p B' r ∧ v x = linearCombination ℂ v' r := fun x hx ↦
+    hv x (hc.support_subset x hx)
   choose! r hr hv_eq using h_coeffs
   let t : α' →₀ ℂ := ∑ x ∈ c.support, c x • r x
   refine ⟨t, ⟨fun y hy ↦ ?_, fun y ↦ ?_, fun hp σ ↦ ?_⟩, ?_⟩
@@ -568,93 +655,124 @@ lemma bind {v' : α' → Z} {e : ℕ} {C : ℝ} (hz : IsAdmissibleCombination v 
       grw [← le_abs_self, ← (hr x hx).sum_norm_le hp σ, ← Finset.sum_filter_ne_zero, sum]
       gcongr
       simp [Finset.subset_iff]
-    calc ∑ y ∈ T, ‖σ (t y)‖
+    calc
+      ∑ y ∈ T, ‖σ (t y)‖
       _ ≤ ∑ y ∈ T, ∑ x ∈ c.support, ‖σ (c x)‖ * ‖σ (r x y)‖ :=
         T.sum_le_sum fun y _ ↦ by simpa [t] using norm_sum_le c.support fun x ↦ σ (c x * r x y)
       _ = ∑ x ∈ c.support, ‖σ (c x)‖ * ∑ y ∈ T, ‖σ (r x y)‖ := by simp [Finset.mul_sum, T.sum_comm]
       _ ≤ ∑ x ∈ c.support, ‖σ (c x)‖ * |B'| := Finset.sum_le_sum fun x hx ↦ by grw [h_size x hx]
       _ ≤ C := by grw [← Finset.sum_mul, ← hB hp, ← hc.sum_norm_le hp σ, sum]
-  · calc c.sum (fun x a ↦ a • v x)
+  · calc
+      c.sum (fun x a ↦ a • v x)
       _ = ∑ x ∈ c.support, c x • linearCombination ℂ v' (r x) :=
         Finset.sum_congr rfl fun x hx ↦ congrArg (c x • ·) (hv_eq x hx)
       _ = t.sum fun y a ↦ a • v' y := by simp only [← linearCombination_apply, t, map_sum, map_smul]
 
-/-- Substitution without loss: if each `v x`, `x ∈ A`, is an admissible combination of the `v' y`,
+/--
+Substitution without loss: if each `v x`, `x ∈ A`, is an admissible combination of the `v' y`,
 `y ∈ A'`, with denominator `1` and size `1`, then an admissible combination of the `v x` is one of
-the `v' y`, with the same denominator and size. -/
-lemma bind_one {v' : α' → Z} (hz : IsAdmissibleCombination v A n d p B z)
-    (hv : ∀ x ∈ A, IsAdmissibleCombination v' A' n 1 p 1 (v x)) :
-    IsAdmissibleCombination v' A' n d p B z :=
+the `v' y`, with the same denominator and size.
+-/
+lemma bind_one
+    {v' : α' → Z}
+    (hz : IsAdmissibleCombination v A n d p B z)
+    (hv : ∀ x ∈ A, IsAdmissibleCombination v' A' n 1 p 1 (v x))
+    : IsAdmissibleCombination v' A' n d p B z :=
   hz.bind 1 1 hv (by simp) (by simp)
 
-/-- A linear map `L` sends an admissible combination of the `v x` to one of the `L (v x)`, with the
-same coefficients. -/
-lemma map (hz : IsAdmissibleCombination v A n d p B z) (L : Z →ₗ[ℂ] Z') :
-    IsAdmissibleCombination (L ∘ v) A n d p B (L z) := by
+/--
+A linear map `L` sends an admissible combination of the `v x` to one of the `L (v x)`, with the
+same coefficients.
+-/
+lemma map (hz : IsAdmissibleCombination v A n d p B z) (L : Z →ₗ[ℂ] Z')
+    : IsAdmissibleCombination (L ∘ v) A n d p B (L z) := by
   obtain ⟨r, hr, rfl⟩ := hz
   exact ⟨r, hr, by simp [sum]⟩
 
-/-- Admissible combinations are stable under a scalar `c` that is integral away from `n` and, if
-`p` holds, has all conjugates `σ c` of absolute value at most `1`. -/
-lemma smul (hz : IsAdmissibleCombination v A n d p B z) {c : ℂ} (hc_int : c ∈ integralAway n)
-    (hc_size : p → ∀ σ : ℂ ≃+* ℂ, ‖σ c‖ ≤ 1) : IsAdmissibleCombination v A n d p B (c • z) :=
+/--
+Admissible combinations are stable under a scalar `c` that is integral away from `n` and, if
+`p` holds, has all conjugates `σ c` of absolute value at most `1`.
+-/
+lemma smul
+    (hz : IsAdmissibleCombination v A n d p B z)
+    {c : ℂ} (hc_int : c ∈ integralAway n) (hc_size : p → ∀ σ : ℂ ≃+* ℂ, ‖σ c‖ ≤ 1)
+    : IsAdmissibleCombination v A n d p B (c • z) :=
   (hz.map (LinearMap.lsmul ℂ Z c)).bind_one fun _ hx ↦
     smul_single hx (by simpa using hc_int) hc_size
 
 /-- Admissible combinations are stable under a scalar that is `0` or a root of unity. -/
-lemma smul_of_eq_zero_or_isOfFinOrder (hz : IsAdmissibleCombination v A n d p B z) {ζ : ℂ}
-    (hζ : ζ = 0 ∨ IsOfFinOrder ζ) : IsAdmissibleCombination v A n d p B (ζ • z) := by
+lemma smul_of_eq_zero_or_isOfFinOrder
+    (hz : IsAdmissibleCombination v A n d p B z) {ζ : ℂ} (hζ : ζ = 0 ∨ IsOfFinOrder ζ)
+    : IsAdmissibleCombination v A n d p B (ζ • z) := by
   obtain rfl | hζ := hζ
   · exact hz.smul (zero_mem _) (by simp)
   · -- Every ring homomorphism sends a root of unity to a root of unity, which has norm `1`.
-    exact hz.smul (fun l _ _ ι ↦ (ι.toMonoidHom.isOfFinOrder hζ).norm_eq_one.le)
+    exact hz.smul
+      (fun l _ _ ι ↦ (ι.toMonoidHom.isOfFinOrder hζ).norm_eq_one.le)
       fun _ σ ↦ (σ.toMonoidHom.isOfFinOrder hζ).norm_eq_one.le
 
-/-- If each `v x`, `x ∈ A`, is a root of unity times some `v' y`, `y ∈ A'`, then an admissible
-combination of the `v x` is one of the `v' y`, with the same denominator and size. -/
-lemma of_eq_isOfFinOrder_smul {v' : α' → Z} (hz : IsAdmissibleCombination v A n d p B z)
-    (hv : ∀ x ∈ A, ∃ ζ : ℂ, IsOfFinOrder ζ ∧ ∃ y ∈ A', v x = ζ • v' y) :
-    IsAdmissibleCombination v' A' n d p B z := by
+/--
+If each `v x`, `x ∈ A`, is a root of unity times some `v' y`, `y ∈ A'`, then an admissible
+combination of the `v x` is one of the `v' y`, with the same denominator and size.
+-/
+lemma of_eq_isOfFinOrder_smul
+    {v' : α' → Z}
+    (hz : IsAdmissibleCombination v A n d p B z)
+    (hv : ∀ x ∈ A, ∃ ζ : ℂ, IsOfFinOrder ζ ∧ ∃ y ∈ A', v x = ζ • v' y)
+    : IsAdmissibleCombination v' A' n d p B z := by
   refine hz.bind_one fun x hx ↦ ?_
   obtain ⟨ζ, hζ, y, hy, hxy⟩ := hv x hx
   simpa only [hxy] using (single y hy).smul_of_eq_zero_or_isOfFinOrder (.inr hζ)
 
-/-- Fix a natural number `n` and a proposition `p`. A vector is an admissible combination of the
+/--
+Fix a natural number `n` and a proposition `p`. A vector is an admissible combination of the
 `v x`, `x ∈ A`, with denominator `d` and size `B` if it is a finite sum `∑ r x • v x` over points of
 `A` in which each `d * r x` is integral at the primes coprime to `n` and, if `p` holds,
 `∑ ‖σ (r x)‖ ≤ B` for all automorphisms `σ` of `ℂ`. Let `z` be such a combination, and let `z'` be
 one of the `v' y`, `y ∈ A'`, with denominator `d'` and size `B'`. For a bilinear map `b`, the value
 `b z z'` is an admissible combination of the `b (v x) (v' y)`, `(x, y) ∈ A × A'`, with denominator
-`d d'` and size `B |B'|`. -/
-lemma map_bilinear {v' : α' → Z'} {d' : ℕ} {B' : ℝ} {z' : Z'}
-    (hz : IsAdmissibleCombination v A n d p B z) {W : Type*} [AddCommGroup W] [Module ℂ W]
-    (b : Z →ₗ[ℂ] Z' →ₗ[ℂ] W) (hz' : IsAdmissibleCombination v' A' n d' p B' z') :
-    IsAdmissibleCombination (fun x : α × α' ↦ b (v x.1) (v' x.2)) (A ×ˢ A') n (d * d') p (B * |B'|)
-      (b z z') := by
+`d d'` and size `B |B'|`.
+-/
+lemma map_bilinear
+    {v' : α' → Z'} {d' : ℕ} {B' : ℝ} {z' : Z'}
+    (hz : IsAdmissibleCombination v A n d p B z)
+    {W : Type*} [AddCommGroup W] [Module ℂ W]
+    (b : Z →ₗ[ℂ] Z' →ₗ[ℂ] W) (hz' : IsAdmissibleCombination v' A' n d' p B' z')
+    : IsAdmissibleCombination
+      (fun x : α × α' ↦ b (v x.1) (v' x.2))
+      (A ×ˢ A') n (d * d') p (B * |B'|) (b z z') := by
   -- Expand `z` in the first variable, then `z'` in the second.
   have h_left : IsAdmissibleCombination (fun x ↦ b (v x) z') A n d p B (b z z') :=
     hz.map (b.flip z')
   refine h_left.bind d' B' (fun x hx ↦ ?_) dvd_rfl fun _ ↦ le_rfl
   exact (hz'.map (b (v x))).bind_one fun y hy ↦ single (x, y) ⟨hx, hy⟩
 
-/-- Let `z` be an admissible combination of the `v x`, `x ∈ A`, with denominator `d` away from `n`,
+/--
+Let `z` be an admissible combination of the `v x`, `x ∈ A`, with denominator `d` away from `n`,
 and let `l` be a prime coprime to `n`. Then `d z` lies in every module `M` that contains these `v x`
 over `New.embValRing`, the ring of complex numbers whose image under the chosen homomorphism
-`ιₚ : ℂ → ℂ_l` is integral. -/
-lemma smul_mem (hz : IsAdmissibleCombination v A n d p B z) {l : ℕ} [Fact l.Prime] [PadicPlace l]
-    (hl : l.Coprime n) {M : Submodule embValRing Z} (hv : ∀ x ∈ A, v x ∈ M) : (d : ℂ) • z ∈ M := by
+`ιₚ : ℂ → ℂ_l` is integral.
+-/
+lemma smul_mem
+    (hz : IsAdmissibleCombination v A n d p B z)
+    {l : ℕ} [Fact l.Prime] [PadicPlace l]
+    (hl : l.Coprime n)
+    {M : Submodule embValRing Z} (hv : ∀ x ∈ A, v x ∈ M)
+    : (d : ℂ) • z ∈ M := by
   obtain ⟨r, hr, rfl⟩ := hz
   simp only [smul_sum, smul_smul]
   exact sum_mem fun x hx ↦
     M.smul_mem ⟨d * r x, hr.integral x l hl ιₚ⟩ (hv x (hr.support_subset x hx))
 
-/-- Let `d ≠ 0` and let `z` be an admissible combination of the `C • v x`, `x ∈ A`, with denominator
+/--
+Let `d ≠ 0` and let `z` be an admissible combination of the `C • v x`, `x ∈ A`, with denominator
 `d` and size `B`. Then `a • z`, multiplied by `normUnit (a * C / d)` (which is `d / (a C)`, or `1`
 if `a C = 0`), is an admissible combination of the `v x`, `x ∈ A`, with denominator `1` and size
-`d B`. -/
-lemma normUnit_smul {C : ℂ} (a : ℂ) (hd : d ≠ 0)
-    (hz : IsAdmissibleCombination (fun x : α ↦ C • v x) A n d p B z) :
-    IsAdmissibleCombination v A n 1 p (d * B) ((normUnit (a * C / d)).val • a • z) := by
+`d B`.
+-/
+lemma normUnit_smul
+    {C : ℂ} (a : ℂ) (hd : d ≠ 0) (hz : IsAdmissibleCombination (fun x : α ↦ C • v x) A n d p B z)
+    : IsAdmissibleCombination v A n 1 p (d * B) ((normUnit (a * C / d)).val • a • z) := by
   -- If `z` has coefficients `r`, the rescaled vector is `0` when `a * C = 0`, and otherwise the
   -- combination of the `v x` with coefficients `d • r`.
   obtain ⟨r, ⟨h_supp, h_int, h_size⟩, rfl⟩ := hz
@@ -664,8 +782,9 @@ lemma normUnit_smul {C : ℂ} (a : ℂ) (hd : d ≠ 0)
     · simpa using h_int x
     · simpa [sum_smul_index', ← mul_sum, hd.pos] using h_size hp σ
     · simp [z₀, sum_smul_index', smul_sum, smul_smul]
-  have h_vec : (normUnit (a * C / d)).val • a • (r.sum fun x c ↦ c • C • v x) =
-      ((normUnit (a * C / d)).val * (a * C)) • z₀ := by
+  have h_vec
+      : (normUnit (a * C / d)).val • a • (r.sum fun x c ↦ c • C • v x)
+        = ((normUnit (a * C / d)).val * (a * C)) • z₀ := by
     simp [z₀, smul_sum, smul_smul, mul_comm, mul_left_comm, mul_assoc]
   rw [h_vec]
   by_cases haC : a * C = 0
@@ -677,20 +796,24 @@ end New.Seesaw.IsAdmissibleCombination
 end AdmissibleComb
 
 open Function in
-/-- Fix a natural number `n` and a proposition `p`. A vector is an admissible combination of vectors
+/--
+Fix a natural number `n` and a proposition `p`. A vector is an admissible combination of vectors
 `w x`, over a set of indices `x`, with denominator `d` and size `B` if it is a finite sum
 `∑ r x • w x` over that set in which each `d * r x` is integral at the primes coprime to `n` and, if
 `p` holds, `∑ ‖σ (r x)‖ ≤ B` for all automorphisms `σ` of `ℂ`. Let each `f i`, `i < m`, be such a
 combination of the vectors `v i (s, t)` with `s ∈ A (2 i)` and `t ∈ A (2 i + 1)`. Then the pure
 tensor `f (m - 1) ⊗ ⋯ ⊗ f 0` is an admissible combination, over the families `y` with all
 `y j ∈ A j`, of the pure tensors of the `v i (y (2 i), y (2 i + 1))`, with denominator `d ^ m` and
-size `|B| ^ m`. -/
-lemma New.Seesaw.IsAdmissibleCombination.pure {n : ℕ} {p : Prop} {α : ℕ → Type*} {F : ℕ → Type}
+size `|B| ^ m`.
+-/
+lemma New.Seesaw.IsAdmissibleCombination.pure
+    {n : ℕ} {p : Prop} {α : ℕ → Type*} {F : ℕ → Type}
     [∀ j : ℕ, AddGroup (α j)] [∀ j : ℕ, AddCommGroup (F j)] [∀ j : ℕ, Module ℂ (F j)]
     {v : ∀ i : ℕ, α (2 * i) × α (2 * i + 1) → F i} {A : ∀ j : ℕ, AddSubgroup (α j)}
-    {f : ∀ i : ℕ, F i} (d : ℕ) (B : ℝ) (m : ℕ)
-    (hf : ∀ i < m, IsAdmissibleCombination (v i) (A (2 * i) ×ˢ A (2 * i + 1)) n d p B (f i)) :
-    IsAdmissibleCombination
+    {f : ∀ i : ℕ, F i}
+    (d : ℕ) (B : ℝ) (m : ℕ)
+    (hf : ∀ i < m, IsAdmissibleCombination (v i) (A (2 * i) ×ˢ A (2 * i + 1)) n d p B (f i))
+    : IsAdmissibleCombination
       (fun y : ∀ j : ℕ, α j ↦ TensorChain.pure (fun i : ℕ ↦ v i (y (2 * i), y (2 * i + 1))) m)
       {y : (j : ℕ) → α j | ∀ j : ℕ, y j ∈ A j} n (d ^ m) p (|B| ^ m) (TensorChain.pure f m) := by
   induction m with
@@ -728,7 +851,8 @@ section MovedVacuumComb
 
 open Matrix Complex AddSubgroup Finset
 
-/-- Let `E` be a CM field with Weil data, `V` a hermitian space over `E` with coordinates `n` and
+/--
+Let `E` be a CM field with Weil data, `V` a hermitian space over `E` with coordinates `n` and
 signs `s`, and `ω` its Weil representation. Let `g` be a finite adelic unitary matrix, and factor as
 `c * C` its multiplier `finMultiplier g = υ(det u) |det u|^(-1/2)`, with `υ` the splitting character
 of the Weil data and `u Ôⁿ = Ôⁿ ∩ g⁻¹ Ôⁿ`. Translate the vacuum `vacElem` by `x`, with the
@@ -736,15 +860,19 @@ Heisenberg operator `finHeisenbergOp x`, and apply `ω (1, g)`. The result is a 
 `∑ r y • C • finHeisenbergOp y vacElem` over `y` in `A`, for any set `A` that contains all
 `g (x + z)` with `z` in the lattice `Ôⁿ`. If `d c / ‖finMultiplier g‖ ^ 2` is integral at the primes
 coprime to `q`, so is each `d * r y`. The proposition `p` is arbitrary: if under `p` all conjugates
-`σ c` have absolute value at most `1`, then under `p` all `∑ ‖σ (r y)‖ ≤ 1`. -/
-lemma New.Seesaw.isAdmissibleCombination_weil_vacElem {E n : Type} [Field E] [CMType E] [WeilData E]
-    [Fintype n] [DecidableEq n] {s : n → ℤˣ} (V : Space E n s) {q d : ℕ} {g : Gf E n} {x : n → 𝔸f E}
-    {A : Set (n → 𝔸f E)} {p : Prop} {C c : ℂ} (hcC : c * C = finMultiplier g)
+`σ c` have absolute value at most `1`, then under `p` all `∑ ‖σ (r y)‖ ≤ 1`.
+-/
+lemma New.Seesaw.isAdmissibleCombination_weil_vacElem
+    {E n : Type} [Field E] [CMType E] [WeilData E] [Fintype n] [DecidableEq n]
+    {s : n → ℤˣ} (V : Space E n s)
+    {q d : ℕ} {g : Gf E n} {x : n → 𝔸f E} {A : Set (n → 𝔸f E)} {p : Prop} {C c : ℂ}
+    (hcC : c * C = finMultiplier g)
     (h_mem : ∀ z ∈ stdLattice E n, (g : Matrix n n (𝔸f E)) *ᵥ (x + z) ∈ A)
     (h_int : (d : ℂ) * (c / (‖finMultiplier g‖ : ℂ) ^ 2) ∈ integralAway q)
-    (h_size : p → ∀ σ : ℂ ≃+* ℂ, ‖σ c‖ ≤ 1) :
-    IsAdmissibleCombination (fun y : n → 𝔸f E ↦ C • V.finHeisenbergOp y V.vacElem) A q d p 1
-      (V.ω (1, g) (V.finHeisenbergOp x V.vacElem)) := by
+    (h_size : p → ∀ σ : ℂ ≃+* ℂ, ‖σ c‖ ≤ 1)
+    : IsAdmissibleCombination
+      (fun y : n → 𝔸f E ↦ C • V.finHeisenbergOp y V.vacElem)
+      A q d p 1 (V.ω (1, g) (V.finHeisenbergOp x V.vacElem)) := by
   -- Let `H` be the group of lattice vectors that `g` keeps in the lattice. Its index is
   -- `‖finMultiplier g‖ ^ 2`, and `ω g vacElem` is a multiple of the sum of the translates of
   -- `vacElem` by `g z`, over representatives `z` of the classes modulo `H`.
@@ -758,8 +886,9 @@ lemma New.Seesaw.isAdmissibleCombination_weil_vacElem {E n : Type} [Field E] [CM
   let ζ (z : L ⧸ H) : ℂ :=
     stdLattice.selfDualAddChar E (star stdLattice.traceOneAdele * star (M *ᵥ z.out) ⬝ᵥ M *ᵥ x)
   set a : ℂ := c / (‖finMultiplier g‖ : ℂ) ^ 2 with ha
-  have h_sum : V.ω (1, g) (V.finHeisenbergOp x V.vacElem) =
-      ∑ z : L ⧸ H, a • ζ z • C • V.finHeisenbergOp (M *ᵥ (x + z.out)) V.vacElem := by
+  have h_sum
+      : V.ω (1, g) (V.finHeisenbergOp x V.vacElem)
+        = ∑ z : L ⧸ H, a • ζ z • C • V.finHeisenbergOp (M *ᵥ (x + z.out)) V.vacElem := by
     rw [V.omega_finHeisenbergOp, V.omega_vacElem_sum, finsum_eq_sum_of_fintype, map_smul, map_sum,
       smul_sum]
     refine sum_congr rfl fun z _ ↦ ?_
@@ -767,9 +896,9 @@ lemma New.Seesaw.isAdmissibleCombination_weil_vacElem {E n : Type} [Field E] [CM
       div_mul_eq_mul_div c, hcC]
   -- There are `‖finMultiplier g‖ ^ 2` terms, so the absolute sum of the coefficients is `‖σ c‖`.
   have h_total (hp : p) (σ : ℂ ≃+* ℂ) : ∑ _z : L ⧸ H, ‖σ a‖ ≤ 1 := by
-    calc ∑ _z : L ⧸ H, ‖σ a‖
-        = H.index * (‖σ c‖ / H.index) := by
-          simp [ha, ← ofReal_pow, h_index, ← Nat.card_eq_fintype_card, ← H.index_eq_card]
+    calc
+      ∑ _z : L ⧸ H, ‖σ a‖ = H.index * (‖σ c‖ / H.index) := by
+        simp [ha, ← ofReal_pow, h_index, ← Nat.card_eq_fintype_card, ← H.index_eq_card]
       _ = ‖σ c‖ := mul_div_cancel₀ _ (Nat.cast_ne_zero.2 h_index_ne)
       _ ≤ 1 := h_size hp σ
   have h_comb : IsAdmissibleCombination
@@ -794,12 +923,14 @@ open Ideal Fintype NumberField Modulus
 
 variable {E n : Type} [Field E] [CMType E] [Fintype n] [DecidableEq n]
 
-/-- Let `𝔪` be a modulus of `E` (a nonzero ideal of `𝓞 E` prime to its conjugate) that divides
+/--
+Let `𝔪` be a modulus of `E` (a nonzero ideal of `𝓞 E` prime to its conjugate) that divides
 `g q`, for `g` in `𝓞 E` and a natural number `q`. Then the number of vectors over `𝓞 E / 𝔪` divides
-a power of `q` times `N(g) ^ card n`, where `N(g)` is the absolute norm of the ideal `(g)`. -/
-lemma card_residueRing_pi_dvd {g : 𝓞 E} {q : ℕ} (𝔪 : Modulus E) (hg : g * q ∈ 𝔪.ideal) :
-    card (n → 𝔪.ResidueRing) ∣
-      absNorm (span {g}) ^ card n * q ^ (Module.finrank ℤ (𝓞 E) * card n) := by
+a power of `q` times `N(g) ^ card n`, where `N(g)` is the absolute norm of the ideal `(g)`.
+-/
+lemma card_residueRing_pi_dvd {g : 𝓞 E} {q : ℕ} (𝔪 : Modulus E) (hg : g * q ∈ 𝔪.ideal)
+    : card (n → 𝔪.ResidueRing)
+      ∣ absNorm (span {g}) ^ card n * q ^ (Module.finrank ℤ (𝓞 E) * card n) := by
   have h_norm : absNorm (span {g * q}) = absNorm (span {g}) * q ^ Module.finrank ℤ (𝓞 E) := by
     rw [← span_singleton_mul_span_singleton, map_mul, absNorm_span_natCast]
   have h_card : card 𝔪.ResidueRing = absNorm 𝔪.ideal := by
@@ -808,16 +939,18 @@ lemma card_residueRing_pi_dvd {g : 𝓞 E} {q : ℕ} (𝔪 : Modulus E) (hg : g 
   exact pow_dvd_pow_of_dvd (map_dvd absNorm (dvd_span_singleton.2 hg)) (card n)
 
 omit [Fintype n] [DecidableEq n] in
-/-- Let `𝔪` be a modulus of the CM field `E`, with `𝔪.places` the primes dividing it,
+/--
+Let `𝔪` be a modulus of the CM field `E`, with `𝔪.places` the primes dividing it,
 `𝔪.reduction : Ô → 𝓞 E / 𝔪` the reduction of integral finite adeles and `𝔪.generator` a chosen
 finite idele generating its kernel. Divide a vector `z` of integral finite adeles by `𝔪.generator`,
 set the components outside `𝔪.places` to `0` (multiplication by the idempotent `idem 𝔪.places`), and
 apply complex conjugation `star`. If `d q ≡ 0` modulo `𝔪`, the result times `star d` is integral at
-all places not dividing `q`. -/
-lemma star_idem_smul_mem_translations {q : ℕ} (𝔪 : Modulus E) {d : Ô E}
-    (hd : 𝔪.reduction (d * q) = 0) (z : n → Ô E) :
-    star (idem 𝔪.places • (↑𝔪.generator⁻¹ : 𝔸f E) • (↑) ∘ z : n → 𝔸f E) ∈
-      translations n q (star (d : 𝔸f E)) := by
+all places not dividing `q`.
+-/
+lemma star_idem_smul_mem_translations
+    {q : ℕ} (𝔪 : Modulus E) {d : Ô E} (hd : 𝔪.reduction (d * q) = 0) (z : n → Ô E)
+    : star (idem 𝔪.places • (↑𝔪.generator⁻¹ : 𝔸f E) • (↑) ∘ z : n → 𝔸f E)
+      ∈ translations n q (star (d : 𝔸f E)) := by
   intro i w hw
   have h_dq : (↑𝔪.generator⁻¹ : 𝔸f E) * (d * q) ∈ Ô E := by
     simpa using (𝔪.reduction_eq_zero_iff_generator_inv_mul_mem (d * q)).1 hd
@@ -830,10 +963,13 @@ lemma star_idem_smul_mem_translations {q : ℕ} (𝔪 : Modulus E) {d : Ô E}
   have h_int : q * t ∈ Ô E := by
     simpa only [h_eq] using star_mem_Ô (mul_mem (idem_mem_Ô _) (mul_mem h_dq (z i).2))
   have h_unit : Valued.v ((q : 𝔸f E) w) = 1 := by simpa using v_algebraMap_eq_one hw
-  calc Valued.v (t w) = Valued.v ((q : 𝔸f E) w * t w) := by rw [map_mul, h_unit, one_mul]
+  calc
+    Valued.v (t w)
+      = Valued.v ((q : 𝔸f E) w * t w) := by rw [map_mul, h_unit, one_mul]
     _ ≤ 1 := mem_Ô.1 h_int w
 
-/-- Let `E` be a CM field with Weil data (the choices that fix the Weil representation), `V` a
+/--
+Let `E` be a CM field with Weil data (the choices that fix the Weil representation), `V` a
 hermitian space over `E` with coordinates `n` and signs `s`, and `𝒮 V` the space of its Weil
 representation, on which a finite adelic vector `y` acts by the Heisenberg operator
 `finHeisenbergOp y`. Let the modulus `𝔪` divide `g q` and `d q`. Let `v` be the image of `u` under
@@ -843,16 +979,21 @@ away from `q`, read on finite adelic vectors by `liftFn`. The operator `V.schrod
 it sends `u` to a finite sum `∑ r y • finHeisenbergOp y v` over vectors `y` with `star d • y`
 integral away from `q`. Each `N(g) ^ card n * r y` is integral away from `q`, with `N(g)` the
 absolute norm of `(g)`. If under the proposition `p` all `∑ ‖σ (Ψ x)‖ ≤ B`, for the automorphisms
-`σ` of `ℂ`, then under `p` all `∑ ‖σ (r y)‖ ≤ B`. -/
-lemma isAdmissibleCombination_schrodingerOp_of_reduction {g : 𝓞 E} {q : ℕ} [WeilData E]
-    {s : n → ℤˣ} (V : Space E n s) (𝔪 : Modulus E) {Ψ : (n → 𝔪.ResidueRing) → ℂ} {p : Prop}
-    {B : ℝ} {u v : 𝒮 V} (hg : g * q ∈ 𝔪.ideal)
-    (hΨ_int : ∀ x : n → 𝔪.ResidueRing, Ψ x ∈ integralAway q)
+`σ` of `ℂ`, then under `p` all `∑ ‖σ (r y)‖ ≤ B`.
+-/
+lemma isAdmissibleCombination_schrodingerOp_of_reduction
+    {g : 𝓞 E} {q : ℕ} [WeilData E]
+    {s : n → ℤˣ} (V : Space E n s)
+    (𝔪 : Modulus E)
+    {Ψ : (n → 𝔪.ResidueRing) → ℂ} {p : Prop} {B : ℝ} {u v : 𝒮 V}
+    (hg : g * q ∈ 𝔪.ideal) (hΨ_int : ∀ x : n → 𝔪.ResidueRing, Ψ x ∈ integralAway q)
     (hΨ_size : p → ∀ σ : ℂ ≃+* ℂ, ∑ x : n → 𝔪.ResidueRing, ‖σ (Ψ x)‖ ≤ B)
-    (huv : V.projOn 𝔪.places u = v) {d : Ô E} (hd : 𝔪.reduction (d * q) = 0) :
-    IsAdmissibleCombination (fun y : n → 𝔸f E ↦ V.finHeisenbergOp y v)
-      (translations n q (star (d : 𝔸f E))) q
-      (absNorm (span {g}) ^ card n) p B (V.schrodingerOp 𝔪.places (𝔪.liftFn Ψ) u) := by
+    (huv : V.projOn 𝔪.places u = v)
+    {d : Ô E} (hd : 𝔪.reduction (d * q) = 0)
+    : IsAdmissibleCombination
+      (fun y : n → 𝔸f E ↦ V.finHeisenbergOp y v)
+      (translations n q (star (d : 𝔸f E))) q (absNorm (span {g}) ^ card n) p B
+      (V.schrodingerOp 𝔪.places (𝔪.liftFn Ψ) u) := by
   -- Expand `Ψ` in indicators of points. The vector `δ a` given by the indicator of `a` is a mean
   -- of roots of unity times translates of `v` (`schrodingerOp_single_eq_mean_translate_projOn`).
   obtain ⟨z, hz⟩ : ∃ z : (n → 𝔪.ResidueRing) → n → Ô E, ∀ b, 𝔪.reduction ∘ z b = b :=
@@ -868,9 +1009,9 @@ lemma isAdmissibleCombination_schrodingerOp_of_reduction {g : 𝓞 E} {q : ℕ} 
   let c : ℂ := (card (n → 𝔪.ResidueRing) : ℂ)⁻¹
   have hc_int : ↑(absNorm (span {g}) ^ card n) * c ∈ integralAway q :=
     div_mem_integralAway (card_residueRing_pi_dvd 𝔪 hg)
-  have h_point (a : n → 𝔪.ResidueRing) :
-      IsAdmissibleCombination (fun y ↦ V.finHeisenbergOp y v) (translations n q (star (d : 𝔸f E))) q
-        (absNorm (span {g}) ^ card n) p 1 (δ a) := by
+  have h_point (a : n → 𝔪.ResidueRing) : IsAdmissibleCombination
+      (fun y ↦ V.finHeisenbergOp y v)
+      (translations n q (star (d : 𝔸f E))) q (absNorm (span {g}) ^ card n) p 1 (δ a) := by
     let w (b : n → 𝔪.ResidueRing) : 𝒮 V := 𝔪.primAddChar (-a ⬝ᵥ b) • V.finHeisenbergOp (y b) v
     have h_mean : δ a = ∑ b : n → 𝔪.ResidueRing, c • w b := by
       simp only [δ, c, w, y, 𝔪.schrodingerOp_single_eq_mean_translate_projOn V u a hz, huv]
@@ -887,7 +1028,8 @@ lemma isAdmissibleCombination_schrodingerOp_of_reduction {g : 𝓞 E} {q : ℕ} 
     simpa only [h_sum] using .of_sum (by simpa using fun a ↦ hΨ_int a) hΨ_size
   exact h_comb.bind _ 1 (fun a _ ↦ h_point a) (by simp) (by simp)
 
-/-- The case `d = g` of `isAdmissibleCombination_schrodingerOp_of_reduction`. Let `V` be a hermitian
+/--
+The case `d = g` of `isAdmissibleCombination_schrodingerOp_of_reduction`. Let `V` be a hermitian
 space over the CM field `E`, `u` a vector of its Weil representation `𝒮 V`, and `𝔪` a modulus that
 divides `g q`. Let `v` be the mean `projOn 𝔪.places u` of the Heisenberg translates
 `finHeisenbergOp y u` over the integral `y` supported at the primes dividing `𝔪` and their
@@ -895,15 +1037,20 @@ conjugates. Let `Ψ` be a function on vectors modulo `𝔪` with values integral
 operator `V.schrodingerOp` attached to `Ψ` sends `u` to a finite sum `∑ r y • finHeisenbergOp y v`
 over vectors `y` with `star g • y` integral away from `q`, and each `N(g) ^ card n * r y` is
 integral away from `q`, with `N(g)` the absolute norm of `(g)`. If under the proposition `p` all
-`∑ ‖σ (Ψ x)‖ ≤ B`, for the automorphisms `σ` of `ℂ`, then under `p` all `∑ ‖σ (r y)‖ ≤ B`. -/
-lemma isAdmissibleCombination_schrodingerOp {g : 𝓞 E} {q : ℕ} [WeilData E] {s : n → ℤˣ}
-    (V : Space E n s) (𝔪 : Modulus E) {Ψ : (n → 𝔪.ResidueRing) → ℂ} {p : Prop} {B : ℝ} {u v : 𝒮 V}
+`∑ ‖σ (Ψ x)‖ ≤ B`, for the automorphisms `σ` of `ℂ`, then under `p` all `∑ ‖σ (r y)‖ ≤ B`.
+-/
+lemma isAdmissibleCombination_schrodingerOp
+    {g : 𝓞 E} {q : ℕ} [WeilData E]
+    {s : n → ℤˣ} (V : Space E n s)
+    (𝔪 : Modulus E)
+    {Ψ : (n → 𝔪.ResidueRing) → ℂ} {p : Prop} {B : ℝ} {u v : 𝒮 V}
     (hg : g * q ∈ 𝔪.ideal) (hΨ_int : ∀ x : n → 𝔪.ResidueRing, Ψ x ∈ integralAway q)
     (hΨ_size : p → ∀ σ : ℂ ≃+* ℂ, ∑ x : n → 𝔪.ResidueRing, ‖σ (Ψ x)‖ ≤ B)
-    (huv : V.projOn 𝔪.places u = v) :
-    IsAdmissibleCombination (fun y : n → 𝔸f E ↦ V.finHeisenbergOp y v)
-      (translations n q (star (algebraMap (𝓞 E) (Ô E) g : 𝔸f E))) q
-      (absNorm (span {g}) ^ card n) p B (V.schrodingerOp 𝔪.places (𝔪.liftFn Ψ) u) :=
+    (huv : V.projOn 𝔪.places u = v)
+    : IsAdmissibleCombination
+      (fun y : n → 𝔸f E ↦ V.finHeisenbergOp y v)
+      (translations n q (star (algebraMap (𝓞 E) (Ô E) g : 𝔸f E))) q (absNorm (span {g}) ^ card n) p
+      B (V.schrodingerOp 𝔪.places (𝔪.liftFn Ψ) u) :=
   isAdmissibleCombination_schrodingerOp_of_reduction V 𝔪 hg hΨ_int hΨ_size huv
     (by simpa using Quotient.eq_zero_iff_mem.2 hg)
 

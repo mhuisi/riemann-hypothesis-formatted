@@ -68,20 +68,22 @@ variable {n R : Type*} [Fintype n] [DecidableEq n] [CommRing R] (σ : Perm n) {O
 
 /-! ### Permutation matrices and residues -/
 
-/-- The homomorphism sending a permutation σ to the permutation matrix in GL_n(R) that maps e_i
-to e_{σ(i)}. -/
+/--
+The homomorphism sending a permutation σ to the permutation matrix in GL_n(R) that maps e_i
+to e_{σ(i)}.
+-/
 abbrev permGL : Perm n →* GL n R := permMatrixHom.toHomUnits
 
 lemma permGL_mem_intGL : permGL σ ∈ intGL n O := ⟨permGL σ, by aesop⟩
 
-lemma diagGL_mul_permGL (t : n → Rˣ) (σ : Perm n) :
-    diagGL t * permGL σ = permGL σ * diagGL (t ∘ σ) := by
+lemma diagGL_mul_permGL (t : n → Rˣ) (σ : Perm n)
+    : diagGL t * permGL σ = permGL σ * diagGL (t ∘ σ) := by
   aesop
 
 variable {i j : n} (hij : i ≠ j) {F : Type*} [Field F] [Valued F ℤᵐ⁰]
 
-lemma permGL_mul_transvectionGL (hij : i ≠ j) (a : R) :
-    permGL σ * transvectionGL hij a = transvectionGL (σ.injective.ne hij) a * permGL σ := by
+lemma permGL_mul_transvectionGL (hij : i ≠ j) (a : R)
+    : permGL σ * transvectionGL hij a = transvectionGL (σ.injective.ne hij) a * permGL σ := by
   aesop (add simp [Perm.inv_def, transvection, Matrix.single, toMatrix_mul_apply, Matrix.one_apply,
     mul_toMatrix_toPEquiv])
 
@@ -93,8 +95,8 @@ lemma residue_eq_zero_iff_valuation_lt_one {a : 𝒪[F]} : residue 𝒪[F] a = 0
   residue_eq_iff_valuation_sub_lt_one.trans (by simp)
 
 @[local simp]
-lemma residue_eq_one_iff_valuation_sub_one_lt_one {a : 𝒪[F]} :
-    residue 𝒪[F] a = 1 ↔ v (a.val - 1) < 1 :=
+lemma residue_eq_one_iff_valuation_sub_one_lt_one {a : 𝒪[F]}
+    : residue 𝒪[F] a = 1 ↔ v (a.val - 1) < 1 :=
   residue_eq_iff_valuation_sub_lt_one
 
 variable {g : GL n F} [CompactSpace 𝒪[F]] (P : GL n F → Prop) [LinearOrder n]
@@ -106,13 +108,16 @@ instance : Finite 𝓀[F] := by
 
 /-! ### Parahoric and pro-`p` Iwahori subgroups -/
 
-/-- Let `H` be a subgroup of `GL_n` of the residue field, and let `P` be a property of matrices
+/--
+Let `H` be a subgroup of `GL_n` of the residue field, and let `P` be a property of matrices
 that on `GL_n(𝒪)` says exactly that the reduction modulo the maximal ideal lies in `H`
 (hypothesis `e`). This is the open subgroup of the `g` in `GL_n(𝒪)` with `P g`, that is, the
-preimage of `H` under reduction. -/
-def residuePreimage (H : Subgroup (GL n (IsLocalRing.ResidueField 𝒪[F])))
-    (e : ∀ k : intGL n 𝒪[F], intGL.map (residue 𝒪[F]) k ∈ H ↔ P k) :
-    OpenSubgroup (GL n F) where
+preimage of `H` under reduction.
+-/
+def residuePreimage
+    (H : Subgroup (GL n (IsLocalRing.ResidueField 𝒪[F])))
+    (e : ∀ k : intGL n 𝒪[F], intGL.map (residue 𝒪[F]) k ∈ H ↔ P k)
+    : OpenSubgroup (GL n F) where
   toSubgroup :=
     ((H.comap (intGL.map (residue 𝒪[F]))).map (intGL n 𝒪[F]).subtype).copy {g ∈ intGL n 𝒪[F] | P g}
       (by aesop)
@@ -124,16 +129,20 @@ def residuePreimage (H : Subgroup (GL n (IsLocalRing.ResidueField 𝒪[F])))
       -- after unfolding, hence `using!`.
       simpa using! isOpen_ball F 1
     refine Subgroup.isOpen_mono (H₁ := congruenceGL (v.ltSubmodule 1) id)
-      (fun g ⟨hg_int, hg_cong⟩ ↦ ?_) (isOpen_congruenceGL (isOpen_integer F) h_ball_open)
+      (fun g ⟨hg_int, hg_cong⟩ ↦ ?_)
+      (isOpen_congruenceGL (isOpen_integer F) h_ball_open)
     have h_residue : intGL.map (residue 𝒪[F]) ⟨g, hg_int⟩ = 1 := by
       -- `-map_sub` keeps the residue of `g i j - 1 i j` as one residue, as in `hg_cong`
       simpa [intGL.map_eq_one, -_root_.map_sub] using hg_cong
     exact ⟨hg_int, (e ⟨g, hg_int⟩).mp (by simp only [h_residue, one_mem])⟩
 
-/-- For a level function `b` on the indices, the parahoric subgroup of the `g` in `GL_N(𝒪)` whose
-entry `g i j` lies in the maximal ideal (`v (g i j) < 1`) whenever `b j < b i`. -/
+/--
+For a level function `b` on the indices, the parahoric subgroup of the `g` in `GL_N(𝒪)` whose
+entry `g i j` lies in the maximal ideal (`v (g i j) < 1`) whenever `b j < b i`.
+-/
 def blockParahoric {N : ℕ} (b : ℕ → ℕ) : Subgroup (GL (Fin N) F) :=
-  (residuePreimage (fun g : GL (Fin N) F ↦ ∀ i j : Fin N, b j < b i → v (g i j) < 1)
+  (residuePreimage
+    (fun g : GL (Fin N) F ↦ ∀ i j : Fin N, b j < b i → v (g i j) < 1)
     (parabolic fun i : Fin N ↦ b i.1) (by simp [parabolic, BlockTriangular])).toSubgroup
 
 /-- Dominant elements of the diagonal torus: the `t` with `v (t i) ≤ v (t j)` for `i ≤ j`. -/
@@ -145,11 +154,14 @@ def dominantTorus : Submonoid (n → Fˣ) where
 variable {P} (ρ : Rep ℂ (GL n F)) [IsSmoothRep ρ.ρ] (ξ : (n → Fˣ) →* ℂˣ) (l : ρ →ₗ[ℂ] ℂ)
 
 omit [LinearOrder n] in
-/-- The open subgroup `New.residuePreimage P H hP`, the preimage in `GL_n(𝒪)` of a subgroup `H` of
-`GL_n` of the residue field, is compact. -/
-lemma isCompact_residuePreimage {H : Subgroup (GL n (IsLocalRing.ResidueField 𝒪[F]))}
-    {hP : ∀ k : intGL n 𝒪[F], intGL.map (residue 𝒪[F]) k ∈ H ↔ P k} :
-    IsCompact (residuePreimage P H hP).carrier := by
+/--
+The open subgroup `New.residuePreimage P H hP`, the preimage in `GL_n(𝒪)` of a subgroup `H` of
+`GL_n` of the residue field, is compact.
+-/
+lemma isCompact_residuePreimage
+    {H : Subgroup (GL n (IsLocalRing.ResidueField 𝒪[F]))}
+    {hP : ∀ k : intGL n 𝒪[F], intGL.map (residue 𝒪[F]) k ∈ H ↔ P k}
+    : IsCompact (residuePreimage P H hP).carrier := by
   -- An open subgroup is closed, and this one lies in the compact group of integral matrices.
   have h_int : IsCompact (intGL n 𝒪[F] : Set (GL n F)) :=
     isCompact_intGL (isCompact_iff_compactSpace.mpr inferInstance)
@@ -159,12 +171,15 @@ lemma isCompact_residuePreimage {H : Subgroup (GL n (IsLocalRing.ResidueField �
 instance {N : ℕ} {b : ℕ → ℕ} : CompactSpace (blockParahoric (F := F) (N := N) b) :=
   isCompact_iff_compactSpace.1 isCompact_residuePreimage
 
-/-- The pro-p Iwahori subgroup I₁ of GL_n(𝒪): matrices that are upper triangular with
-ones on the diagonal modulo the maximal ideal. -/
+/--
+The pro-p Iwahori subgroup I₁ of GL_n(𝒪): matrices that are upper triangular with
+ones on the diagonal modulo the maximal ideal.
+-/
 def proIwahori : Subgroup (GL n F) :=
   (residuePreimage
     (fun g : GL n F ↦ (∀ i j : n, j < i → v (g i j) < 1) ∧ ∀ i : n, v (g i i - 1) < 1)
-    (unitriangular id (IsLocalRing.ResidueField 𝒪[F])) (by
+    (unitriangular id (IsLocalRing.ResidueField 𝒪[F]))
+    (by
       simp [apply_ite, Matrix.one_apply, mem_intGL_iff_det]
       grind)).toSubgroup
 
@@ -177,42 +192,50 @@ lemma isOpen_proIwahori : (proIwahori : Subgroup (GL n F)).IsOpen := (residuePre
 
 /-! ### Eigenforms, eigenvectors and characters of the torus -/
 
-/-- The linear form `l` is an eigenform, with eigenvalue `ξ`, of the maps
+/--
+The linear form `l` is an eigenform, with eigenvalue `ξ`, of the maps
 `x ↦ ρ(t) (mean of x over I₁)` for dominant diagonal `t`. The single equation holds two facts:
 for `t = 1` it says that `l` factors through the mean, so is I₁-invariant; for `x` fixed by
-I₁ it says `l (ρ(t) x) = ξ(t) l(x)`. -/
+I₁ it says `l (ρ(t) x) = ξ(t) l(x)`.
+-/
 abbrev IsExponent : Prop :=
-  ∀ ⦃t : n → Fˣ⦄, t ∈ dominantTorus →
-    ∀ x : ρ, l (ρ (diagGL t) (compactMean ρ.ρ proIwahori x)) = ξ t * l x
+  ∀ ⦃t : n → Fˣ⦄,
+    t ∈ dominantTorus → ∀ x : ρ, l (ρ (diagGL t) (compactMean ρ.ρ proIwahori x)) = ξ t * l x
 
-/-- `x` is a non-zero vector fixed by the pro-`p` Iwahori subgroup `I₁` with `U_t x = ξ(t) x` for
-all dominant `t`, where `U_t = (mean over I₁) ∘ ρ(t)`. -/
+/--
+`x` is a non-zero vector fixed by the pro-`p` Iwahori subgroup `I₁` with `U_t x = ξ(t) x` for
+all dominant `t`, where `U_t = (mean over I₁) ∘ ρ(t)`.
+-/
 structure IsIwahoriEigen (x : ρ) : Prop where
   /-- The vector is non-zero. -/
   ne_zero : x ≠ 0
   /-- The vector is fixed by the pro-`p` Iwahori subgroup. -/
   mem_levelSpace : x ∈ levelSpace ρ.ρ proIwahori
   /-- `U_t x = ξ(t) x` for every dominant diagonal `t`. -/
-  compactMean_eq_smul : ∀ t ∈ dominantTorus,
-    compactMean ρ.ρ proIwahori (ρ (diagGL t) x) = (ξ t).val • x
+  compactMean_eq_smul
+    : ∀ t ∈ dominantTorus, compactMean ρ.ρ proIwahori (ρ (diagGL t) x) = (ξ t).val • x
 
-/-- The normalised absolute value on F^×, as a character with complex values: x ↦ q^{−ord x}, q
-the order of the residue field. -/
+/--
+The normalised absolute value on F^×, as a character with complex values: x ↦ q^{−ord x}, q
+the order of the residue field.
+-/
 def normAbsChar : Fˣ →* ℂˣ :=
-  MonoidHom.mk' (fun x ↦ Units.mk0 (Nat.card 𝓀[F] : ℂ) NeZero.out ^ (v x.1).log)
-    (by simp [_root_.zpow_add])
+  MonoidHom.mk' (fun x ↦ Units.mk0 (Nat.card 𝓀[F] : ℂ) NeZero.out ^ (v x.1).log) (by
+    simp [_root_.zpow_add])
 
-/-- The bijection from families `(θ i)`, `0 ≤ i < N`, of characters of `Fˣ` to characters of the
+/--
+The bijection from families `(θ i)`, `0 ≤ i < N`, of characters of `Fˣ` to characters of the
 diagonal torus that sends `θ` to `t ↦ ∏ i, θ i (t i) * |t i| ^ (N - 1 - i)`, with
 `|·| = normAbsChar`: multiply `θ i` by `normAbsChar ^ (N - 1 - i)`, then take the product over `i`.
-See `torusChar_mulSingle` for the value on one coordinate. -/
+See `torusChar_mulSingle` for the value on one coordinate.
+-/
 def torusChar {N : ℕ} : (Fin N → Fˣ →* ℂˣ) ≃ ((Fin N → Fˣ) →* ℂˣ) :=
   (Equiv.mulRight fun i : Fin N ↦ normAbsChar (F := F) ^ i.rev.1).trans
     (Pi.monoidHomMulEquiv (fun _ ↦ Fˣ) (ℂˣ)).symm.toEquiv
 
 @[simp]
-lemma torusChar_mulSingle {N : ℕ} {θ : Fin N → Fˣ →* ℂˣ} (i : Fin N) (x : Fˣ) :
-    torusChar θ (Pi.mulSingle i x) = θ i x * normAbsChar x ^ i.rev.val := by
+lemma torusChar_mulSingle {N : ℕ} {θ : Fin N → Fˣ →* ℂˣ} (i : Fin N) (x : Fˣ)
+    : torusChar θ (Pi.mulSingle i x) = θ i x * normAbsChar x ^ i.rev.val := by
   simp [torusChar, Pi.monoidHomMulEquiv, Pi.mulSingle_apply, apply_ite]
 
 variable {ρ} {t t' : n → Fˣ} {x : ρ}
@@ -220,19 +243,21 @@ variable {ρ} {t t' : n → Fˣ} {x : ρ}
 /-! ### Membership in the pro-`p` Iwahori subgroup -/
 
 omit [CompactSpace 𝒪[F]] in
-/-- Let `M` be a square matrix over `F` whose entries are all integral, whose entries below the
+/--
+Let `M` be a square matrix over `F` whose entries are all integral, whose entries below the
 diagonal have valuation `< 1`, and whose diagonal entries are `≡ 1` modulo the maximal ideal. Then
 `M` is the underlying matrix of an element of `New.proIwahori`. In particular, such an `M` is
-invertible. -/
-lemma exists_proIwahori_coe_eq_of_residue_unitriangular (M : Matrix n n F)
-    (hM_int : ∀ i j : n, v (M i j) ≤ 1) (hM_below : ∀ i j : n, j < i → v (M i j) < 1)
-    (hM_diag : ∀ i : n, v (M i i - 1) < 1) :
-    ∃ g ∈ proIwahori, g.val = M := by
+invertible.
+-/
+lemma exists_proIwahori_coe_eq_of_residue_unitriangular
+    (M : Matrix n n F) (hM_int : ∀ i j : n, v (M i j) ≤ 1)
+    (hM_below : ∀ i j : n, j < i → v (M i j) < 1) (hM_diag : ∀ i : n, v (M i i - 1) < 1)
+    : ∃ g ∈ proIwahori, g.val = M := by
   -- Lift `M` to a matrix over `𝒪[F]`. Its reduction is upper unitriangular, so of determinant `1`,
   -- and hence the determinant of the lift is a unit.
   let M₀ : Matrix n n 𝒪[F] := of fun i j ↦ ⟨M i j, hM_int i j⟩
-  have h_residue_unitri (a b : n) (h_ba : b ≤ a) :
-      (residue 𝒪[F]).mapMatrix M₀ a b = (1 : Matrix n n 𝓀[F]) a b := by
+  have h_residue_unitri (a b : n) (h_ba : b ≤ a)
+      : (residue 𝒪[F]).mapMatrix M₀ a b = (1 : Matrix n n 𝓀[F]) a b := by
     rcases h_ba.lt_or_eq with h_lt | rfl
     · simpa [M₀, Matrix.one_apply, h_lt.ne'] using hM_below a b h_lt
     · simpa [M₀] using hM_diag b
@@ -244,23 +269,27 @@ lemma exists_proIwahori_coe_eq_of_residue_unitriangular (M : Matrix n n F)
   exact ⟨GeneralLinearGroup.map 𝒪[F].subtype k, ⟨⟨k, rfl⟩, hM_below, hM_diag⟩, rfl⟩
 
 omit [CompactSpace 𝒪[F]] in
-/-- `New.exists_proIwahori_coe_eq_of_residue_unitriangular`, with the conditions below and on the
-diagonal as one hypothesis `hM_tri`. -/
-lemma exists_proIwahori_coe_eq (M : Matrix n n F) (hM_int : ∀ i j : n, v (M i j) ≤ 1)
-    (hM_tri : (∀ i j : n, j < i → v (M i j) < 1) ∧ ∀ i : n, v (M i i - 1) < 1) :
-    ∃ g ∈ proIwahori, g.val = M :=
+/--
+`New.exists_proIwahori_coe_eq_of_residue_unitriangular`, with the conditions below and on the
+diagonal as one hypothesis `hM_tri`.
+-/
+lemma exists_proIwahori_coe_eq
+    (M : Matrix n n F) (hM_int : ∀ i j : n, v (M i j) ≤ 1)
+    (hM_tri : (∀ i j : n, j < i → v (M i j) < 1) ∧ ∀ i : n, v (M i i - 1) < 1)
+    : ∃ g ∈ proIwahori, g.val = M :=
   exists_proIwahori_coe_eq_of_residue_unitriangular M hM_int hM_tri.left hM_tri.right
 
 omit [CompactSpace 𝒪[F]] in
-/-- An invertible matrix lies in `New.proIwahori` exactly when all its entries are integral, its
+/--
+An invertible matrix lies in `New.proIwahori` exactly when all its entries are integral, its
 entries below the diagonal lie in the maximal ideal, and its diagonal entries are `≡ 1` modulo the
-maximal ideal. -/
+maximal ideal.
+-/
 @[local simp]
-lemma mem_proIwahori :
-    g ∈ proIwahori ↔
-      (∀ i j : n, v (g i j) ≤ 1) ∧
-      (∀ i : n, ∀ j < i, v (g i j) < 1) ∧
-      ∀ i : n, v (g i i - 1) < 1 := by
+lemma mem_proIwahori
+    : g ∈ proIwahori
+      ↔ (∀ i j : n, v (g i j) ≤ 1) ∧ (∀ i : n, ∀ j < i, v (g i j) < 1)
+        ∧ ∀ i : n, v (g i i - 1) < 1 := by
   constructor
   · rintro ⟨hg_int, hg_tri⟩
     exact ⟨(mem_intGL.mp hg_int).left, hg_tri⟩
@@ -274,15 +303,19 @@ section
 
 omit [CompactSpace 𝒪[F]]
 
-/-- An upper unitriangular matrix lies in `New.proIwahori` exactly when its entries above the
-diagonal are integral. -/
-lemma mem_proIwahori_iff_of_unitriangular (hg_tri : g ∈ unitriangular id F) :
-    g ∈ proIwahori ↔ ∀ i j : n, i < j → v (g i j) ≤ 1 := by
+/--
+An upper unitriangular matrix lies in `New.proIwahori` exactly when its entries above the
+diagonal are integral.
+-/
+lemma mem_proIwahori_iff_of_unitriangular (hg_tri : g ∈ unitriangular id F)
+    : g ∈ proIwahori ↔ ∀ i j : n, i < j → v (g i j) ≤ 1 := by
   -- On and below the diagonal `g` agrees with the identity, so only the entries above it matter.
   have hg_one : ∀ a b : n, b ≤ a → g a b = (1 : Matrix n n F) a b := hg_tri
   rw [mem_proIwahori]
-  refine ⟨fun ⟨hg_int, _⟩ i j _ ↦ hg_int i j,
-    fun h_above ↦ ⟨fun i j ↦ ?_, fun i j h_lt ↦ ?_, fun i ↦ ?_⟩⟩
+  refine ⟨
+    fun ⟨hg_int, _⟩ i j _ ↦ hg_int i j,
+    fun h_above ↦ ⟨fun i j ↦ ?_, fun i j h_lt ↦ ?_, fun i ↦ ?_⟩
+  ⟩
   · rcases lt_trichotomy i j with h_lt | rfl | h_gt
     · exact h_above i j h_lt
     · simp [hg_one i i le_rfl]
@@ -290,10 +323,12 @@ lemma mem_proIwahori_iff_of_unitriangular (hg_tri : g ∈ unitriangular id F) :
   · simp [hg_one i j h_lt.le, h_lt.ne']
   · simp [hg_one i i le_rfl]
 
-/-- For `i ≠ j` (hypothesis `hij`), the transvection `1 + a E_ij` lies in `New.proIwahori` when `a`
-lies in the maximal ideal, or when `a` is integral and `i < j`. -/
-lemma transvectionGL_mem_proIwahori {a : F} (ha : v a < 1 ∨ v a ≤ 1 ∧ i < j) :
-    transvectionGL hij a ∈ proIwahori := by
+/--
+For `i ≠ j` (hypothesis `hij`), the transvection `1 + a E_ij` lies in `New.proIwahori` when `a`
+lies in the maximal ideal, or when `a` is integral and `i < j`.
+-/
+lemma transvectionGL_mem_proIwahori {a : F} (ha : v a < 1 ∨ v a ≤ 1 ∧ i < j)
+    : transvectionGL hij a ∈ proIwahori := by
   -- Entry by entry: the identity plus `a` at `(i, j)`, and `i ≠ j` keeps `a` off the diagonal.
   simp [transvection, Matrix.single, Matrix.one_apply]
   grind [zero_le, one_pos]
@@ -310,19 +345,19 @@ lemma v_diag_eq_one_of_mem_proIwahori (hg : g ∈ proIwahori) (j : n) : v (g j j
 
 /-! ### Decompositions -/
 
-/-- Row reduction from the last row upwards, for `g` in `GL n F`, where `n` is a finite linearly
+/--
+Row reduction from the last row upwards, for `g` in `GL n F`, where `n` is a finite linearly
 ordered index type and `F` is a field with a `ℤᵐ⁰`-valued valuation `v`. For every set s of rows
 there is m with g m⁻¹ upper unitriangular, m in the pro-`p` Iwahori subgroup `proIwahori` if g is,
 and a pivot column p i for each row i in s: the pivot is non-zero, it is the first entry of largest
-valuation in its row, and m vanishes above it. -/
-lemma exists_row_reduction (g : GL n F) (s : Finset n) :
-    ∃ m : GL n F,
-      g / m ∈ unitriangular id F ∧
-      (g ∈ proIwahori → m ∈ proIwahori) ∧
-      ∃ p : n → n, ∀ i ∈ s,
-        m i (p i) ≠ 0 ∧
-        (∀ l : n, v (m i l) < v (m i (p i)) ∨ v (m i l) = v (m i (p i)) ∧ p i ≤ l) ∧
-        ∀ r < i, m r (p i) = 0 := by
+valuation in its row, and m vanishes above it.
+-/
+lemma exists_row_reduction (g : GL n F) (s : Finset n)
+    : ∃ m : GL n F,
+      g / m ∈ unitriangular id F ∧ (g ∈ proIwahori → m ∈ proIwahori)
+        ∧ ∃ p : n → n, ∀ i ∈ s,
+          m i (p i) ≠ 0 ∧ (∀ l : n, v (m i l) < v (m i (p i)) ∨ v (m i l) = v (m i (p i)) ∧ p i ≤ l)
+            ∧ ∀ r < i, m r (p i) = 0 := by
   -- Induct on s, adding a row a above all rows of s.
   induction s using Finset.induction_on_min with
   | empty => exact ⟨g, by simp, fun hg ↦ hg, id, nofun⟩
@@ -337,22 +372,29 @@ lemma exists_row_reduction (g : GL n F) (s : Finset n) :
     have h_pivot : m a j ≠ 0 := fun h_zero ↦
       m.det_ne_zero (det_eq_zero_of_row_eq_zero a fun l ↦ by simpa [h_zero] using h_max l)
     -- The row operation e subtracts multiples of row a from the rows above it, clearing column j.
-    let col (r : n) : F := if r < a then -m r j / m a j else if r = a then 1 else 0
+    let col (r : n) : F :=
+      if r < a then
+        - m r j / m a j
+      else if r = a then
+        1
+      else
+        0
     have h_det_unit : IsUnit (updateCol 1 a col).det := by simp [col, ← cramer_apply]
     let e : GL n F := .mk'' (updateCol 1 a col) h_det_unit
     have he_tri : e ∈ unitriangular id F := by
       simp [e, col, updateCol_apply, Matrix.one_apply]
       grind
-    have he_mul (r l : n) :
-        (e * m) r l = if r < a then m r l - m r j / m a j * m a l else m r l := by
-      simp [e, col, updateCol_apply, Matrix.mul_apply, Finset.sum_ite, Finset.filter_eq', Matrix.one_apply]
+    have he_mul (r l : n)
+        : (e * m) r l = if r < a then m r l - m r j / m a j * m a l else m r l := by
+      simp [e, col, updateCol_apply, Matrix.mul_apply, Finset.sum_ite, Finset.filter_eq',
+        Matrix.one_apply]
       grind
     have he_mem (hg : g ∈ proIwahori) : e ∈ proIwahori := by
       obtain ⟨hm_int, -, -⟩ := mem_proIwahori.mp (hm_K hg)
       -- For m in `proIwahori` the pivot has valuation 1: it is the largest in row `a`, which
       -- has valuation 1 on the diagonal and at most 1 elsewhere.
-      have h_pivot_one : v (m a j) = 1 := le_antisymm (hm_int a j)
-        ((v_diag_eq_one_of_mem_proIwahori (hm_K hg) a).ge.trans (h_max a))
+      have h_pivot_one : v (m a j) = 1 :=
+        le_antisymm (hm_int a j) ((v_diag_eq_one_of_mem_proIwahori (hm_K hg) a).ge.trans (h_max a))
       -- So the multiples `-m r j / m a j` in column `a` of `e` are integral.
       simp [e, col, updateCol_apply, apply_ite v, Matrix.one_apply]
       grind [div_one, zero_le, one_pos]
@@ -375,27 +417,30 @@ lemma exists_row_reduction (g : GL n F) (s : Finset n) :
         -- above row `i`, `e` subtracts multiples of row `a`, which is zero in column `p i`
         rw [he_mul, hp_above r hr, hp_above a h_a_lt, mul_zero, sub_zero, ite_self]
 
-/-- Iwasawa–Bruhat decomposition and Iwahori factorisation with the same `u`. Let `n` be a finite
+/--
+Iwasawa–Bruhat decomposition and Iwahori factorisation with the same `u`. Let `n` be a finite
 linearly ordered index type and `F` a field with a `ℤᵐ⁰`-valued valuation. For `g` in `GL n F` there
 is an upper unitriangular `u` over `F` such that (a) `g = u t σ k` with `t` diagonal, `σ` a
 permutation matrix and `k` in the pro-`p` Iwahori subgroup `I₁`, stated as `(t σ)⁻¹ u⁻¹ g ∈ I₁`; and
-(b) if `g` is in `I₁`, then so is `u`, and `u⁻¹ g` is lower triangular. -/
-lemma exists_iwasawa_bruhat (g : GL n F) :
-    ∃ u ∈ unitriangular id F,
+(b) if `g` is in `I₁`, then so is `u`, and `u⁻¹ g` is lower triangular.
+-/
+lemma exists_iwasawa_bruhat (g : GL n F)
+    : ∃ u ∈ unitriangular id F,
       -- (a)
-      (∃ (t : n → Fˣ) (σ : Perm n), (diagGL t * permGL σ)⁻¹ * (u⁻¹ * g) ∈ proIwahori) ∧
-      -- (b)
-      (g ∈ proIwahori → u ∈ proIwahori ∧ ∀ i j : n, i < j → (u⁻¹ * g) i j = 0) := by
+      (∃ (t : n → Fˣ) (σ : Perm n), (diagGL t * permGL σ)⁻¹ * (u⁻¹ * g) ∈ proIwahori)
+        -- (b)
+        ∧ (g ∈ proIwahori → u ∈ proIwahori ∧ ∀ i j : n, i < j → (u⁻¹ * g) i j = 0) := by
   -- Reduce all rows; u = g m⁻¹, so u⁻¹ g = m.
   obtain ⟨m, hm_tri, hm_K, p, hp⟩ := exists_row_reduction g .univ
   -- The pivot facts for every row: non-zero, first of largest valuation, zeros above it.
-  obtain ⟨h_pivot_ne, hp_first, hp_above⟩ : (∀ i : n, m i (p i) ≠ 0) ∧
-      (∀ i l : n, v (m i l) < v (m i (p i)) ∨ v (m i l) = v (m i (p i)) ∧ p i ≤ l) ∧
-      ∀ i : n, ∀ r < i, m r (p i) = 0 := by
+  obtain ⟨h_pivot_ne, hp_first, hp_above⟩
+      : (∀ i : n, m i (p i) ≠ 0)
+        ∧ (∀ i l : n, v (m i l) < v (m i (p i)) ∨ v (m i l) = v (m i (p i)) ∧ p i ≤ l)
+        ∧ ∀ i : n, ∀ r < i, m r (p i) = 0 := by
     simpa only [Finset.mem_univ, true_implies, forall_and] using hp
   -- The pivot columns are distinct, since m vanishes above each non-zero pivot.
-  have hp_inj : p.Injective := .of_lt_imp_ne fun i j h_lt h_eq ↦
-    h_pivot_ne i (by simpa [h_eq] using hp_above j i h_lt)
+  have hp_inj : p.Injective :=
+    .of_lt_imp_ne fun i j h_lt h_eq ↦ h_pivot_ne i (by simpa [h_eq] using hp_above j i h_lt)
   lift p to Perm n using Finite.injective_iff_bijective.mp hp_inj
   let t (i : n) : Fˣ := .mk0 (m i (p i)) (h_pivot_ne i)
   have h_um : (g / m)⁻¹ * g = m := by rw [inv_div, div_mul_cancel]
@@ -403,10 +448,13 @@ lemma exists_iwasawa_bruhat (g : GL n F) :
   · -- Dividing each row by its pivot and moving the pivots to the diagonal gives an element of
     -- `proIwahori`: entries left of a pivot have smaller valuation, the others at most the same.
     -- Row `i` of the product is row `p⁻¹ i` of `m` divided by its pivot, which is in column `i`.
-    have h_entry (i j : n) : ((diagGL t * permGL p⁻¹)⁻¹ * m) i j =
-        (m (p.symm i) i)⁻¹ * m (p.symm i) j := by simp [t, ← map_inv, mul_assoc, toMatrix_mul_apply]
-    have h_row (i l : n) : v (m (p.symm i) l) < v (m (p.symm i) i) ∨
-        v (m (p.symm i) l) = v (m (p.symm i) i) ∧ i ≤ l := by simpa using hp_first (p.symm i) l
+    have h_entry (i j : n)
+        : ((diagGL t * permGL p⁻¹)⁻¹ * m) i j = (m (p.symm i) i)⁻¹ * m (p.symm i) j := by
+      simp [t, ← map_inv, mul_assoc, toMatrix_mul_apply]
+    have h_row (i l : n)
+        : v (m (p.symm i) l) < v (m (p.symm i) i)
+          ∨ v (m (p.symm i) l) = v (m (p.symm i) i) ∧ i ≤ l := by
+      simpa using hp_first (p.symm i) l
     have h_ne (i : n) : m (p.symm i) i ≠ 0 := by simpa using h_pivot_ne (p.symm i)
     have h_pos (i : n) : 0 < v (m (p.symm i) i) := v.pos_iff.mpr (h_ne i)
     rw [h_um, mem_proIwahori]
@@ -427,38 +475,47 @@ lemma exists_iwasawa_bruhat (g : GL n F) :
 
 /-! ### Conjugation by the torus and the operators `U_t` -/
 
-/-- Let `g : GL n F` lie in the pro-`p` Iwahori subgroup `I₁` and be block triangular for the
+/--
+Let `g : GL n F` lie in the pro-`p` Iwahori subgroup `I₁` and be block triangular for the
 valuations of the diagonal `t`: the entry `g i j` vanishes when `v (t j) < v (t i)`. Then
-`diag(t) * g * diag(t)⁻¹` lies in `I₁`. -/
-lemma diagGL_conj_mem_proIwahori (hg : g ∈ proIwahori)
-    (hg_tri : (g : Matrix n n F).BlockTriangular fun i : n ↦ v (t i : F)) :
-    diagGL t * g * (diagGL t)⁻¹ ∈ proIwahori := by
+`diag(t) * g * diag(t)⁻¹` lies in `I₁`.
+-/
+lemma diagGL_conj_mem_proIwahori
+    (hg : g ∈ proIwahori) (hg_tri : (g : Matrix n n F).BlockTriangular fun i : n ↦ v (t i : F))
+    : diagGL t * g * (diagGL t)⁻¹ ∈ proIwahori := by
   -- Conjugation multiplies the entry `(i, j)` by `t i * (t j)⁻¹`. By `hg_tri` the entry is zero
   -- unless `v (t i) ≤ v (t j)`, and then its valuation is at most that of `g i j`.
-  have h_entry (i j : n) :
-      (diagGL t * g * (diagGL t)⁻¹) i j = (t i : F) * g i j * (t j : F)⁻¹ := by simp [← map_inv]
+  have h_entry (i j : n) : (diagGL t * g * (diagGL t)⁻¹) i j = (t i : F) * g i j * (t j : F)⁻¹ := by
+    simp [← map_inv]
   have h_v_le (i j : n) : v ((diagGL t * g * (diagGL t)⁻¹) i j) ≤ v (g i j) := by
     rw [h_entry]
     rcases lt_or_ge (v (t j : F)) (v (t i : F)) with h_lt | h_ge
     · simp [hg_tri h_lt]
     · have h_ratio : v (t i : F) * (v (t j : F))⁻¹ ≤ 1 := mul_inv_le_one_of_le₀ h_ge zero_le
-      calc v ((t i : F) * g i j * (t j : F)⁻¹) = v (g i j) * (v (t i : F) * (v (t j : F))⁻¹) := by
-            rw [map_mul, map_mul, map_inv₀, mul_comm (v (t i : F)), mul_assoc]
+      calc
+        v ((t i : F) * g i j * (t j : F)⁻¹) = v (g i j) * (v (t i : F) * (v (t j : F))⁻¹) := by
+          rw [map_mul, map_mul, map_inv₀, mul_comm (v (t i : F)), mul_assoc]
         _ ≤ v (g i j) := mul_le_of_le_one_right' h_ratio
-  obtain ⟨hg_int, hg_below, hg_diag⟩ :
-      (∀ i j : n, v (g i j) ≤ 1) ∧ (∀ i : n, ∀ j < i, v (g i j) < 1) ∧ ∀ i : n, v (g i i - 1) < 1 :=
+  obtain ⟨hg_int, hg_below, hg_diag⟩
+      : (∀ i j : n, v (g i j) ≤ 1) ∧ (∀ i : n, ∀ j < i, v (g i j) < 1)
+        ∧ ∀ i : n, v (g i i - 1) < 1 :=
     mem_proIwahori.mp hg
-  refine mem_proIwahori.mpr ⟨fun i j ↦ (h_v_le i j).trans (hg_int i j),
-    fun i j hji ↦ (h_v_le i j).trans_lt (hg_below i j hji), fun i ↦ ?_⟩
+  refine mem_proIwahori.mpr ⟨
+    fun i j ↦ (h_v_le i j).trans (hg_int i j),
+    fun i j hji ↦ (h_v_le i j).trans_lt (hg_below i j hji),
+    fun i ↦ ?_
+  ⟩
   -- the diagonal entries are unchanged
   rw [h_entry, mul_right_comm, mul_inv_cancel₀ (t i).ne_zero, one_mul]
   exact hg_diag i
 
-/-- For a dominant diagonal `t` (`New.dominantTorus`: `v (t i)` increases with `i`) and `g : GL n F`
+/--
+For a dominant diagonal `t` (`New.dominantTorus`: `v (t i)` increases with `i`) and `g : GL n F`
 in the pro-`p` Iwahori subgroup `I₁`, some upper unitriangular `u` in `I₁` has
-`diag(t)⁻¹ * (u⁻¹ * g) * diag(t)` in `I₁`. -/
-lemma exists_unipotent_conj_mem_proIwahori (ht : t ∈ dominantTorus) (hg : g ∈ proIwahori) :
-    ∃ u ∈ unitriangular id F ⊓ proIwahori, (diagGL t)⁻¹ * (u⁻¹ * g) * diagGL t ∈ proIwahori := by
+`diag(t)⁻¹ * (u⁻¹ * g) * diag(t)` in `I₁`.
+-/
+lemma exists_unipotent_conj_mem_proIwahori (ht : t ∈ dominantTorus) (hg : g ∈ proIwahori)
+    : ∃ u ∈ unitriangular id F ⊓ proIwahori, (diagGL t)⁻¹ * (u⁻¹ * g) * diagGL t ∈ proIwahori := by
   -- Iwahori factorisation: g = u m in `proIwahori`, u upper unitriangular and m lower triangular.
   obtain ⟨u, hu, -, h_fact⟩ := exists_iwasawa_bruhat g
   obtain ⟨huK, h_lower⟩ : u ∈ proIwahori ∧ ∀ i j : n, i < j → (u⁻¹ * g) i j = 0 := h_fact hg
@@ -471,12 +528,14 @@ lemma exists_unipotent_conj_mem_proIwahori (ht : t ∈ dominantTorus) (hg : g �
     diagGL_conj_mem_proIwahori (mul_mem (inv_mem huK) hg) h_tri
   exact ⟨u, ⟨hu, huK⟩, by rwa [map_inv, inv_inv] at h_conj⟩
 
-/-- Let `n` be a finite linearly ordered index type and `F` a field with a `ℤᵐ⁰`-valued valuation.
+/--
+Let `n` be a finite linearly ordered index type and `F` a field with a `ℤᵐ⁰`-valued valuation.
 For a dominant diagonal `t` and an upper unitriangular `g : GL n F` in the pro-`p` Iwahori subgroup
-`I₁`, the conjugate `diag(t) * g * diag(t)⁻¹` lies in `I₁`. -/
-lemma conj_unitriangular_mem_proIwahori (ht : t ∈ dominantTorus)
-    (hu : g ∈ unitriangular id F ⊓ proIwahori) :
-    diagGL t * g * (diagGL t)⁻¹ ∈ proIwahori := by
+`I₁`, the conjugate `diag(t) * g * diag(t)⁻¹` lies in `I₁`.
+-/
+lemma conj_unitriangular_mem_proIwahori
+    (ht : t ∈ dominantTorus) (hu : g ∈ unitriangular id F ⊓ proIwahori)
+    : diagGL t * g * (diagGL t)⁻¹ ∈ proIwahori := by
   obtain ⟨hg_tri, hg_mem⟩ := Subgroup.mem_inf.mp hu
   -- As `t` is dominant, an upper unitriangular `g` is block triangular for the valuations of `t`.
   refine diagGL_conj_mem_proIwahori hg_mem fun i j h_lt ↦ ?_
@@ -485,22 +544,24 @@ lemma conj_unitriangular_mem_proIwahori (ht : t ∈ dominantTorus)
 
 end
 
-/-- Let `n` be a finite linearly ordered index type and `F` a field with a `ℤᵐ⁰`-valued valuation
+/--
+Let `n` be a finite linearly ordered index type and `F` a field with a `ℤᵐ⁰`-valued valuation
 and compact ring of integers. For a smooth representation `ρ` of `GL n F`, dominant diagonal `t`,
 `t'` and a vector `x` fixed by the pro-`p` Iwahori subgroup `I₁` (`x ∈ levelSpace ρ.ρ proIwahori`),
 the operators `U_t = compactMean ρ.ρ proIwahori ∘ ρ (diagGL t)` (apply `ρ(t)`, then take the mean
-over `I₁`) satisfy `U_t (U_t' x) = U_(t * t') x`. -/
+over `I₁`) satisfy `U_t (U_t' x) = U_(t * t') x`.
+-/
 @[local simp]
-lemma compactMean_diagGL_compactMean_diagGL (ht : t ∈ dominantTorus) (ht' : t' ∈ dominantTorus)
-    (hx : x ∈ levelSpace ρ.ρ proIwahori) :
-    compactMean ρ.ρ proIwahori (ρ (diagGL t) (compactMean ρ.ρ proIwahori (ρ (diagGL t') x))) =
-      compactMean ρ.ρ proIwahori (ρ (diagGL (t * t')) x) := by
+lemma compactMean_diagGL_compactMean_diagGL
+    (ht : t ∈ dominantTorus) (ht' : t' ∈ dominantTorus) (hx : x ∈ levelSpace ρ.ρ proIwahori)
+    : compactMean ρ.ρ proIwahori (ρ (diagGL t) (compactMean ρ.ρ proIwahori (ρ (diagGL t') x)))
+      = compactMean ρ.ρ proIwahori (ρ (diagGL (t * t')) x) := by
   -- The inner mean drops out: each k in `proIwahori` is u · (u⁻¹ k), where t conjugates u into
   -- `proIwahori` and u⁻¹ k fixes ρ(t') x, since t'⁻¹ u⁻¹ k t' lies in `proIwahori`.
   rw [map_mul, map_mul, Module.End.mul_apply]
   refine map_compactMean_of_factor (fun _ ↦ compactMean_apply) fun k hk ↦ ?_
-  obtain ⟨u, hu, h_conj⟩ : ∃ u ∈ unitriangular id F ⊓ proIwahori,
-      (diagGL t')⁻¹ * (u⁻¹ * k) * diagGL t' ∈ proIwahori :=
+  obtain ⟨u, hu, h_conj⟩
+      : ∃ u ∈ unitriangular id F ⊓ proIwahori, (diagGL t')⁻¹ * (u⁻¹ * k) * diagGL t' ∈ proIwahori :=
     exists_unipotent_conj_mem_proIwahori ht' hk
   -- `u⁻¹ * k` fixes `ρ (diagGL t') x`: its conjugate by `diagGL t'` lies in `I₁`, so fixes `x`
   have hx_fix : ρ.ρ ((diagGL t')⁻¹ * (u⁻¹ * k) * diagGL t') x = x := by
@@ -510,10 +571,12 @@ lemma compactMean_diagGL_compactMean_diagGL (ht : t ∈ dominantTorus) (ht' : t'
 
 variable (ρ)
 
-/-- The monoid homomorphism `t ↦ U_t`, `U_t = compactMean ρ.ρ proIwahori ∘ ρ (diagGL t)`, from
-dominant diagonal elements to endomorphisms of the vectors fixed by the pro-`p` Iwahori subgroup. -/
-def iwahoriHeckeHom :
-    dominantTorus (n := n) (F := F) →* Module.End ℂ (levelSpace ρ.ρ proIwahori) where
+/--
+The monoid homomorphism `t ↦ U_t`, `U_t = compactMean ρ.ρ proIwahori ∘ ρ (diagGL t)`, from
+dominant diagonal elements to endomorphisms of the vectors fixed by the pro-`p` Iwahori subgroup.
+-/
+def iwahoriHeckeHom
+    : dominantTorus (n := n) (F := F) →* Module.End ℂ (levelSpace ρ.ρ proIwahori) where
   toFun t :=
     (compactMean ρ.ρ proIwahori * ρ (diagGL t)).restrict fun _ _ ↦ compactMean_mem_levelSpace _
   map_one' := by
@@ -552,10 +615,13 @@ lemma apply_mem_cyclicSpan (g : G) : ∀ x ∈ cyclicSpan ρ y, ρ g x ∈ cycli
 
 variable [TopologicalSpace G] [IsTopologicalGroup G]
 
-/-- Let `ρ` be a smooth representation and `K` a compact subgroup. If `x` lies in the span of the
-orbit of `y`, then so does the mean over `K` of `ρ(g) x`, for every `g`. -/
-lemma compactMean_mem_cyclicSpan [IsSmoothRep ρ] [CompactSpace K] (g : G) {x : V}
-    (hx : x ∈ cyclicSpan ρ y) : compactMean ρ K (ρ g x) ∈ cyclicSpan ρ y := by
+/--
+Let `ρ` be a smooth representation and `K` a compact subgroup. If `x` lies in the span of the
+orbit of `y`, then so does the mean over `K` of `ρ(g) x`, for every `g`.
+-/
+lemma compactMean_mem_cyclicSpan
+    [IsSmoothRep ρ] [CompactSpace K] (g : G) {x : V} (hx : x ∈ cyclicSpan ρ y)
+    : compactMean ρ K (ρ g x) ∈ cyclicSpan ρ y := by
   -- The quotient map by the subrepresentation kills every `ρ k (ρ g x)`, hence also their mean.
   have h_zero : (cyclicSpan ρ y).mkQ (compactMean ρ K (ρ g x)) = 0 :=
     map_compactMean_of_const _ fun k _ ↦ by
@@ -566,7 +632,9 @@ end New
 
 namespace New
 
-variable {G V : Type*} [Group G] [AddCommGroup V] [Module ℂ V] (ρ : Representation ℂ G V)
+variable
+  {G V : Type*} [Group G] [AddCommGroup V] [Module ℂ V]
+  (ρ : Representation ℂ G V)
   [TopologicalSpace G] [IsTopologicalGroup G]
 
 /-- The smooth vectors of `ρ`: the `x` fixed by all `g` in some neighbourhood of `1`. -/
@@ -613,22 +681,28 @@ open Matrix WithZero Valued GeneralLinearGroup DoubleCoset Filter
 
 namespace New
 
-variable {F F' : Type*} {N : ℕ} [Field F] [Valued F ℤᵐ⁰] [Field F']
-  [Valued F' ℤᵐ⁰] {g : GL (Fin N) F} {t : Fin N → Fˣ}
+variable
+  {F F' : Type*} {N : ℕ} [Field F] [Valued F ℤᵐ⁰] [Field F'] [Valued F' ℤᵐ⁰]
+  {g : GL (Fin N) F} {t : Fin N → Fˣ}
 
-/-- The double coset `I₁ diag(t) I₁` in `GL (Fin N) F`, where `I₁ = New.proIwahori` is the pro-`p`
-Iwahori subgroup and `t` is a family of units of `F`. -/
+/--
+The double coset `I₁ diag(t) I₁` in `GL (Fin N) F`, where `I₁ = New.proIwahori` is the pro-`p`
+Iwahori subgroup and `t` is a family of units of `F`.
+-/
 abbrev iwahoriDoubleCoset (t : Fin N → Fˣ) : Set (GL (Fin N) F) :=
   doubleCoset (diagGL t) (proIwahori : Subgroup (GL (Fin N) F))
     (proIwahori : Subgroup (GL (Fin N) F))
 
-/-- A diagonal matrix lies in the pro-`p` Iwahori subgroup exactly when each diagonal entry is
-`≡ 1` modulo the maximal ideal. -/
+/--
+A diagonal matrix lies in the pro-`p` Iwahori subgroup exactly when each diagonal entry is
+`≡ 1` modulo the maximal ideal.
+-/
 lemma diagGL_mem_proIwahori : diagGL t ∈ proIwahori ↔ ∀ i : Fin N, v ((t i : F) - 1) < 1 := by
   -- Off the diagonal the entries are `0`. On it, `v (t i - 1) < 1 = v 1` forces `v (t i) = 1`, so
   -- the diagonal entries are integral.
-  have h_entry (i j : Fin N) : (diagGL t : Matrix (Fin N) (Fin N) F) i j =
-      if i = j then (t i : F) else 0 := by simp [diagonal_apply]
+  have h_entry (i j : Fin N)
+      : (diagGL t : Matrix (Fin N) (Fin N) F) i j = if i = j then (t i : F) else 0 := by
+    simp [diagonal_apply]
   simp only [mem_proIwahori, h_entry, ite_true]
   constructor
   · rintro ⟨-, -, h_diag⟩
@@ -641,18 +715,22 @@ lemma diagGL_mem_proIwahori : diagGL t ∈ proIwahori ↔ ∀ i : Fin N, v ((t i
     · -- below the diagonal the entries are `0`
       simp [hji.ne']
 
-/-- For a ring map `ι : F →+* F'` under which the valuation of `F'` pulls back to one equivalent to
+/--
+For a ring map `ι : F →+* F'` under which the valuation of `F'` pulls back to one equivalent to
 that of `F`, applying `ι` entrywise keeps `g : GL (Fin N) F` in the pro-`p` Iwahori subgroup and
-out of it. -/
-lemma map_mem_proIwahori_iff_of_isEquiv {ι : F →+* F'} (h_equiv : (v.comap ι).IsEquiv v) :
-    g.map ι ∈ proIwahori ↔ g ∈ proIwahori := by
+out of it.
+-/
+lemma map_mem_proIwahori_iff_of_isEquiv {ι : F →+* F'} (h_equiv : (v.comap ι).IsEquiv v)
+    : g.map ι ∈ proIwahori ↔ g ∈ proIwahori := by
   simp [← h_equiv.le_one_iff_le_one, ← h_equiv.lt_one_iff_lt_one, mem_proIwahori]
 
-/-- If the valuations of `t` increase strictly, then `t i ^ k / t j ^ k * a i j` is integral for all
-`i < j` and all large `k`. -/
-lemma eventually_v_mul_pow_le_one (ht : StrictMono fun i : Fin N ↦ v (t i : F))
-    (a : Fin N → Fin N → F) :
-    ∀ᶠ k : ℕ in atTop, ∀ i j : Fin N, i < j → v (t i ^ k / t j ^ k * a i j) ≤ 1 := by
+/--
+If the valuations of `t` increase strictly, then `t i ^ k / t j ^ k * a i j` is integral for all
+`i < j` and all large `k`.
+-/
+lemma eventually_v_mul_pow_le_one
+    (ht : StrictMono fun i : Fin N ↦ v (t i : F)) (a : Fin N → Fin N → F)
+    : ∀ᶠ k : ℕ in atTop, ∀ i j : Fin N, i < j → v (t i ^ k / t j ^ k * a i j) ≤ 1 := by
   simp_rw [eventually_all, ← div_pow]
   intro i j hij
   -- The powers of `t i / t j` tend to `0`, and `𝒪[F]` is a neighbourhood of `0`.
@@ -660,59 +738,77 @@ lemma eventually_v_mul_pow_le_one (ht : StrictMono fun i : Fin N ↦ v (t i : F)
   exact (tendsto_zero_pow_of_v_lt_one h_lt).mul_const (a i j)
     ((isOpen_integer F).mem_nhds (by simp))
 
-/-- If the valuations of `t` increase strictly, then for every diagonal `s` the product `t ^ k * s`
-is dominant (`New.dominantTorus`) for all large `k`. -/
-lemma eventually_pow_mul_mem_dominantTorus (ht : StrictMono fun i : Fin N ↦ v (t i : F))
-    (s : Fin N → Fˣ) :
-    ∀ᶠ k : ℕ in atTop, t ^ k * s ∈ dominantTorus := by
+/--
+If the valuations of `t` increase strictly, then for every diagonal `s` the product `t ^ k * s`
+is dominant (`New.dominantTorus`) for all large `k`.
+-/
+lemma eventually_pow_mul_mem_dominantTorus
+    (ht : StrictMono fun i : Fin N ↦ v (t i : F)) (s : Fin N → Fˣ)
+    : ∀ᶠ k : ℕ in atTop, t ^ k * s ∈ dominantTorus := by
   filter_upwards [eventually_v_mul_pow_le_one ht fun i j ↦ s i / s j] with k hk
   simpa [dominantTorus, monotone_iff_forall_lt, field, zero_lt_iff] using hk
 
-/-- For a diagonal `t` and an integer `j`, the subgroup `diag(t)⁻ʲ I₁ diag(t)ʲ` of the `x` with
-`diag(t) ^ j * x * diag(t) ^ (-j)` in the pro-`p` Iwahori subgroup `I₁`. -/
+/--
+For a diagonal `t` and an integer `j`, the subgroup `diag(t)⁻ʲ I₁ diag(t)ʲ` of the `x` with
+`diag(t) ^ j * x * diag(t) ^ (-j)` in the pro-`p` Iwahori subgroup `I₁`.
+-/
 private abbrev conjProIwahori (t : Fin N → Fˣ) (j : ℤ) : Subgroup (GL (Fin N) F) :=
   (MulAut.conj (diagGL t) ^ j).comapSubgroup proIwahori
 
-/-- For `k` in the pro-`p` Iwahori subgroup, the twisted conjugate `k⁻¹ * g * σ(k)` of `g`, divided
-on the left by `diag(t)`. -/
-private abbrev twistedConj (t : Fin N → Fˣ) (g : GL (Fin N) F) (σ : F →+* F)
-    (k : (proIwahori : Subgroup (GL (Fin N) F))) : GL (Fin N) F :=
+/--
+For `k` in the pro-`p` Iwahori subgroup, the twisted conjugate `k⁻¹ * g * σ(k)` of `g`, divided
+on the left by `diag(t)`.
+-/
+private abbrev twistedConj
+    (t : Fin N → Fˣ) (g : GL (Fin N) F) (σ : F →+* F) (k : (proIwahori : Subgroup (GL (Fin N) F)))
+    : GL (Fin N) F :=
   (diagGL t)⁻¹ * ((k : GL (Fin N) F)⁻¹ * g * GeneralLinearGroup.map σ (k : GL (Fin N) F))
 
-/-- If `σ` keeps the valuation, then applying `σ` entrywise keeps `x` in `diag(t)⁻ʲ I₁ diag(t)ʲ` and
-out of it. -/
-private lemma map_mem_conjProIwahori_iff {σ : F →+* F} (hσ : ∀ x : F, v (σ x) = v x) {j : ℤ}
-    {x : GL (Fin N) F} :
-    GeneralLinearGroup.map σ x ∈ conjProIwahori t j ↔ x ∈ conjProIwahori t j := by
+/--
+If `σ` keeps the valuation, then applying `σ` entrywise keeps `x` in `diag(t)⁻ʲ I₁ diag(t)ʲ` and
+out of it.
+-/
+private lemma map_mem_conjProIwahori_iff
+    {σ : F →+* F} (hσ : ∀ x : F, v (σ x) = v x) {j : ℤ} {x : GL (Fin N) F}
+    : GeneralLinearGroup.map σ x ∈ conjProIwahori t j ↔ x ∈ conjProIwahori t j := by
   -- membership is a condition on the valuations of the entries, which `σ` keeps
   simp [← map_inv, ← hσ (x _ _ - 1), mul_left_comm (_ ^ j), hσ, ← map_zpow, mul_assoc,
     mem_proIwahori, zpow_ne_zero]
 
-/-- Let `v (t i)` increase strictly, let `σ` keep the valuation and act surjectively on
+/--
+Let `v (t i)` increase strictly, let `σ` keep the valuation and act surjectively on
 `GL (Fin N) F`, and let `g` lie in `I₁ diag(t) I₁`. Then for all `a b : ℕ` some `k` in `I₁` has
 `diag(t)⁻¹ * (k⁻¹ * g * σ(k))` in `diag(t)⁻ʲ I₁ diag(t)ʲ` for every integer `j` with
-`-a ≤ j ≤ b`. -/
-private lemma exists_twistedConj_mem_conjProIwahori (ht : StrictMono fun i : Fin N ↦ v (t i : F))
+`-a ≤ j ≤ b`.
+-/
+private lemma exists_twistedConj_mem_conjProIwahori
+    (ht : StrictMono fun i : Fin N ↦ v (t i : F))
     {σ : F →+* F} (hσ : ∀ x : F, v (σ x) = v x)
     (hσ_surj : Function.Surjective (GeneralLinearGroup.map (n := Fin N) σ))
-    (hg : g ∈ iwahoriDoubleCoset t) (a b : ℕ) :
-    ∃ k : proIwahori, ∀ j : ℤ, -a ≤ j → j ≤ b → twistedConj t g σ k ∈ conjProIwahori t j := by
+    (hg : g ∈ iwahoriDoubleCoset t) (a b : ℕ)
+    : ∃ k : proIwahori, ∀ j : ℤ, -a ≤ j → j ≤ b → twistedConj t g σ k ∈ conjProIwahori t j := by
   -- Start the range at `[0, 0]`, widen it at the top and shift it downwards.
   -- Start: for `g = k t k'` the element `twistedConj t g σ k = k' σ(k)` lies in `I₁`.
   have h_start : ∃ k : proIwahori, twistedConj t g σ k ∈ conjProIwahori t 0 := by
     obtain ⟨k, hk, k', hk', rfl⟩ : ∃ k ∈ proIwahori, ∃ k' ∈ proIwahori, g = k * diagGL t * k' :=
       mem_doubleCoset.mp hg
-    exact ⟨⟨k, hk⟩, by simpa [twistedConj, mul_assoc] using
-      (conjProIwahori t 0).mul_mem hk' ((map_mem_conjProIwahori_iff hσ).mpr hk)⟩
+    exact ⟨
+      ⟨k, hk⟩,
+      by
+        simpa [twistedConj, mul_assoc] using
+          (conjProIwahori t 0).mul_mem hk' ((map_mem_conjProIwahori_iff hσ).mpr hk)
+    ⟩
   -- Widening, from `[0, b]` to `[0, b + 1]`.
-  have h_widen (b : ℕ) (k : proIwahori)
-      (hk : ∀ j : ℤ, 0 ≤ j → j ≤ b → twistedConj t g σ k ∈ conjProIwahori t j) :
-      ∃ k' : proIwahori, ∀ j : ℤ, 0 ≤ j → j ≤ b + 1 →
-        twistedConj t g σ k' ∈ conjProIwahori t j := by
+  have h_widen
+      (b : ℕ) (k : proIwahori)
+      (hk : ∀ j : ℤ, 0 ≤ j → j ≤ b → twistedConj t g σ k ∈ conjProIwahori t j)
+      : ∃ k' : proIwahori, ∀ j : ℤ,
+        0 ≤ j → j ≤ b + 1 → twistedConj t g σ k' ∈ conjProIwahori t j := by
     -- Write `twistedConj t g σ k = u σ(z)` with `u` upper unitriangular in `I₁` and `σ(z)` in
     -- `diag(t) I₁ diag(t)⁻¹`.
-    obtain ⟨u, hu, hu_conj⟩ : ∃ u ∈ unitriangular id F ⊓ proIwahori,
-        (diagGL t)⁻¹ * (u⁻¹ * twistedConj t g σ k) * diagGL t ∈ proIwahori :=
+    obtain ⟨u, hu, hu_conj⟩
+        : ∃ u ∈ unitriangular id F ⊓ proIwahori,
+          (diagGL t)⁻¹ * (u⁻¹ * twistedConj t g σ k) * diagGL t ∈ proIwahori :=
       exists_unipotent_conj_mem_proIwahori ht.monotone (hk 0 le_rfl (by lia))
     obtain ⟨z, hz⟩ : ∃ z : GL (Fin N) F, GeneralLinearGroup.map σ z = u⁻¹ * twistedConj t g σ k :=
       hσ_surj _
@@ -734,10 +830,11 @@ private lemma exists_twistedConj_mem_conjProIwahori (ht : StrictMono fun i : Fin
     simpa [hz, mul_assoc, _root_.zpow_add] using proIwahori.mul_mem (hz_mem j (by lia)) (hu_mem j)
   -- Shifting, from `[-a, b + 1]` to `[-a - 1, b]`: `y = t (twistedConj t g σ k) t⁻¹` lies in `I₁`,
   -- and `twistedConj t g σ (k y) = σ(y)`.
-  have h_shift (a b : ℕ) (k : proIwahori)
-      (hk : ∀ j : ℤ, -a ≤ j → j ≤ b + 1 → twistedConj t g σ k ∈ conjProIwahori t j) :
-      ∃ k' : proIwahori, ∀ j : ℤ, -(a + 1) ≤ j → j ≤ b →
-        twistedConj t g σ k' ∈ conjProIwahori t j := by
+  have h_shift
+      (a b : ℕ) (k : proIwahori)
+      (hk : ∀ j : ℤ, -a ≤ j → j ≤ b + 1 → twistedConj t g σ k ∈ conjProIwahori t j)
+      : ∃ k' : proIwahori, ∀ j : ℤ,
+        -(a + 1) ≤ j → j ≤ b → twistedConj t g σ k' ∈ conjProIwahori t j := by
     let y : proIwahori :=
       ⟨(MulAut.conj (diagGL t) ^ (1 : ℤ)) (twistedConj t g σ k), hk 1 (by lia) (by lia)⟩
     refine ⟨k * y, fun j hj₀ hj ↦ ?_⟩
@@ -751,36 +848,42 @@ private lemma exists_twistedConj_mem_conjProIwahori (ht : StrictMono fun i : Fin
     | succ b ih => exact ih.elim (h_widen b)
     | zero => exact h_start.imp fun k hk j hj₀ hj ↦ by rwa [show j = 0 by lia]
 
-/-- If `v (t i)` increases strictly and `x` lies in `diag(t)⁻ʲ I₁ diag(t)ʲ` for every integer `j`,
-then `x` is a diagonal matrix. -/
-private lemma isDiag_of_forall_mem_conjProIwahori (ht : StrictMono fun i : Fin N ↦ v (t i : F))
-    {x : GL (Fin N) F} (hx : ∀ j : ℤ, x ∈ conjProIwahori t j) :
-    (x : Matrix (Fin N) (Fin N) F).IsDiag := by
+/--
+If `v (t i)` increases strictly and `x` lies in `diag(t)⁻ʲ I₁ diag(t)ʲ` for every integer `j`,
+then `x` is a diagonal matrix.
+-/
+private lemma isDiag_of_forall_mem_conjProIwahori
+    (ht : StrictMono fun i : Fin N ↦ v (t i : F))
+    {x : GL (Fin N) F} (hx : ∀ j : ℤ, x ∈ conjProIwahori t j)
+    : (x : Matrix (Fin N) (Fin N) F).IsDiag := by
   intro i j hij
   by_contra h_ne
   -- Membership for the power `m` says `v (x i j) * (v (t i) / v (t j)) ^ m ≤ 1`; in logarithms:
   have h_log (m : ℤ) : (v (x i j)).log + m * ((v (t i : F)).log - (v (t j : F)).log) ≤ 0 := by
     obtain ⟨h_int, -, -⟩ := mem_proIwahori.mp (hx m)
     simpa [← map_inv, ← log_le_log, h_ne, mul_add, sub_eq_add_neg, add_left_comm, ← map_zpow,
-      mul_assoc, zpow_ne_zero] using h_int i j
+        mul_assoc, zpow_ne_zero]
+      using h_int i j
   have h_log_ne : (v (t i : F)).log ≠ (v (t j : F)).log := fun h_log_eq ↦
     hij (ht.injective (by simpa using congrArg exp h_log_eq))
   -- The bound fails for `m = 1 - log v (x i j)` or for its negative.
-  rcases h_log_ne.lt_or_gt with h_lt | h_lt <;>
-    nlinarith only [h_lt, h_log (1 - (v (x i j)).log), h_log (-(1 - (v (x i j)).log))]
+  rcases h_log_ne.lt_or_gt with h_lt | h_lt
+    <;> nlinarith only [h_lt, h_log (1 - (v (x i j)).log), h_log (-(1 - (v (x i j)).log))]
 
-/-- Let `σ` be a continuous endomorphism of the local field `F` that keeps the valuation and whose
+/--
+Let `σ` be a continuous endomorphism of the local field `F` that keeps the valuation and whose
 entrywise action on `GL_n(F)` is surjective, and let `t` be diagonal with `v (t i)` strictly
 increasing in `i`. Let `K = proIwahori` be the pro-`p` Iwahori subgroup. Every `g` in `K t K`
-satisfies `k⁻¹ g σ(k) = t d` for some `k ∈ K` and some `d` diagonal in `K`. -/
-lemma exists_inv_mul_mul_map_eq_diagGL_mul [CompactSpace 𝒪[F]]
-    (ht : StrictMono fun i : Fin N ↦ v (t i : F)) (σ : F →+* F)
-    (hσ : ∀ x : F, v (σ x) = v x) (hσ_cont : Continuous σ)
+satisfies `k⁻¹ g σ(k) = t d` for some `k ∈ K` and some `d` diagonal in `K`.
+-/
+lemma exists_inv_mul_mul_map_eq_diagGL_mul
+    [CompactSpace 𝒪[F]]
+    (ht : StrictMono fun i : Fin N ↦ v (t i : F))
+    (σ : F →+* F) (hσ : ∀ x : F, v (σ x) = v x) (hσ_cont : Continuous σ)
     (hσ_surj : Function.Surjective (GeneralLinearGroup.map (n := Fin N) σ))
-    (hg : g ∈ iwahoriDoubleCoset t) :
-    ∃ k ∈ proIwahori, ∃ d : Fin N → Fˣ,
-      diagGL d ∈ proIwahori ∧
-      k⁻¹ * g * k.map σ = diagGL (t * d) := by
+    (hg : g ∈ iwahoriDoubleCoset t)
+    : ∃ k ∈ proIwahori, ∃ d : Fin N → Fˣ,
+      diagGL d ∈ proIwahori ∧ k⁻¹ * g * k.map σ = diagGL (t * d) := by
   -- Put `X k = t⁻¹ k⁻¹ g σ(k)` (`twistedConj`) and `H j = t⁻ʲ K tʲ` (`conjProIwahori`) with
   -- `K = proIwahori`. For every finite range of `j`, some `k` in `K` has `X k` in `H j` on that
   -- range; a cluster point in the compact `K` has it for all `j`, and only diagonal matrices lie in
@@ -789,8 +892,8 @@ lemma exists_inv_mul_mul_map_eq_diagGL_mul [CompactSpace 𝒪[F]]
   obtain ⟨k, hk⟩ : ∃ k : proIwahori, ClusterPt k (atTop.map fun m ↦ f m m) :=
     exists_clusterPt_of_compactSpace _
   have h_all (j : ℤ) : twistedConj t g σ k ∈ conjProIwahori t j := by
-    have h_cont :
-        Continuous fun k : proIwahori ↦ (MulAut.conj (diagGL t) ^ j) (twistedConj t g σ k) := by
+    have h_cont
+        : Continuous fun k : proIwahori ↦ (MulAut.conj (diagGL t) ^ j) (twistedConj t g σ k) := by
       -- `simp` writes the conjugation by `diagGL t ^ j` as a product, which `fun_prop` handles
       simp [← map_zpow, mul_assoc]
       fun_prop

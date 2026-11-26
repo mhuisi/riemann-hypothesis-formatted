@@ -92,21 +92,23 @@ section HodgeTateProjectors
 open Module Matrix IsScalarTower RingHom Function Algebra Submodule.Quotient New.Period.BdRPlus
   algebraMap
 
-/-- Bounded denominators in `BdRPlus`. Let `R` be a coefficient ring (the integers of a finite
+/--
+Bounded denominators in `BdRPlus`. Let `R` be a coefficient ring (the integers of a finite
 Galois extension of `ℚ_p` in `ℚ̄_p`) and let `e ∈ Amax` be nonzero in `BdR`. Then some
 `κ ∈ BdRPlus` with `θ κ ≠ 0`, where `θ = thetaBdR : BdRPlus → ℂ_p`, has `‖θ (κ * z)‖ ≤ 1` for
-every `z` such that `e • z` is the image of some `y` under the map `Amax ⊗ R → BdRPlus`. -/
-lemma New.Period.exists_norm_thetaBdR_mul_le {p : ℕ} [ThePrime p] (R : CoeffRing p) {e : Amax}
-    (he_ne_zero : algebraMap Amax BdR e ≠ 0) :
-    ∃ κ : BdRPlus,
-      thetaBdR κ ≠ 0 ∧
-      ∀ {z : BdRPlus} {y : TensorProduct ℤ_[p] Amax R},
-        (toAlgHom ℤ_[p] R BdRPlus).liftEquiv ℤ_[p] Amax R BdRPlus y = e • z →
-          ‖thetaBdR (κ * z)‖ ≤ 1 := by
+every `z` such that `e • z` is the image of some `y` under the map `Amax ⊗ R → BdRPlus`.
+-/
+lemma New.Period.exists_norm_thetaBdR_mul_le
+    {p : ℕ} [ThePrime p] (R : CoeffRing p) {e : Amax} (he_ne_zero : algebraMap Amax BdR e ≠ 0)
+    : ∃ κ : BdRPlus,
+      thetaBdR κ ≠ 0
+        ∧ ∀ {z : BdRPlus} {y : TensorProduct ℤ_[p] Amax R},
+          (toAlgHom ℤ_[p] R BdRPlus).liftEquiv ℤ_[p] Amax R BdRPlus y = e • z
+            → ‖thetaBdR (κ * z)‖ ≤ 1 := by
   -- Write `e = ξ ^ m * δ` with `δ` a unit of `BdRPlus` and `ξ = xi`.
   obtain ⟨m, δ, hδ⟩ : ∃ m : ℕ, Associated ((xi : BdRPlus) ^ m) (algebraMap Amax BdRPlus e) :=
-    exists_associated_xi_pow
-      (ne_zero_of_map ((algebraMap_apply Amax BdRPlus BdR e).symm.trans_ne he_ne_zero))
+    exists_associated_xi_pow (ne_zero_of_map ((algebraMap_apply Amax BdRPlus BdR e).symm.trans_ne
+      he_ne_zero))
   set O : TensorProduct ℤ_[p] Amax R →ₐ[Amax] BdRPlus :=
     (toAlgHom ℤ_[p] R BdRPlus).liftEquiv ℤ_[p] Amax R BdRPlus
   -- `N` is `A + ξ ^ (m + 1) B`, for `A` the image of `Amax` in `B = BdRPlus`.
@@ -114,8 +116,8 @@ lemma New.Period.exists_norm_thetaBdR_mul_le {p : ℕ} [ThePrime p] (R : CoeffRi
     (((toAlgHom Amax BPlus BdRPlus).toLinearMap ∘ₗ Algebra.linearMap Amax BPlus).coprod
       (.mulLeft Amax (xi ^ (m + 1) • 1))).range
   -- A power of `p` moves each `O y` into `N`; by finite generation one power `p ^ c` serves all.
-  obtain ⟨c, hc⟩ :
-      IsNilpotent (p : End Amax (TensorProduct ℤ_[p] Amax R ⧸ N.comap O.toLinearMap)) := by
+  obtain ⟨c, hc⟩
+      : IsNilpotent (p : End Amax (TensorProduct ℤ_[p] Amax R ⧸ N.comap O.toLinearMap)) := by
     refine End.isNilpotent_iff_of_finite.mpr (Quot.ind fun y ↦ ?_)
     obtain ⟨l, a, v, h⟩ := exists_Ainf_approx (O y) (m + 1)
     exact ⟨l, mod_cast (mk_eq_zero _).mpr ⟨(a, v), by simp [← h, smul_def, ← algebraMap_apply]⟩⟩
@@ -126,45 +128,57 @@ lemma New.Period.exists_norm_thetaBdR_mul_le {p : ℕ} [ThePrime p] (R : CoeffRi
   -- `p ^ c` kills the class of `y` modulo the preimage of `N`.
   have h_pow_y : ((p ^ c : ℕ) : End Amax (_ ⧸ N.comap O.toLinearMap)) ⟦y⟧ = 0 := by
     rw [p.cast_pow c, hc, LinearMap.zero_apply]
-  obtain ⟨a, v, ha⟩ : ∃ (a : Amax) (v : BdRPlus),
-      ((a : BPlus) : BdRPlus) = (xi : BdRPlus) ^ m * (δ * (p ^ c * z) - xi * v) := by
+  obtain ⟨a, v, ha⟩
+      : ∃ (a : Amax) (v : BdRPlus),
+        ((a : BPlus) : BdRPlus) = (xi : BdRPlus) ^ m * (δ * (p ^ c * z) - xi * v) := by
     simpa [N, h, smul_def, ← hδ, pow_succ, mul_assoc, mul_left_comm (_ ^ c), ← mul_sub,
-      ← eq_sub_iff_add_eq] using (mk_eq_zero _).mp h_pow_y
+        ← eq_sub_iff_add_eq]
+      using (mk_eq_zero _).mp h_pow_y
   obtain ⟨a', ha'⟩ : (xi : BPlus) ^ m ∣ (a : BPlus) := xi_pow_dvd_iff.mp ⟨_, ha⟩
   -- The quotient `a'` lies in `BPlus`, and `p ^ (2 * m) * a'` comes from some `a'' ∈ Amax`, because
   -- `ξ` divides `mu` (`amaxImage.p_pow_mul_mem_of_dvd_mu`).
   obtain ⟨a'', ha''⟩ : p ^ (2 * m) * a' ∈ amaxImage :=
     amaxImage.p_pow_mul_mem_of_dvd_mu ⟨_, xi_mul_tau.symm⟩ ⟨a, by simpa [smul_def]⟩
   -- Cancel `ξ ^ m` and apply `θ`, which kills `ξ`: the element in question is `θ a''`.
-  have h_theta : thetaBdR ((p : BdRPlus) ^ (2 * m) * ((δ : BdRPlus) * (p : BdRPlus) ^ c) * z) =
-      (thetaAmax a'' : ℂ_[p]) := by
+  have h_theta
+      : thetaBdR ((p : BdRPlus) ^ (2 * m) * ((δ : BdRPlus) * (p : BdRPlus) ^ c) * z)
+        = (thetaAmax a'' : ℂ_[p]) := by
     clear he_ne_zero hc hκ
     simp_all [← thetaBPlus_algebraMap_Amax, ← thetaBdR_algebraMap_BPlus, ← algebraMap_apply,
       prime_xi.ne_zero, mul_assoc]
   rw [h_theta, ← mem_valRingCp]
   exact (thetaAmax a'').prop
 
-/-- The diagonal matrix with entry `1` at the indices `i` with `k i = w` and `0` elsewhere: the
-projector onto the coordinates of Hodge–Tate weight `w`. -/
-private def New.Period.jumpProjector {α A : Type*} [DecidableEq α] [Ring A] (w : ℤ) (k : α → ℤ) :
-    Matrix α α A :=
+/--
+The diagonal matrix with entry `1` at the indices `i` with `k i = w` and `0` elsewhere: the
+projector onto the coordinates of Hodge–Tate weight `w`.
+-/
+private def New.Period.jumpProjector {α A : Type*} [DecidableEq α] [Ring A] (w : ℤ) (k : α → ℤ)
+    : Matrix α α A :=
   diagonal fun i ↦ if w = k i then 1 else 0
-/-- Trace formula for the multiplicity of a jump. Let `W · diag (t ^ k)` be a Hodge frame of `T`,
+/--
+Trace formula for the multiplicity of a jump. Let `W · diag (t ^ k)` be a Hodge frame of `T`,
 basis `ε` (`IsHodgeFrame` for `⊤`: fixed by the twisted action of `Γ`, `W` a unit over `BdRPlus`),
 and `z = W · P · W⁻¹ · x`, where `P = jumpProjector w k` keeps the coordinates of weight `w`. For
 `r` potentially crystalline and `ℤ_p`-linear `u` with `u (g y) = r g * u y`, `u x = 1`, the sum over
-`s` of `thetaBdR (z s) * γ (trace (u (ε s)))` is the multiplicity of the jump `w` of `r` at `γ`. -/
-private lemma New.Period.sum_thetaBdR_mul_trace_eq_jump_of_isHodgeFrame {p : ℕ} [ThePrime p]
-    {Γ : Type} [Group Γ] [OverGp Γ p] {T ι : Type} [AddCommGroup T] [Module ℤ_[p] T] [Fintype ι]
-    [DecidableEq ι] (ε : Basis ι ℤ_[p] T) {ρ : Representation ℤ_[p] Γ T} (x : T) (w : ℤ)
+`s` of `thetaBdR (z s) * γ (trace (u (ε s)))` is the multiplicity of the jump `w` of `r` at `γ`.
+-/
+private lemma New.Period.sum_thetaBdR_mul_trace_eq_jump_of_isHodgeFrame
+    {p : ℕ} [ThePrime p]
+    {Γ : Type} [Group Γ] [OverGp Γ p]
+    {T ι : Type} [AddCommGroup T] [Module ℤ_[p] T] [Fintype ι] [DecidableEq ι]
+    (ε : Basis ι ℤ_[p] T)
+    {ρ : Representation ℤ_[p] Γ T}
+    (x : T)
+    (w : ℤ)
     {U : Matrix ι ι BdR} {Y : SpecialLinearGroup ι (PadicAlgCl p)} {W : (Matrix ι ι BdRPlus)ˣ}
     {k : ι → ℤ} (hF : IsHodgeFrame (⊤ : Filter Γ) (fun g : Γ ↦ (ρ g).toMatrix ε ε) U Y W k)
     {z : ι → BdRPlus} (hz : z = ↑W *ᵥ jumpProjector w k *ᵥ ↑W⁻¹ *ᵥ (↑) ∘ ε.repr x)
-    (γ : PadicAlgCl p →ₐ[ℤ_[p]] ℂ_[p]) (r : PadicRep Γ p)
-    (u : T →ₗ[ℤ_[p]] Matrix r.Index r.Index (PadicAlgCl p))
+    (γ : PadicAlgCl p →ₐ[ℤ_[p]] ℂ_[p])
+    (r : PadicRep Γ p) (u : T →ₗ[ℤ_[p]] Matrix r.Index r.Index (PadicAlgCl p))
     (hu : ∀ (g : Γ) (y : T), u (ρ g y) = (r.rep g).val * u y) (hx : u x = 1)
-    (h_pcr : IsPotentiallyCrystalline (matrixRep r.rep)) :
-    ∑ s : ι, thetaBdR (z s) * γ (u (ε s)).trace = jump (matrixRep r.rep) γ w := by
+    (h_pcr : IsPotentiallyCrystalline (matrixRep r.rep))
+    : ∑ s : ι, thetaBdR (z s) * γ (u (ε s)).trace = jump (matrixRep r.rep) γ w := by
   -- Hodge–Tate bases: `b` from a frame `P` of `r`, and `β` from the rows of `(θ W)⁻¹` for `T`.
   -- The matrix `F y = P⁻¹ (γ (u y))` satisfies `∑ s, θ (z s) • F (ε s) = jumpProjector w k₁ * F x`,
   -- a projector onto the jump `w` of `r`; taking traces gives the multiplicity.
@@ -172,72 +186,91 @@ private lemma New.Period.sum_thetaBdR_mul_trace_eq_jump_of_isHodgeFrame {p : ℕ
   obtain ⟨P, k₁, -, h_jumps, b, hb, hbP⟩ :=
     h_pcr.exists_isHodgeTateFrame (Pi.basisFun (PadicAlgCl p) r.Index) γ
   -- `β l` has weight `k l`, and its values on `ε` are the row `l` of `(θ W)⁻¹`.
-  obtain ⟨β, hβ, hβW⟩ := (hasJumps_of_rows (ρ := ρ) (γ := ofId ℤ_[p] ℂ_[p]) ε
-    (W.map thetaBdR.toRingHom.mapMatrix.toMonoidHom)⁻¹ k
-    -- (`by exact` waits for the expected type; elaborated at once this times out)
-    (by exact .of_forall fun g ↦ inv_mul_apply_of_isHodgeTateFrame
-          (isHodgeTateFrame_of_hodgeMatrix (hF.eventually_mul_smul_eq g)))).right
+  obtain ⟨β, hβ, hβW⟩ :=
+    (hasJumps_of_rows (ρ := ρ) (γ := ofId ℤ_[p] ℂ_[p]) ε
+      (W.map thetaBdR.toRingHom.mapMatrix.toMonoidHom)⁻¹ k
+      -- (`by exact` waits for the expected type; elaborated at once this times out)
+      (by
+        exact .of_forall fun g ↦
+          inv_mul_apply_of_isHodgeTateFrame (isHodgeTateFrame_of_hodgeMatrix
+            (hF.eventually_mul_smul_eq g)))).right
   let F (y : T) : Matrix r.Index r.Index ℂ_[p] :=
     (↑P⁻¹ : Matrix r.Index r.Index ℂ_[p]) * (u y).map γ
   suffices h_proj : ∑ s, thetaBdR (z s) • F (ε s) = jumpProjector w k₁ * F x by
     -- Multiply by `P` and take traces; `u x = 1` leaves the trace of the projector.
-    have h_trace : ((P : Matrix r.Index r.Index ℂ_[p]) * ∑ s, thetaBdR (z s) • F (ε s)).trace =
-        ((P : Matrix r.Index r.Index ℂ_[p]) * (jumpProjector w k₁ * F x)).trace := by
+    have h_trace
+        : ((P : Matrix r.Index r.Index ℂ_[p]) * ∑ s, thetaBdR (z s) • F (ε s)).trace
+          = ((P : Matrix r.Index r.Index ℂ_[p]) * (jumpProjector w k₁ * F x)).trace := by
       rw [h_proj]
     simpa [F, Finset.mul_sum, mul_assoc, Matrix.trace_mul_comm (P : Matrix r.Index r.Index ℂ_[p]),
-      jumpProjector, hx, h_jumps w, Multiset.count_map, AddMonoidHom.map_trace, ← Finset.filter_val,
-      Finset.card_val] using h_trace
+        jumpProjector, hx, h_jumps w, Multiset.count_map, AddMonoidHom.map_trace,
+        ← Finset.filter_val, Finset.card_val]
+      using h_trace
   ext i c
   -- The entry `(i, c)` of `F` is a map `φ` of weight `k₁ i` on `T`, hence a combination of the
   -- `β l` with `k l = k₁ i` with algebraic coefficients (`hodgeTateMaps.mem_span_same_weight`).
   have h_entry (y : T) : F y i c = b i (u y *ᵥ Pi.single c 1) := by
-    simp [pi_eq_sum_univ' (col _ c), F, ← hbP, ↓Matrix.mul_apply, mul_comm]
+    simp [pi_eq_sum_univ' (col _ c), F, ← hbP, ↓ Matrix.mul_apply, mul_comm]
   -- `φ` pulls `b i` back along the equivariant map `y ↦ u y *ᵥ Pi.single c 1`.
   let φ : hodgeTateMaps ρ (ofId ℤ_[p] ℂ_[p]) (k₁ i) :=
     hodgeTateMaps.pull (φ := algebraMap ℤ_[p] (PadicAlgCl p)) ⟨applyVec u (Pi.single c 1), by simp⟩
       (by simp [hu, -mulVec_single]) ⟨b i, hb i⟩
   -- The coordinates of `W⁻¹ z` are those of `W⁻¹ x` of weight `w`.
-  have h_coord : (↑W⁻¹ : Matrix ι ι BdRPlus) *ᵥ z =
-      jumpProjector w k *ᵥ (↑W⁻¹ : Matrix ι ι BdRPlus) *ᵥ (↑) ∘ ε.repr x :=
+  have h_coord
+      : (↑W⁻¹ : Matrix ι ι BdRPlus) *ᵥ z
+        = jumpProjector w k *ᵥ (↑W⁻¹ : Matrix ι ι BdRPlus) *ᵥ (↑) ∘ ε.repr x :=
     (congrArg _ hz).trans (inv_smul_smul W _)
   -- Both sides of the claim are linear in the map, so it passes from these `β l` to their span.
-  have h_span (ψ : T →ₛₗ[(ofId ℤ_[p] ℂ_[p] : ℤ_[p] →+* ℂ_[p])] ℂ_[p])
-      (hψ : ψ ∈ Submodule.span (PadicAlgCl p) (β '' {l | k l = k₁ i})) :
-      ∑ s, thetaBdR (z s) * ψ (ε s) = (if w = k₁ i then 1 else 0) * ψ x := by
+  have h_span
+      (ψ : T →ₛₗ[(ofId ℤ_[p] ℂ_[p] : ℤ_[p] →+* ℂ_[p])] ℂ_[p])
+      (hψ : ψ ∈ Submodule.span (PadicAlgCl p) (β '' {l | k l = k₁ i}))
+      : ∑ s, thetaBdR (z s) * ψ (ε s) = (if w = k₁ i then 1 else 0) * ψ x := by
     induction hψ using Submodule.span_induction with
     | mem _ h =>
       -- For `β l` the claim is `θ` of coordinate `l` of `h_coord`.
       obtain ⟨l, hl : k l = k₁ i, rfl⟩ := h
-      have h_coord_l : thetaBdR (((↑W⁻¹ : Matrix ι ι BdRPlus) *ᵥ z) l) =
-          thetaBdR ((jumpProjector w k *ᵥ (↑W⁻¹ : Matrix ι ι BdRPlus) *ᵥ (↑) ∘ ε.repr x) l) := by
+      have h_coord_l
+          : thetaBdR (((↑W⁻¹ : Matrix ι ι BdRPlus) *ᵥ z) l)
+            = thetaBdR
+              ((jumpProjector w k *ᵥ (↑W⁻¹ : Matrix ι ι BdRPlus) *ᵥ (↑) ∘ ε.repr x) l) := by
         rw [h_coord]
       rw [← ε.sum_repr x, map_sum]
       simpa [-toRingHom_ofId, hβW, hl, jumpProjector, mulVec, dotProduct, smul_def, diagonal,
-        apply_ite, ite_apply, mul_comm] using h_coord_l
-    | zero => simp only [LinearMap.zero_apply, mul_zero, Finset.sum_const_zero]
+          apply_ite, ite_apply, mul_comm]
+        using h_coord_l
+    | zero =>
+      simp only [LinearMap.zero_apply, mul_zero, Finset.sum_const_zero]
     | add ψ₁ ψ₂ _ _ h₁ h₂ =>
       simp only [LinearMap.add_apply, mul_add, Finset.sum_add_distrib, h₁, h₂]
-    | smul a ψ' _ h =>
-      simp only [LinearMap.smul_apply, mul_smul_comm, ← Finset.smul_sum, h]
+    | smul a ψ' _ h => simp only [LinearMap.smul_apply, mul_smul_comm, ← Finset.smul_sum, h]
   simp only [Matrix.sum_apply, Matrix.smul_apply, h_entry, smul_eq_mul, diagonal_mul, jumpProjector]
   exact h_span φ (hodgeTateMaps.mem_span_same_weight hβ φ.prop (β.mem_span _))
 
-/-- Integrality of the projection onto one jump. Let `U * Y = W · diag (t ^ k)` be a Hodge frame
+/--
+Integrality of the projection onto one jump. Let `U * Y = W · diag (t ^ k)` be a Hodge frame
 (`IsHodgeFrame`) with `det Y = 1` and `U * U' = e • 1`, and let `y` over `Amax ⊗ R` map to `Y`
 under `O`. Then `e` times the projection `W · P · W⁻¹ · x` onto the coordinates of weight `w`
-(`P = jumpProjector w k`) is the image under `O` of `M x`, with `M = U · y · P · adj y · U'`. -/
-private lemma New.Period.map_mulVec_apply_eq_smul_of_isHodgeFrame {p : ℕ} [ThePrime p] {Γ : Type}
-    [Group Γ] [OverGp Γ p] {T ι : Type} [AddCommGroup T] [Module ℤ_[p] T] [Fintype ι]
-    [DecidableEq ι] (ε : Basis ι ℤ_[p] T) {ρ : Representation ℤ_[p] Γ T} (x : T) (w : ℤ)
-    {R : CoeffRing p} (O : TensorProduct ℤ_[p] Amax R →ₐ[Amax] BdRPlus) {e : Amax}
-    {U U' : Matrix ι ι Amax} (hUU' : U * U' = e • 1) {Y : Matrix ι ι (PadicAlgCl p)}
-    (hY_det : Y.det = 1) {W : (Matrix ι ι BdRPlus)ˣ} {k : ι → ℤ}
-    (hF : IsHodgeFrame (⊤ : Filter Γ) (fun g : Γ ↦ (ρ g).toMatrix ε ε)
+(`P = jumpProjector w k`) is the image under `O` of `M x`, with `M = U · y · P · adj y · U'`.
+-/
+private lemma New.Period.map_mulVec_apply_eq_smul_of_isHodgeFrame
+    {p : ℕ} [ThePrime p]
+    {Γ : Type} [Group Γ] [OverGp Γ p]
+    {T ι : Type} [AddCommGroup T] [Module ℤ_[p] T] [Fintype ι] [DecidableEq ι]
+    (ε : Basis ι ℤ_[p] T)
+    {ρ : Representation ℤ_[p] Γ T}
+    (x : T) (w : ℤ)
+    {R : CoeffRing p} (O : TensorProduct ℤ_[p] Amax R →ₐ[Amax] BdRPlus)
+    {e : Amax} {U U' : Matrix ι ι Amax} (hUU' : U * U' = e • 1)
+    {Y : Matrix ι ι (PadicAlgCl p)} (hY_det : Y.det = 1)
+    {W : (Matrix ι ι BdRPlus)ˣ} {k : ι → ℤ}
+    (hF : IsHodgeFrame (⊤ : Filter Γ)
+      (fun g : Γ ↦ (ρ g).toMatrix ε ε)
       ((algebraMap Amax BdR).mapMatrix U) ⟨Y, hY_det⟩ W k)
     {y : Matrix ι ι (TensorProduct ℤ_[p] Amax R)}
-    (hy : O.mapMatrix y = (algebraMap (PadicAlgCl p) BdRPlus).mapMatrix Y) (s : ι) :
-    O (((U.map (↑) * y * jumpProjector w k * y.adjugate * U'.map (↑)) *ᵥ (↑) ∘ ε.repr x) s) =
-      e • (↑W *ᵥ jumpProjector w k *ᵥ ↑W⁻¹ *ᵥ (↑) ∘ ε.repr x) s := by
+    (hy : O.mapMatrix y = (algebraMap (PadicAlgCl p) BdRPlus).mapMatrix Y)
+    (s : ι)
+    : O (((U.map (↑) * y * jumpProjector w k * y.adjugate * U'.map (↑)) *ᵥ (↑) ∘ ε.repr x) s)
+      = e • (↑W *ᵥ jumpProjector w k *ᵥ ↑W⁻¹ *ᵥ (↑) ∘ ε.repr x) s := by
   set M : Matrix ι ι (TensorProduct ℤ_[p] Amax R) :=
     U.map (↑) * y * jumpProjector w k * y.adjugate * U'.map (↑)
   -- Diagonal matrices commute, so `U * Y` conjugates the projector as `W` does.
@@ -246,8 +279,10 @@ private lemma New.Period.map_mulVec_apply_eq_smul_of_isHodgeFrame {p : ℕ} [The
       ((W : Matrix ι ι BdRPlus) * jumpProjector w k * (↑W⁻¹ : Matrix ι ι BdRPlus)) := by
     refine map_injective (IsFractionRing.injective _ BdR) ?_
     -- The frame equation `U * Y = W * diag (t ^ k)`, written with the maps that appear below.
-    have hUY : U.map (algebraMap BdRPlus BdR ∘ ((↑) : Amax → BdRPlus)) *
-        Y.map (algebraMap BdRPlus BdR ∘ algebraMap (PadicAlgCl p) BdRPlus) = hodgeMatrix W k :=
+    have hUY
+        : U.map (algebraMap BdRPlus BdR ∘ ((↑) : Amax → BdRPlus))
+            * Y.map (algebraMap BdRPlus BdR ∘ algebraMap (PadicAlgCl p) BdRPlus)
+          = hodgeMatrix W k :=
       hF.mul_map_eq
     -- `simp` distributes the map over the products, which leaves `U * Y` in the form of `hUY`.
     simp
@@ -258,28 +293,29 @@ private lemma New.Period.map_mulVec_apply_eq_smul_of_isHodgeFrame {p : ℕ} [The
   -- Hence `O M = e • W P W⁻¹`, because `Y.det = 1` and `U * U' = e • 1`. The flags
   -- `-mapMatrix_apply` and `-TensorProduct.algebraMap_apply` keep `O.mapMatrix` and `algebraMap`
   -- folded so that `hy` and `h_conj` apply; without them `simp` unfolds both first.
-  simp [↓map_mul, O.map_adjugate, comp_def, ← map_det, hy, hY_det, hUU', M, h_conj.eq,
-    mul_assoc, mul_adjugate, -mapMatrix_apply, ← U.map_mul, map_smul',
-    -TensorProduct.algebraMap_apply, smul_mulVec]
-/-- Hodge–Tate projectors of lattices with jumps in `[0, n]` have bounded denominators (`𝒥` maps `Γ`
+  simp [↓ map_mul, O.map_adjugate, comp_def, ← map_det, hy, hY_det, hUU', M, h_conj.eq, mul_assoc,
+    mul_adjugate, -mapMatrix_apply, ← U.map_mul, map_smul', -TensorProduct.algebraMap_apply,
+    smul_mulVec]
+/--
+Hodge–Tate projectors of lattices with jumps in `[0, n]` have bounded denominators (`𝒥` maps `Γ`
 to `Gp p` with open image). Some `t ∈ ℂ_p`, depending on `Γ`, `n`, `w` only, serves each crystalline
 `T` with jumps in `[0, n]`, basis `ε`, `x ∈ T`. Some `z` has (a) `‖z s‖ ≤ 1` and (b) for potentially
 crystalline `r` and `ℤ_p`-linear `u` with `u (g y) = r g * u y`, `u x = 1`,
-`t * ∑ s, z s * γ (trace (u (ε s)))` is the multiplicity of the jump `w` of `r` at `γ`. -/
-lemma New.Period.exists_uniform_trace_sum_eq_jump {p : ℕ} [ThePrime p] (Γ : Type) [Group Γ]
-    [𝒥 : OverGp Γ p] (n : ℕ) (w : ℤ) :
-    ∃ t : ℂ_[p],
+`t * ∑ s, z s * γ (trace (u (ε s)))` is the multiplicity of the jump `w` of `r` at `γ`.
+-/
+lemma New.Period.exists_uniform_trace_sum_eq_jump
+    {p : ℕ} [ThePrime p] (Γ : Type) [Group Γ] [𝒥 : OverGp Γ p] (n : ℕ) (w : ℤ)
+    : ∃ t : ℂ_[p],
       ∀ {T ι : Type} [AddCommGroup T] [Module ℤ_[p] T] [Fintype ι] (ε : Basis ι ℤ_[p] T)
-        {ρ : Representation ℤ_[p] Γ T} (x : T),
-      IsCrystallineUpTo (R := ℤ_[p]) n ρ →
-      ∃ z : ι → ℂ_[p],
-        (∀ s : ι, ‖z s‖ ≤ 1) ∧
-        ∀ (γ : PadicAlgCl p →ₐ[ℤ_[p]] ℂ_[p]) (r : PadicRep Γ p)
-          (u : T →ₗ[ℤ_[p]] Matrix r.Index r.Index (PadicAlgCl p)),
-          (∀ (g : Γ) (y : T), u (ρ g y) = (r.rep g).val * u y) →
-          u x = 1 →
-          IsPotentiallyCrystalline (matrixRep r.rep) →
-          t * ∑ s : ι, z s * γ (u (ε s)).trace = jump (matrixRep r.rep) γ w := by
+          {ρ : Representation ℤ_[p] Γ T} (x : T),
+        IsCrystallineUpTo (R := ℤ_[p]) n ρ
+          → ∃ z : ι → ℂ_[p],
+            (∀ s : ι, ‖z s‖ ≤ 1)
+              ∧ ∀ (γ : PadicAlgCl p →ₐ[ℤ_[p]] ℂ_[p]) (r : PadicRep Γ p)
+                  (u : T →ₗ[ℤ_[p]] Matrix r.Index r.Index (PadicAlgCl p)),
+                (∀ (g : Γ) (y : T), u (ρ g y) = (r.rep g).val * u y) → u x = 1
+                  → IsPotentiallyCrystalline (matrixRep r.rep)
+                  → t * ∑ s : ι, z s * γ (u (ε s)).trace = jump (matrixRep r.rep) γ w := by
   classical
   -- In a Hodge frame `W` of `T` take the projector `W * jumpProjector w k * W⁻¹` onto the jump
   -- `w`. The vector `z` it makes of `x` has denominators bounded by one `κ`, and `u` takes `θ z`
@@ -288,8 +324,9 @@ lemma New.Period.exists_uniform_trace_sum_eq_jump {p : ℕ} [ThePrime p] (Γ : T
   -- invariant columns, and `U'` with `U * U' = e • 1`.
   obtain ⟨e, he_unit, h_unif⟩ := Lift.uniform_period_bound Γ n
   -- `R` contains the integers of `localFieldOf Γ`, a finite extension of `ℚ_p`.
-  obtain ⟨R, hR⟩ : ∃ R : CoeffRing p,
-      ∀ x ∈ localFieldOf Γ, ‖x‖ ≤ 1 → x ∈ (R : Subalgebra ℤ_[p] (PadicAlgCl p)) := by
+  obtain ⟨R, hR⟩
+      : ∃ R : CoeffRing p, ∀ x ∈ localFieldOf Γ,
+        ‖x‖ ≤ 1 → x ∈ (R : Subalgebra ℤ_[p] (PadicAlgCl p)) := by
     obtain ⟨s, hs⟩ := (localFieldOf Γ).essFiniteType_iff.mp inferInstance
     rw [← hs]
     exact CoeffRing.exists_mem_of_mem_adjoin s
@@ -307,14 +344,16 @@ lemma New.Period.exists_uniform_trace_sum_eq_jump {p : ℕ} [ThePrime p] (Γ : T
     isUnit_of_mul_isUnit_left (y := (algebraMap Amax BdR).mapMatrix U')
       (by simp [← Matrix.map_mul, hUU', smul_eq_diagonal_mul, he_ne_zero, Pi.isUnit_iff])
   -- `U` is invariant over `BdR` too, being invariant over `Amax` (`hU`).
-  obtain ⟨⟨Y, hY_det⟩, W, k, hF⟩ := exists_isHodgeFrame Γ le_top hU_unit fun g ↦ by
-    simpa [comp_def, ← algebraMap_apply] using congrArg (algebraMap Amax BdR).mapMatrix (hU g)
+  obtain ⟨⟨Y, hY_det⟩, W, k, hF⟩ :=
+    exists_isHodgeFrame Γ le_top hU_unit fun g ↦ by
+      simpa [comp_def, ← algebraMap_apply] using congrArg (algebraMap Amax BdR).mapMatrix (hU g)
   obtain ⟨W, rfl⟩ := hF.isUnit
   -- `Y` is fixed and integral, so its entries lie in `R`.
   have hY_mem (i l : ι) : Y i l ∈ (R : Subalgebra ℤ_[p] (PadicAlgCl p)) :=
     hR _ (by simpa using fun g ↦ congrFun₂ (hF.eventually_map_eq g) i l) (hF.norm_le_one i l)
-  obtain ⟨y, hy⟩ : ∃ y : Matrix ι ι (TensorProduct ℤ_[p] Amax R),
-      O.mapMatrix y = (algebraMap (PadicAlgCl p) BdRPlus).mapMatrix Y :=
+  obtain ⟨y, hy⟩
+      : ∃ y : Matrix ι ι (TensorProduct ℤ_[p] Amax R),
+        O.mapMatrix y = (algebraMap (PadicAlgCl p) BdRPlus).mapMatrix Y :=
     ⟨of fun i l ↦ 1 ⊗ₜ ⟨Y i l, hY_mem i l⟩, by ext; simp [O]⟩
   -- `jumpProjector w k` keeps the coordinates of weight `w`; `z` is the projection of `x`.
   let z : ι → BdRPlus := ↑W *ᵥ jumpProjector w k *ᵥ ↑W⁻¹ *ᵥ (↑) ∘ ε.repr x
@@ -343,92 +382,119 @@ section LocalLimit
 open Matrix Polynomial MonoidAlgebra Finset Module Metric IsUltrametricDist Submodule Set New.Period
   hodgeTateMaps TensorProduct Function LinearMap Amax Filter
 
-/-- If the combinations of the traces of the `ρ η x` with coefficients `a η x` tend uniformly on `G`
+/--
+If the combinations of the traces of the `ρ η x` with coefficients `a η x` tend uniformly on `G`
 to `b` times the trace of `r`, they do so uniformly on the group ring `ℤ_ℓ[G]`: for each `ε > 0`,
 eventually along `F` the error is at most `ε` at every `y`. Representations act on the group ring
-by `groupRingHom`, their linear extension; `⟨r⟩` is `r` as a `PadicRep`. -/
-lemma New.GaloisRep.eventually_trace_sub_sum_mem_closedBall {ℓ : ℕ} [ThePrime ℓ] {G m I : Type}
-    [Group G] [Fintype m] [DecidableEq m] {r : G →* GL m (PadicAlgCl ℓ)} {ι : I → Type}
-    [∀ η : I, Fintype (ι η)] {F : Filter I} {a : (η : I) → ι η → PadicAlgCl ℓ}
-    {ρ : (η : I) → ι η → PadicRep G ℓ} {b : PadicAlgCl ℓ}
+by `groupRingHom`, their linear extension; `⟨r⟩` is `r` as a `PadicRep`.
+-/
+lemma New.GaloisRep.eventually_trace_sub_sum_mem_closedBall
+    {ℓ : ℕ} [ThePrime ℓ]
+    {G m I : Type} [Group G] [Fintype m] [DecidableEq m]
+    {r : G →* GL m (PadicAlgCl ℓ)} {ι : I → Type} [∀ η : I, Fintype (ι η)]
+    {F : Filter I} {a : (η : I) → ι η → PadicAlgCl ℓ} {ρ : (η : I) → ι η → PadicRep G ℓ}
+    {b : PadicAlgCl ℓ}
     (h_conv : TendstoUniformly
       (fun (η : I) (g : G) ↦ ∑ x : ι η, a η x * ((ρ η x).rep g).val.trace)
-      (fun g : G ↦ b * (r g).val.trace) F)
-    {ε : ℝ} (hε : 0 < ε) :
-    ∀ᶠ η : I in F, ∀ y : ℤ_[ℓ][G],
-      b * (groupRingHom ⟨r⟩ y).trace - ∑ x : ι η, a η x * (groupRingHom (ρ η x) y).trace ∈
-        closedBall 0 ε := by
+      (fun g : G ↦ b * (r g).val.trace)
+      F)
+    {ε : ℝ} (hε : 0 < ε)
+    : ∀ᶠ η : I in F, ∀ y : ℤ_[ℓ][G],
+        b * (groupRingHom ⟨r⟩ y).trace - ∑ x : ι η, a η x * (groupRingHom (ρ η x) y).trace ∈
+          closedBall 0 ε := by
   -- The coefficients of y have norm at most 1, and the norm is ultrametric. (`using!`: the
   -- coefficients act through their coercion to `ℚ̄_ℓ`, which plain `using` does not match.)
   filter_upwards [tendstoUniformly_iff.mp h_conv ε hε] with η hη y
   simpa [lift_apply, Finsupp.sum, mul_sum, univ.sum_comm, smul_sub, smul_sum] using!
-    norm_sum_le_of_forall_le_of_nonneg hε.le fun g _ ↦ (norm_smul ..).trans_le
-      ((mul_le_of_le_one_left (by simp) (y.coeff g).prop).trans
-        ((dist_eq_norm _ _).symm.trans_lt (hη g)).le)
+    norm_sum_le_of_forall_le_of_nonneg hε.le fun g _ ↦
+      (norm_smul ..).trans_le
+        ((mul_le_of_le_one_left (by simp) (y.coeff g).prop).trans
+          ((dist_eq_norm _ _).symm.trans_lt (hη g)).le)
 
-/-- Linear relations pass to the limit. Let `r` have non-degenerate trace form, `F` be a proper
+/--
+Linear relations pass to the limit. Let `r` have non-degenerate trace form, `F` be a proper
 filter, `S` a finite set of indices `l`, and let the traces of the `ρ η x` weighted by `a * c l`
 tend uniformly to `b l` times the trace of `r`. If the group ring elements `y θ l` satisfy the
 relation with coefficients `c l θ x` in each `ρ θ x`, and their combination with coefficients `b l`
-has a value `M` in `r` that does not depend on `θ`, then `M = 0`. -/
-lemma New.GaloisRep.matrix_eq_zero_of_relation_of_limit {ℓ : ℕ} [ThePrime ℓ] {G m I : Type}
-    [Group G] [Fintype m] [DecidableEq m] {r : G →* GL m (PadicAlgCl ℓ)} {ι : I → Type}
-    [∀ η : I, Fintype (ι η)] (F : Filter I) [NeBot F] (hr_nondeg : IsTraceNondeg r)
-    (a : (η : I) → ι η → PadicAlgCl ℓ) (ρ : (η : I) → ι η → PadicRep G ℓ) (S : Finset ℕ)
+has a value `M` in `r` that does not depend on `θ`, then `M = 0`.
+-/
+lemma New.GaloisRep.matrix_eq_zero_of_relation_of_limit
+    {ℓ : ℕ} [ThePrime ℓ]
+    {G m I : Type} [Group G] [Fintype m] [DecidableEq m]
+    {r : G →* GL m (PadicAlgCl ℓ)} {ι : I → Type} [∀ η : I, Fintype (ι η)]
+    (F : Filter I) [NeBot F]
+    (hr_nondeg : IsTraceNondeg r)
+    (a : (η : I) → ι η → PadicAlgCl ℓ)
+    (ρ : (η : I) → ι η → PadicRep G ℓ)
+    (S : Finset ℕ)
     {b : ℕ → PadicAlgCl ℓ} {c : ℕ → (η : I) → ι η → PadicAlgCl ℓ}
-    (h_conv : ∀ l : ℕ, TendstoUniformly
-      (fun (η : I) (g : G) ↦ ∑ x : ι η, (a * c l) η x * ((ρ η x).rep g).val.trace)
-      (fun g : G ↦ b l * (r g).val.trace) F)
+    (h_conv : ∀ l : ℕ,
+      TendstoUniformly
+        (fun (η : I) (g : G) ↦ ∑ x : ι η, (a * c l) η x * ((ρ η x).rep g).val.trace)
+        (fun g : G ↦ b l * (r g).val.trace)
+        F)
     (y : I → ℕ → ℤ_[ℓ][G])
     (hy_rel : ∀ (θ : I) (x : ι θ), ∑ l ∈ S, c l θ x • groupRingHom (ρ θ x) (y θ l) = 0)
     {M : Matrix m m (PadicAlgCl ℓ)}
-    (hM_eq : ∀ θ : I, (∑ l ∈ S, b l • groupRingHom ⟨r⟩ (y θ l) : Matrix m m (PadicAlgCl ℓ)) = M) :
-    M = 0 := by
+    (hM_eq : ∀ θ : I, (∑ l ∈ S, b l • groupRingHom ⟨r⟩ (y θ l) : Matrix m m (PadicAlgCl ℓ)) = M)
+    : M = 0 := by
   obtain ⟨t₀⟩ : Nonempty I := F.nonempty_of_neBot
   refine hr_nondeg _ ?_ fun g ↦ ?_
   · simp (maxDischargeDepth := 9) [← hM_eq t₀, lift_apply, Finsupp.sum, sum_mem, smul_of_tower_mem,
       mem_span_of_mem]
   -- The trace of M r g is a sum of errors that tend to 0.
-  let err (θ : I) (l : ℕ) : PadicAlgCl ℓ := b l * (groupRingHom ⟨r⟩ (y θ l * .single g 1)).trace -
-    ∑ x, (a * c l) θ x * (groupRingHom (ρ θ x) (y θ l * .single g 1)).trace
+  let err (θ : I) (l : ℕ) : PadicAlgCl ℓ :=
+    b l * (groupRingHom ⟨r⟩ (y θ l * .single g 1)).trace
+      - ∑ x, (a * c l) θ x * (groupRingHom (ρ θ x) (y θ l * .single g 1)).trace
   have h_lim : Tendsto (fun θ ↦ ∑ l ∈ S, err θ l) F (nhds (∑ l ∈ S, 0)) :=
-    tendsto_finsetSum S fun l _ ↦ nhds_basis_closedBall.tendsto_right_iff.mpr fun ε hε ↦
-      (eventually_trace_sub_sum_mem_closedBall (h_conv l) hε).mono fun θ h ↦ h _
+    tendsto_finsetSum S fun l _ ↦
+      nhds_basis_closedBall.tendsto_right_iff.mpr fun ε hε ↦
+        (eventually_trace_sub_sum_mem_closedBall (h_conv l) hε).mono fun θ h ↦ h _
   have h_const (θ : I) : ∑ l ∈ S, err θ l = (M * r g).trace := by
     -- Each `ρ θ x` satisfies the relation, so the sum of its error terms vanishes.
-    have h_rel : ∑ x : ι θ, a θ x *
-        ((∑ l ∈ S, c l θ x • groupRingHom (ρ θ x) (y θ l)) * ((ρ θ x).rep g).val).trace = 0 := by
+    have h_rel
+        : ∑ x : ι θ, a θ x *
+            ((∑ l ∈ S, c l θ x • groupRingHom (ρ θ x) (y θ l)) * ((ρ θ x).rep g).val).trace
+          = 0 := by
       simp [hy_rel]
     simpa [err, ← hM_eq θ, sum_mul, mul_sum, mul_assoc, S.sum_comm] using h_rel
   exact (tendsto_const_nhds_iff.mp (h_lim.congr h_const)).trans sum_const_zero
 
-/-- Let the maps `x ↦ u o x *ᵥ v` intertwine a lattice `lat` with potentially crystalline `σ o`,
+/--
+Let the maps `x ↦ u o x *ᵥ v` intertwine a lattice `lat` with potentially crystalline `σ o`,
 let `(toGp s, k)` be a Weil pair (`s` acts on residues as `x ↦ x ^ (1 / ℓ ^ k)`), and let `y` lie in
 the `Amax`-span of the invariant periods of `lat` (elements of `Amax ⊗ T` fixed by `Γ`). Then one
 `y' ∈ Amax ⊗ T` represents `linearFrob` of `s` on the image of `y` in every `σ o`; here
-`periodTensorMap Amax Bmax f` is the map `a ⊗ x ↦ a ⊗ f x` into `Bmax ⊗ _`. -/
-lemma New.GaloisRep.exists_periodTensorMap_eq_linearFrob {ℓ : ℕ} [ThePrime ℓ] {Γ T κ : Type}
-    [Group Γ] [OverGp Γ ℓ] [AddCommGroup T] [Module ℤ_[ℓ] T] {n : κ → Type} [∀ o : κ, Fintype (n o)]
+`periodTensorMap Amax Bmax f` is the map `a ⊗ x ↦ a ⊗ f x` into `Bmax ⊗ _`.
+-/
+lemma New.GaloisRep.exists_periodTensorMap_eq_linearFrob
+    {ℓ : ℕ} [ThePrime ℓ]
+    {Γ T κ : Type} [Group Γ] [OverGp Γ ℓ] [AddCommGroup T] [Module ℤ_[ℓ] T]
+    {n : κ → Type} [∀ o : κ, Fintype (n o)]
     {lat : Representation ℤ_[ℓ] Γ T}
     {σ : (o : κ) → Representation (PadicAlgCl ℓ) Γ (n o → PadicAlgCl ℓ)}
     (hσ : ∀ o : κ, IsPotentiallyCrystalline (σ o))
     {u : (o : κ) → T →ₗ[ℤ_[ℓ]] Matrix (n o) (n o) (PadicAlgCl ℓ)}
     (h_equiv : ∀ (o : κ) (v : n o → PadicAlgCl ℓ) (g : Γ) (x : T),
       applyVec (u o) v (lat g x) = σ o g (applyVec (u o) v x))
-    {s : Γ} {k : ℕ} (hs : IsWeilPair (toGp s) k) {y : Amax ⊗[ℤ_[ℓ]] T}
-    (hy : y ∈ span Amax (fixedPeriods lat Amax ⊤)) :
-    ∃ y' : Amax ⊗[ℤ_[ℓ]] T, ∀ (o : κ) (v : n o → PadicAlgCl ℓ),
-      periodTensorMap Amax Bmax (applyVec (u o) v) y' =
-        linearFrob (σ o) s k (periodTensorMap Amax Bmax (applyVec (u o) v) y) := by
+    {s : Γ} {k : ℕ} (hs : IsWeilPair (toGp s) k)
+    {y : Amax ⊗[ℤ_[ℓ]] T} (hy : y ∈ span Amax (fixedPeriods lat Amax ⊤))
+    : ∃ y' : Amax ⊗[ℤ_[ℓ]] T, ∀ (o : κ) (v : n o → PadicAlgCl ℓ),
+      periodTensorMap Amax Bmax (applyVec (u o) v) y'
+        = linearFrob (σ o) s k (periodTensorMap Amax Bmax (applyVec (u o) v) y) := by
   -- On invariant elements `linearFrob` acts by φ ^ k s on periods and by s on `T`, which keeps
   -- `Amax ⊗ T`; extend by linearity.
   induction hy using span_induction with
   | mem y hy =>
-    exact ⟨_, fun o v ↦ .symm <| (linearFrob_apply (hσ o) hs
-      (fixedPeriods.periodTensorMap_mem (.of_forall (h_equiv o v))
-        ((nearOne _).univ_mem' hy))).trans
-      (tensorAction_periodTensorMap (h_equiv o v _) ..)⟩
-  | zero => exact ⟨0, by simp⟩
+    exact ⟨
+      _,
+      fun o v ↦
+        .symm <| (linearFrob_apply (hσ o) hs
+          (fixedPeriods.periodTensorMap_mem (.of_forall (h_equiv o v))
+            ((nearOne _).univ_mem' hy))).trans (tensorAction_periodTensorMap (h_equiv o v _) ..)
+    ⟩
+  | zero =>
+    exact ⟨0, by simp⟩
   | add y₁ y₂ _ _ h₁ h₂ =>
     obtain ⟨⟨y₁', h₁'⟩, ⟨y₂', h₂'⟩⟩ := And.intro h₁ h₂
     exact ⟨y₁' + y₂', fun o v ↦ by simp [h₁', h₂']⟩
@@ -438,66 +504,82 @@ lemma New.GaloisRep.exists_periodTensorMap_eq_linearFrob {ℓ : ℕ} [ThePrime �
 
 namespace New.GaloisRep
 
-variable {ℓ : ℕ} [ThePrime ℓ] {E m I : Type} [Field E] [EmbeddedNumberField E] [Fintype m]
-  [DecidableEq m] {ι : I → Type} [∀ η : I, Fintype (ι η)]
+variable
+  {ℓ : ℕ} [ThePrime ℓ]
+  {E m I : Type} [Field E] [EmbeddedNumberField E] [Fintype m] [DecidableEq m]
+  {ι : I → Type} [∀ η : I, Fintype (ι η)]
 
 section Chart
 
-/-- The map `g ↦ χ(g) ^ (-d) · [g]` from the decomposition group at `A` to the group ring, where `χ`
-is the cyclotomic character. A representation read along it is its Tate twist by `χ ^ (-d)`. -/
-noncomputable def tateTwistHom (A : ClosurePlace) [PadicPlaceEmbedding E A ℓ] (d : ℕ) :
-    decompGroup Gal(Ω/E) A →* ℤ_[ℓ][Gal(Ω/E)] :=
+/--
+The map `g ↦ χ(g) ^ (-d) · [g]` from the decomposition group at `A` to the group ring, where `χ`
+is the cyclotomic character. A representation read along it is its Tate twist by `χ ^ (-d)`.
+-/
+noncomputable def tateTwistHom (A : ClosurePlace) [PadicPlaceEmbedding E A ℓ] (d : ℕ)
+    : decompGroup Gal(Ω/E) A →* ℤ_[ℓ][Gal(Ω/E)] :=
   singleHom.comp (((Units.coeHom ℤ_[ℓ]).comp (χ⁻¹ ^ d)).prod (decompGroup Gal(Ω/E) A).subtype)
 
 variable {A : ClosurePlace} [PadicPlaceEmbedding E A ℓ]
 
 /-- Read along `tateTwistHom A d`, an element `g` acts as `χ(g) ^ (-d)` times its action in `σ`. -/
-lemma viaGroupRing_tateTwistHom {d : ℕ} {σ : PadicRep Gal(Ω/E) ℓ} (g : decompGroup Gal(Ω/E) A)
-    (x : σ.Index → PadicAlgCl ℓ) :
-    viaGroupRing (tateTwistHom A d) σ g x = (χ g ^ (-d : ℤ)).val • decompRep σ.rep A g x := by
+lemma viaGroupRing_tateTwistHom
+    {d : ℕ} {σ : PadicRep Gal(Ω/E) ℓ} (g : decompGroup Gal(Ω/E) A) (x : σ.Index → PadicAlgCl ℓ)
+    : viaGroupRing (tateTwistHom A d) σ g x = (χ g ^ (-d : ℤ)).val • decompRep σ.rep A g x := by
   simp [tateTwistHom]
 
-/-- A continuous representation `σ` has finitely many Hodge–Tate jumps at `A`: the integers `k`
+/--
+A continuous representation `σ` has finitely many Hodge–Tate jumps at `A`: the integers `k`
 of nonzero multiplicity at some `γ : ℚ̄_ℓ → ℂ_ℓ`, for the restriction of `σ` to the decomposition
-group at `A`, form a finite set. -/
-lemma finite_setOf_jump_ne_zero {σ : PadicRep Gal(Ω/E) ℓ} (hσ : Continuous σ.rep) :
-    {k : ℤ | ∃ γ : PadicAlgCl ℓ →ₐ[ℤ_[ℓ]] ℂ_[ℓ], jump (decompRep σ.rep A) γ k ≠ 0}.Finite := by
+group at `A`, form a finite set.
+-/
+lemma finite_setOf_jump_ne_zero {σ : PadicRep Gal(Ω/E) ℓ} (hσ : Continuous σ.rep)
+    : {k : ℤ | ∃ γ : PadicAlgCl ℓ →ₐ[ℤ_[ℓ]] ℂ_[ℓ], jump (decompRep σ.rep A) γ k ≠ 0}.Finite := by
   -- The image `L` of the group ring is a lattice, so its jumps are bounded. A jump of `σ` is a jump
   -- of `L`, by pulling back along y ↦ y v.
   let Δ : Subgroup Gal(Ω/E) := decompGroup Gal(Ω/E) A
   obtain ⟨L, q, u, _, _, -, hu, -⟩ :=
     exists_finite_groupRing_quotient Δ (τ := fun _ : Unit ↦ σ) fun _ ↦ hσ
-  obtain ⟨n, h_bound⟩ := exists_jump_bound (γ := Algebra.ofId ℤ_[ℓ] ℂ_[ℓ])
-    (ρ := actionRep _ L (q.toMonoidHom.comp (.comp (of ℤ_[ℓ] Gal(Ω/E)) Δ.subtype)))
+  obtain ⟨n, h_bound⟩ :=
+    exists_jump_bound (γ := Algebra.ofId ℤ_[ℓ] ℂ_[ℓ])
+      (ρ := actionRep _ L (q.toMonoidHom.comp (.comp (of ℤ_[ℓ] Gal(Ω/E)) Δ.subtype)))
   refine (finite_Icc (-(n : ℤ)) n).subset fun k ⟨γ, hk⟩ ↦
     h_bound k fun h_jump_zero ↦ hk <| jump_eq_zero_iff.mpr fun f hf ↦ f.ext fun v ↦ ?_
   -- A form `f` of weight `k` for `σ` gives, for each vector `v`, the form `y ↦ f (y v)` of
   -- weight `k` for `L`; that one is zero, so `f v = 0`.
-  have h_pull := jump_eq_zero_iff.mp h_jump_zero _ (pull (asSemilinear (applyVec (u ())) (v, γ))
-    (by simp [hu, asSemilinear]) ⟨_, hf⟩).prop
+  have h_pull :=
+    jump_eq_zero_iff.mp h_jump_zero _
+      (pull (asSemilinear (applyVec (u ())) (v, γ)) (by simp [hu, asSemilinear]) ⟨_, hf⟩).prop
   -- At `y = 1` the pulled-back form is `f v`; `simp` does not unfold `pull`.
   exact (congrArg f (by simp [asSemilinear])).trans (LinearMap.congr_fun h_pull 1)
 
-/-- If the twist of `σ` by `χ ^ (-d)` is crystalline and every jump of `σ` at `A` has absolute
+/--
+If the twist of `σ` by `χ ^ (-d)` is crystalline and every jump of `σ` at `A` has absolute
 value at most `d`, then the twist is crystalline with jumps in `[0, 2 d]`: the twist adds `d` to
-every jump. -/
-lemma isCrystallineUpTo_tateTwistHom {d : ℕ} {σ : PadicRep Gal(Ω/E) ℓ}
-    (h_twist : IsCrystalline (viaGroupRing (tateTwistHom A d) σ))
+every jump.
+-/
+lemma isCrystallineUpTo_tateTwistHom
+    {d : ℕ} {σ : PadicRep Gal(Ω/E) ℓ} (h_twist : IsCrystalline (viaGroupRing (tateTwistHom A d) σ))
     (h_bound : ∀ (γ : PadicAlgCl ℓ →ₐ[ℤ_[ℓ]] ℂ_[ℓ]) (k : ℤ),
-      jump (decompRep σ.rep A) γ k ≠ 0 → k.natAbs ≤ d) :
-    IsCrystallineUpTo (2 * d) (viaGroupRing (tateTwistHom A d) σ) := by
+      jump (decompRep σ.rep A) γ k ≠ 0 → k.natAbs ≤ d)
+    : IsCrystallineUpTo (2 * d) (viaGroupRing (tateTwistHom A d) σ) := by
   refine ⟨h_twist, fun γ k hk ↦ ?_⟩
-  have h_shift : (k - d).natAbs ≤ d := h_bound γ _ <| by
-    rw [← jump_twist_cyclotomicGp _ (viaGroupRing_tateTwistHom (d := d))]
-    simpa using hk
+  have h_shift : (k - d).natAbs ≤ d :=
+    h_bound γ _ <| by
+      rw [← jump_twist_cyclotomicGp _ (viaGroupRing_tateTwistHom (d := d))]
+      simpa using hk
   omega
 
 end Chart
 
-/-- The trace of `r` is the uniform limit along `F` of the sums ∑ᵢ a η i · tr ρ η i, where the
-`ρ η i` are unramified or crystalline at `A`, and are finitely many or share their jumps. -/
-structure IsTraceLimit [PadicIso ℓ] (r : GalRep ℓ E m) (A : ClosurePlace) (F : Filter I)
-    (a : (η : I) → ι η → PadicAlgCl ℓ) (ρ : (η : I) → ι η → PadicRep Gal(Ω/E) ℓ) : Prop where
+/--
+The trace of `r` is the uniform limit along `F` of the sums ∑ᵢ a η i · tr ρ η i, where the
+`ρ η i` are unramified or crystalline at `A`, and are finitely many or share their jumps.
+-/
+structure IsTraceLimit
+    [PadicIso ℓ]
+    (r : GalRep ℓ E m) (A : ClosurePlace) (F : Filter I) (a : (η : I) → ι η → PadicAlgCl ℓ)
+    (ρ : (η : I) → ι η → PadicRep Gal(Ω/E) ℓ)
+    : Prop where
   /-- The limit is continuous. -/
   continuous_limit : Continuous r
   /-- The trace form of the limit is non-degenerate. -/
@@ -507,41 +589,51 @@ structure IsTraceLimit [PadicIso ℓ] (r : GalRep ℓ E m) (A : ClosurePlace) (F
   /-- Each `ρ η i` is unramified or crystalline at `A`. -/
   isGoodAt_approx (η : I) (i : ι η) : IsGoodAt (ρ η i).rep A
   /-- There are finitely many `η`, or all `ρ η i` have the same jumps. -/
-  finite_or_hasJumpsAt : Finite I ∨
-    ∃ J : (E →+* ℂ) → Multiset ℤ, ∀ (η : I) (i : ι η), HasJumpsAt (ρ η i).rep A J
+  finite_or_hasJumpsAt
+    : Finite I ∨ ∃ J : (E →+* ℂ) → Multiset ℤ, ∀ (η : I) (i : ι η), HasJumpsAt (ρ η i).rep A J
   /-- The combinations of traces converge uniformly along `F` to the trace of `r`. -/
-  tendstoUniformly_trace :
-    TendstoUniformly (fun (η : I) (g : Gal(Ω/E)) ↦ ∑ i : ι η, a η i * ((ρ η i).rep g).val.trace)
-      (fun g : Gal(Ω/E) ↦ (r g).val.trace) F
+  tendstoUniformly_trace
+    : TendstoUniformly
+      (fun (η : I) (g : Gal(Ω/E)) ↦ ∑ i : ι η, a η i * ((ρ η i).rep g).val.trace)
+      (fun g : Gal(Ω/E) ↦ (r g).val.trace)
+      F
 
 namespace IsTraceLimit
 
-variable [PadicIso ℓ] {r : GalRep ℓ E m} {A : ClosurePlace} {F : Filter I}
-  {a : (η : I) → ι η → PadicAlgCl ℓ} {ρ : (η : I) → ι η → PadicRep Gal(Ω/E) ℓ}
+variable
+  [PadicIso ℓ]
+  {r : GalRep ℓ E m} {A : ClosurePlace} {F : Filter I} {a : (η : I) → ι η → PadicAlgCl ℓ}
+  {ρ : (η : I) → ι η → PadicRep Gal(Ω/E) ℓ}
 
 /-- `Amax` has a `p`-adic basis, for the ideal of `ℤ_p` generated by `p`. -/
-lemma _root_.New.Period.nonempty_adicBasis_span_natCast (p : ℕ) [ThePrime p] :
-    Nonempty (Lift.AdicBasis (Ideal.span {(p : ℤ_[p])}) Amax) := by
+lemma _root_.New.Period.nonempty_adicBasis_span_natCast (p : ℕ) [ThePrime p]
+    : Nonempty (Lift.AdicBasis (Ideal.span {(p : ℤ_[p])}) Amax) := by
   rw [← PadicInt.maximalIdeal_eq_span_p]
   exact nonempty_adicBasis _ PadicInt.maximalIdeal_eq_span_p
 
-/-- The convergence of traces is uniform on the group ring: for every `ε > 0`, eventually along
+/--
+The convergence of traces is uniform on the group ring: for every `ε > 0`, eventually along
 `F`, the trace of every `y ∈ ℤ_ℓ[Gal(Ω/E)]` on `r` differs by at most `ε` from the combination
-∑ᵢ a η i · (trace of `y` on `ρ η i`). -/
-lemma eventually_norm_trace_sub_le (h : IsTraceLimit r A F a ρ) {ε : ℝ} (hε : 0 < ε) :
-    ∀ᶠ η : I in F, ∀ y : ℤ_[ℓ][Gal(Ω/E)],
-      ‖(groupRingHom ⟨r⟩ y).trace - ∑ i : ι η, a η i * (groupRingHom (ρ η i) y).trace‖ ≤ ε := by
-  simpa using eventually_trace_sub_sum_mem_closedBall (b := 1) (r := r) (ρ := ρ)
-    (by simpa using h.tendstoUniformly_trace) hε
+∑ᵢ a η i · (trace of `y` on `ρ η i`).
+-/
+lemma eventually_norm_trace_sub_le (h : IsTraceLimit r A F a ρ) {ε : ℝ} (hε : 0 < ε)
+    : ∀ᶠ η : I in F, ∀ y : ℤ_[ℓ][Gal(Ω/E)],
+        ‖(groupRingHom ⟨r⟩ y).trace - ∑ i : ι η, a η i * (groupRingHom (ρ η i) y).trace‖ ≤ ε := by
+  simpa using
+    eventually_trace_sub_sum_mem_closedBall (b := 1) (r := r) (ρ := ρ)
+      (by simpa using h.tendstoUniformly_trace) hε
 
-/-- In a chart at `A` (an embedding `PadicPlaceEmbedding E A ℓ`), the integers that occur as jumps
-of some `ρ η i` at some `γ : ℚ̄_ℓ → ℂ_ℓ` form a finite set. -/
-lemma finite_setOf_jump_approx_ne_zero (h : IsTraceLimit r A F a ρ) [PadicPlaceEmbedding E A ℓ] :
-    {k : ℤ | ∃ (η : I) (i : ι η) (γ : PadicAlgCl ℓ →ₐ[ℤ_[ℓ]] ℂ_[ℓ]),
-      jump (decompRep (ρ η i).rep A) γ k ≠ 0}.Finite := by
+/--
+In a chart at `A` (an embedding `PadicPlaceEmbedding E A ℓ`), the integers that occur as jumps
+of some `ρ η i` at some `γ : ℚ̄_ℓ → ℂ_ℓ` form a finite set.
+-/
+lemma finite_setOf_jump_approx_ne_zero (h : IsTraceLimit r A F a ρ) [PadicPlaceEmbedding E A ℓ]
+    : {k : ℤ | ∃ (η : I) (i : ι η) (γ : PadicAlgCl ℓ →ₐ[ℤ_[ℓ]] ℂ_[ℓ]),
+        jump (decompRep (ρ η i).rep A) γ k ≠ 0}.Finite := by
   rcases h.finite_or_hasJumpsAt with h_fin | ⟨J, h_same⟩
-  · simpa only [ofPred_exists] using finite_iUnion fun η ↦
-      finite_iUnion fun i ↦ finite_setOf_jump_ne_zero (h.continuous_approx η i)
+  · simpa only [ofPred_exists] using
+      finite_iUnion fun η ↦
+        finite_iUnion fun i ↦ finite_setOf_jump_ne_zero (h.continuous_approx η i)
   · -- Every `γ : Q̄_ℓ → ℂ_ℓ` is an element `g γ` of `Gp ℓ` followed by the inclusion.
     choose g hg using exists_gp_eq_algHom (p := ℓ)
     refine (finite_iUnion fun τ ↦ (J τ).finite_toSet).subset ?_
@@ -550,78 +642,98 @@ lemma finite_setOf_jump_approx_ne_zero (h : IsTraceLimit r A F a ρ) [PadicPlace
 
 variable [NeBot F]
 
-/-- In a chart at `A`, one Tate twist, by `χ ^ (-d)` (`tateTwistHom A d`), makes `r` and all
-`ρ η i` crystalline with jumps in `[0, 2 d]` (`IsCrystallineUpTo (2 * d)`). -/
-lemma exists_isCrystallineUpTo_tateTwistHom (h : IsTraceLimit r A F a ρ)
-    [PadicPlaceEmbedding E A ℓ] :
-    ∃ d : ℕ, IsCrystallineUpTo (2 * d) (viaGroupRing (tateTwistHom A d) ⟨r⟩) ∧
-      ∀ (η : I) (i : ι η), IsCrystallineUpTo (2 * d) (viaGroupRing (tateTwistHom A d) (ρ η i)) := by
+/--
+In a chart at `A`, one Tate twist, by `χ ^ (-d)` (`tateTwistHom A d`), makes `r` and all
+`ρ η i` crystalline with jumps in `[0, 2 d]` (`IsCrystallineUpTo (2 * d)`).
+-/
+lemma exists_isCrystallineUpTo_tateTwistHom (h : IsTraceLimit r A F a ρ) [PadicPlaceEmbedding E A ℓ]
+    : ∃ d : ℕ,
+      IsCrystallineUpTo (2 * d) (viaGroupRing (tateTwistHom A d) ⟨r⟩)
+        ∧ ∀ (η : I) (i : ι η),
+          IsCrystallineUpTo (2 * d) (viaGroupRing (tateTwistHom A d) (ρ η i)) := by
   -- Take `d` above all jumps. The twist of `r` is crystalline as a limit.
-  have h_fin : ({k : ℤ | ∃ γ : PadicAlgCl ℓ →ₐ[ℤ_[ℓ]] ℂ_[ℓ], jump (decompRep r A) γ k ≠ 0} ∪
-      {k : ℤ | ∃ (η : I) (i : ι η) (γ : PadicAlgCl ℓ →ₐ[ℤ_[ℓ]] ℂ_[ℓ]),
-        jump (decompRep (ρ η i).rep A) γ k ≠ 0}).Finite :=
+  have h_fin
+      : ({k : ℤ | ∃ γ : PadicAlgCl ℓ →ₐ[ℤ_[ℓ]] ℂ_[ℓ], jump (decompRep r A) γ k ≠ 0}
+        ∪ {k : ℤ | ∃ (η : I) (i : ι η) (γ : PadicAlgCl ℓ →ₐ[ℤ_[ℓ]] ℂ_[ℓ]),
+            jump (decompRep (ρ η i).rep A) γ k ≠ 0}).Finite :=
     (finite_setOf_jump_ne_zero (A := A) (σ := ⟨r⟩) h.continuous_limit).union
       h.finite_setOf_jump_approx_ne_zero
   obtain ⟨d, hd_bound⟩ := (h_fin.image Int.natAbs).bddAbove
-  have h_approx (η : I) (i : ι η) :
-      IsCrystallineUpTo (2 * d) (viaGroupRing (tateTwistHom A d) (ρ η i)) := by
+  have h_approx (η : I) (i : ι η)
+      : IsCrystallineUpTo (2 * d) (viaGroupRing (tateTwistHom A d) (ρ η i)) := by
     obtain ⟨-, h_crys⟩ := h.isGoodAt_approx η i
     exact isCrystallineUpTo_tateTwistHom (h_crys.tate_twist _ viaGroupRing_tateTwistHom)
       fun γ k hk ↦ hd_bound ⟨k, .inr ⟨η, i, γ, hk⟩, rfl⟩
   -- for each `ε > 0` there is an `η` such that the trace on `r` of every `y` killed by all `ρ η i`
   -- has norm at most `ε`
-  have h_close : ∀ ε > (0 : ℝ), ∃ η : I, ∀ y : ℤ_[ℓ][Gal(Ω/E)],
-      (∀ i : ι η, groupRingHom (ρ η i) y = 0) → ‖(groupRingHom ⟨r⟩ y).trace‖ ≤ ε := fun ε hε ↦
+  have h_close
+      : ∀ ε > (0 : ℝ), ∃ η : I, ∀ y : ℤ_[ℓ][Gal(Ω/E)],
+        (∀ i : ι η, groupRingHom (ρ η i) y = 0) → ‖(groupRingHom ⟨r⟩ y).trace‖ ≤ ε := fun ε hε ↦
     (h.eventually_norm_trace_sub_le hε).exists.imp fun η hη y hy ↦ by simpa [hy] using hη y
   have h_limit : IsCrystalline (viaGroupRing (tateTwistHom A d) ⟨r⟩) :=
     isCrystalline_of_trace_limit _ h.continuous_limit h.isTraceNondeg h_approx h.continuous_approx
       h_close
-  exact ⟨d, isCrystallineUpTo_tateTwistHom h_limit fun γ k hk ↦ hd_bound ⟨k, .inl ⟨γ, hk⟩, rfl⟩,
-    h_approx⟩
+  exact ⟨
+    d,
+    isCrystallineUpTo_tateTwistHom h_limit fun γ k hk ↦ hd_bound ⟨k, .inl ⟨γ, hk⟩, rfl⟩,
+    h_approx
+  ⟩
 
-/-- In a chart at `A` (an embedding `PadicPlaceEmbedding E A ℓ`), the restriction of `r` to the
-decomposition group at `A` is crystalline. -/
-lemma isCrystalline (h : IsTraceLimit r A F a ρ) [PadicPlaceEmbedding E A ℓ] :
-    IsCrystalline (decompRep r A) := by
+/--
+In a chart at `A` (an embedding `PadicPlaceEmbedding E A ℓ`), the restriction of `r` to the
+decomposition group at `A` is crystalline.
+-/
+lemma isCrystalline (h : IsTraceLimit r A F a ρ) [PadicPlaceEmbedding E A ℓ]
+    : IsCrystalline (decompRep r A) := by
   obtain ⟨d, ⟨h_twist_crys, -⟩, -⟩ := h.exists_isCrystallineUpTo_tateTwistHom
   -- the twist by `χ ^ d` undoes `tateTwistHom A d`
-  have h_untwist (g : decompGroup Gal(Ω/E) A) (x : m → PadicAlgCl ℓ) :
-      decompRep r A g x = (χ g ^ (d : ℤ)).val • viaGroupRing (tateTwistHom A d) ⟨r⟩ g x := by
+  have h_untwist (g : decompGroup Gal(Ω/E) A) (x : m → PadicAlgCl ℓ)
+      : decompRep r A g x = (χ g ^ (d : ℤ)).val • viaGroupRing (tateTwistHom A d) ⟨r⟩ g x := by
     rw [viaGroupRing_tateTwistHom]
     simp [smul_smul, ← mul_pow]
   exact h_twist_crys.tate_twist d h_untwist
 
-/-- A limit of traces of representations that are unramified or crystalline at `A` is unramified or
-crystalline at `A`. -/
+/--
+A limit of traces of representations that are unramified or crystalline at `A` is unramified or
+crystalline at `A`.
+-/
 theorem isGoodAt (h : IsTraceLimit r A F a ρ) : IsGoodAt r A := by
   refine ⟨fun hA s hs ↦ ?_, h.isCrystalline⟩
   -- Off ℓ, the relation s - 1 = 0 on inertia passes to the limit.
   have h_unram (θ : I) (x : ι θ) : (ρ θ x).rep s = 1 := (h.isGoodAt_approx θ x).left hA s hs
   have h_rel : (r s).val - 1 = 0 :=
-    matrix_eq_zero_of_relation_of_limit F h.isTraceNondeg a ρ {0} (b := fun _ ↦ 1)
-      (c := fun _ ↦ 1) (fun _ ↦ by simpa using h.tendstoUniformly_trace)
-      (fun _ _ ↦ .single s 1 - 1) (by simp [h_unram]) (by simp)
+    matrix_eq_zero_of_relation_of_limit F h.isTraceNondeg a ρ {0}
+      (b := fun _ ↦ 1)
+      (c := fun _ ↦ 1)
+      (fun _ ↦ by simpa using h.tendstoUniformly_trace)
+      (fun _ _ ↦ .single s 1 - 1)
+      (by simp [h_unram]) (by simp)
   exact Units.ext (sub_eq_zero.mp h_rel)
 
-/-- Suppose the trace of `r` is the uniform limit along the nontrivial filter `F` of the sums
+/--
+Suppose the trace of `r` is the uniform limit along the nontrivial filter `F` of the sums
 ∑ᵢ a η i · tr (ρ η i), where the `ρ η i` are unramified or crystalline at the place `A` and are
 either finitely many or share their jumps (`IsTraceLimit r A F a ρ`). Suppose also that we fix an
 embedding of Ω into ℚ̄_ℓ inducing `A`, with a compatible map from the decomposition group to
 Gal(ℚ̄_ℓ/ℚ_ℓ) (`PadicPlaceEmbedding E A ℓ`). Then for every `γ` and `w`, the multiplicity of the
 Hodge–Tate jump `w` at `γ` of `r` restricted to the decomposition group at `A` is the limit along
-`F` of ∑ᵢ a η i · (the multiplicity of `w` at `γ` for the corresponding restriction of `ρ η i`). -/
-theorem tendsto_jump (h : IsTraceLimit r A F a ρ) [PadicPlaceEmbedding E A ℓ]
-    (γ : PadicAlgCl ℓ →ₐ[ℤ_[ℓ]] ℂ_[ℓ]) (w : ℤ) :
-    Tendsto (fun η : I ↦ ∑ i : ι η, a η i * jump (decompRep (ρ η i).rep A) γ w) F
-      (nhds (jump (decompRep r A) γ w)) := by
+`F` of ∑ᵢ a η i · (the multiplicity of `w` at `γ` for the corresponding restriction of `ρ η i`).
+-/
+theorem tendsto_jump
+    (h : IsTraceLimit r A F a ρ)
+    [PadicPlaceEmbedding E A ℓ]
+    (γ : PadicAlgCl ℓ →ₐ[ℤ_[ℓ]] ℂ_[ℓ]) (w : ℤ)
+    : Tendsto
+      (fun η : I ↦ ∑ i : ι η, a η i * jump (decompRep (ρ η i).rep A) γ w)
+      F (nhds (jump (decompRep r A) γ w)) := by
   -- After a common twist the image `L θ` of the group ring in r and the `ρ θ x`, listed as `X θ o`,
   -- is a crystalline lattice. `exists_uniform_trace_sum_eq_jump` reads the multiplicity of w in
   -- `X θ o` as `t * ∑ s, z θ s * γ (trace at y θ s)`, with `t` independent of θ and `‖z θ s‖ ≤ 1`.
   let Δ : Subgroup Gal(Ω/E) := decompGroup Gal(Ω/E) A
   let X (η : I) : Option (ι η) → PadicRep Gal(Ω/E) ℓ := Option.elim' ⟨r⟩ (ρ η)
   obtain ⟨d, h_limit, h_approx⟩ := h.exists_isCrystallineUpTo_tateTwistHom
-  have h_in (θ : I) : ∀ o : Option (ι θ),
-      IsCrystallineUpTo (2 * d) (viaGroupRing (tateTwistHom A d) (X θ o))
+  have h_in (θ : I)
+      : ∀ o : Option (ι θ), IsCrystallineUpTo (2 * d) (viaGroupRing (tateTwistHom A d) (X θ o))
     | none => h_limit
     | some x => h_approx θ x
   have h_cont (η : I) : ∀ o : Option (ι η), Continuous (X η o).rep
@@ -631,8 +743,8 @@ theorem tendsto_jump (h : IsTraceLimit r A F a ρ) [PadicPlaceEmbedding E A ℓ]
   have hL_free (η : I) : Free ℤ_[ℓ] (L η) := (hL η).free
   have hL_finite (η : I) : Module.Finite ℤ_[ℓ] (L η) := (hL η).finite
   have hq (η : I) : (⇑(q η)).Surjective := (hL η).surjective
-  have hu (η : I) (o : Option (ι η)) (y : ℤ_[ℓ][Gal(Ω/E)]) :
-      u η o (q η y) = groupRingHom (X η o) y :=
+  have hu (η : I) (o : Option (ι η)) (y : ℤ_[ℓ][Gal(Ω/E)])
+      : u η o (q η y) = groupRingHom (X η o) y :=
     (hL η).factors o y
   have h_iso {x : PadicAlgCl ℓ} : ‖γ x‖ = ‖x‖ := by
     obtain ⟨g, hg⟩ := exists_gp_eq_algHom γ
@@ -643,151 +755,186 @@ theorem tendsto_jump (h : IsTraceLimit r A F a ρ) [PadicPlaceEmbedding E A ℓ]
   choose y hy using fun θ s ↦ hq θ (finBasis ℤ_[ℓ] _ s)
   let err (θ : I) (s : Fin (finrank ℤ_[ℓ] (L θ))) : PadicAlgCl ℓ :=
     (groupRingHom ⟨r⟩ (y θ s)).trace - ∑ x, a θ x * (groupRingHom (ρ θ x) (y θ s)).trace
-  have h_dist (θ : I) : dist (∑ x, a θ x * jump (decompRep (ρ θ x).rep A) γ w)
-      (jump (decompRep r A) γ w) = ‖t * ∑ s, z θ s * γ (err θ s)‖ := by
+  have h_dist (θ : I)
+      : dist (∑ x, a θ x * jump (decompRep (ρ θ x).rep A) γ w) (jump (decompRep r A) γ w)
+        = ‖t * ∑ s, z θ s * γ (err θ s)‖ := by
     have h_read (o : Option (ι θ)) :=
       h_proj θ γ ⟨.toHomUnits _⟩ (u θ o) (by simp [hu]) (by simp)
         (h_in θ o).left.isPotentiallyCrystalline
     -- `using!`: `h_read` is stated for `X θ o`, which is `r` or `ρ θ x` only up to unfolding of
     -- instances
-    simpa [err, ← hy, hu, mul_sub, mul_sum, sum_comm (γ := ι _), mul_left_comm (γ _),
-      dist_eq_norm', ← h_iso, ↓jump_twist_cyclotomicGp _ viaGroupRing_tateTwistHom] using!
-      congr(‖$(h_read none) - ∑ x, γ (a θ x) * $(h_read x)‖).symm
+    simpa [err, ← hy, hu, mul_sub, mul_sum, sum_comm (γ := ι _), mul_left_comm (γ _), dist_eq_norm',
+        ← h_iso, ↓ jump_twist_cyclotomicGp _ viaGroupRing_tateTwistHom]
+      using! congr(‖$(h_read none) - ∑ x, γ (a θ x) * $(h_read x)‖).symm
   refine Metric.tendsto_nhds.mpr fun ε hε ↦ ?_
   obtain ⟨δ, hδ, hδε⟩ : ∃ δ : ℝ, 0 < δ ∧ ‖t‖ * δ < ε := exists_pos_mul_lt hε ‖t‖
   filter_upwards [h.eventually_norm_trace_sub_le hδ] with θ hθ
   have h_term (s : Fin (finrank ℤ_[ℓ] (L θ))) : ‖z θ s * γ (err θ s)‖ ≤ δ := by
     have h_err : ‖err θ s‖ ≤ δ := hθ (y θ s)
     exact (norm_mul_le_of_le (hz θ s) (h_iso.trans_le h_err)).trans_eq (one_mul δ)
-  calc dist (∑ x, a θ x * jump (decompRep (ρ θ x).rep A) γ w) (jump (decompRep r A) γ w)
+  calc
+    dist (∑ x, a θ x * jump (decompRep (ρ θ x).rep A) γ w) (jump (decompRep r A) γ w)
       = ‖t * ∑ s, z θ s * γ (err θ s)‖ := h_dist θ
     _ ≤ ‖t‖ * δ :=
       norm_mul_le_of_le le_rfl (norm_sum_le_of_forall_le_of_nonneg hδ.le fun s _ ↦ h_term s)
     _ < ε := hδε
 
-/-- Let the jump multiplicities of `ρ η i` be `R'`-related to `J' η i`. Suppose that `n` is
+/--
+Let the jump multiplicities of `ρ η i` be `R'`-related to `J' η i`. Suppose that `n` is
 `R`-related to the multiplicity in `J` whenever numbers `x η i` are `R'`-related to the
 multiplicities in `J' η i` and ∑ᵢ a η i · x η i tends to `n`. Then the jump multiplicities of `r`
-are `R`-related to `J`. -/
-theorem jumpsRelAt (h : IsTraceLimit r A F a ρ) {R R' : ℕ → ℕ → Prop} {J : (E →+* ℂ) → Multiset ℤ}
-    {J' : (η : I) → ι η → (E →+* ℂ) → Multiset ℤ}
+are `R`-related to `J`.
+-/
+theorem jumpsRelAt
+    (h : IsTraceLimit r A F a ρ)
+    {R R' : ℕ → ℕ → Prop} {J : (E →+* ℂ) → Multiset ℤ} {J' : (η : I) → ι η → (E →+* ℂ) → Multiset ℤ}
     (h_jump : ∀ (η : I) (i : ι η), JumpsRelAt (ρ η i).rep A R' (J' η i))
     (h_rel : ∀ (τ : E →+* ℂ) (u : ℤ) (x : (η : I) → ι η → ℕ) (n : ℕ),
-      (∀ (η : I) (i : ι η), R' ((J' η i τ).count u) (x η i)) →
-      Tendsto (fun η : I ↦ ∑ i : ι η, a η i * x η i) F (nhds n) →
-      R ((J τ).count u) n) :
-    JumpsRelAt r A R J :=
-  fun _ γ _ hg u ↦ h_rel _ u _ _ (fun η i ↦ h_jump η i hg u) (h.tendsto_jump γ u)
+      (∀ (η : I) (i : ι η), R' ((J' η i τ).count u) (x η i))
+        → Tendsto (fun η : I ↦ ∑ i : ι η, a η i * x η i) F (nhds n)
+        → R ((J τ).count u) n)
+    : JumpsRelAt r A R J := fun _ γ _ hg u ↦
+  h_rel _ u _ _ (fun η i ↦ h_jump η i hg u) (h.tendsto_jump γ u)
 
-/-- Relations in the group ring pass to the limit. Let the traces weighted by the coefficients of
+/--
+Relations in the group ring pass to the limit. Let the traces weighted by the coefficients of
 the `Q η i` and of `P` converge (`h_coeff`). If the group ring elements `y θ l` satisfy, in each
 `ρ θ x`, the relation with the coefficients of `Q θ x`, and their combination with the
-coefficients of `P` has in `r` a value `M` that does not depend on `θ`, then `M = 0`. -/
-lemma eq_zero_of_relation (h : IsTraceLimit r A F a ρ) {n : ℕ} {P : (PadicAlgCl ℓ)[X]}
-    {Q : (η : I) → ι η → (PadicAlgCl ℓ)[X]}
-    (h_coeff : ∀ l : ℕ, TendstoUniformly
+coefficients of `P` has in `r` a value `M` that does not depend on `θ`, then `M = 0`.
+-/
+lemma eq_zero_of_relation
+    (h : IsTraceLimit r A F a ρ)
+    {n : ℕ} {P : (PadicAlgCl ℓ)[X]} {Q : (η : I) → ι η → (PadicAlgCl ℓ)[X]}
+    (h_coeff : ∀ l : ℕ,
+      TendstoUniformly
         (fun (η : I) (g : Gal(Ω/E)) ↦
           ∑ i : ι η, a η i * (Q η i).coeff l * ((ρ η i).rep g).val.trace)
-        (fun g : Gal(Ω/E) ↦ P.coeff l * (r g).val.trace) F)
+        (fun g : Gal(Ω/E) ↦ P.coeff l * (r g).val.trace)
+        F)
     (y : I → ℕ → ℤ_[ℓ][Gal(Ω/E)])
-    (hy_rel : ∀ (θ : I) (x : ι θ),
-      ∑ l ∈ range n, (Q θ x).coeff l • groupRingHom (ρ θ x) (y θ l) = 0)
+    (hy_rel
+      : ∀ (θ : I) (x : ι θ), ∑ l ∈ range n, (Q θ x).coeff l • groupRingHom (ρ θ x) (y θ l) = 0)
     {M : Matrix m m (PadicAlgCl ℓ)}
     (hM_eq : ∀ θ : I,
-      (∑ l ∈ range n, P.coeff l • groupRingHom ⟨r⟩ (y θ l) : Matrix m m (PadicAlgCl ℓ)) = M) :
-    M = 0 :=
+      (∑ l ∈ range n, P.coeff l • groupRingHom ⟨r⟩ (y θ l) : Matrix m m (PadicAlgCl ℓ)) = M)
+    : M = 0 :=
   matrix_eq_zero_of_relation_of_limit F h.isTraceNondeg a ρ (range n)
-    (c := fun l η x ↦ (Q η x).coeff l) h_coeff y hy_rel hM_eq
+    (c := fun l η x ↦ (Q η x).coeff l)
+    h_coeff y hy_rel hM_eq
 
 omit [PadicIso ℓ] in
-/-- Untwisting the powers of a Weil element. Let the twist of `σ` by `χ ^ (-d)` be crystalline with
+/--
+Untwisting the powers of a Weil element. Let the twist of `σ` by `χ ^ (-d)` be crystalline with
 jumps in `[0, 2 d]`, `σ` crystalline at `A`, `(s, k)` a Weil pair, and `Y N ∈ Amax ⊗ T` represent
 (`hY`) the linear Frobenius of `s ^ N` (degree `N k`) of the twist on `ℓ ^ (k d (n - N)) δ ⊗ 1`. For
 `deg Q < n`, `periodTensorMap` sends `∑ N, lTensor Amax (Q.coeff N • applyVec u v) (Y N)` to
-`(δ • (ℓ ^ (k d)) ^ n) • Q(β) (1 ⊗ v)`, `β = linearFrob (decompRep σ.rep A) ⟨s, hs⟩ k`. -/
-private lemma periodTensorMap_sum_lTensor_eq [L : PadicPlaceEmbedding E A ℓ] {s : Gal(Ω/E)}
-    (hs : s ∈ decompGroup Gal(Ω/E) A) {k d n : ℕ} (hw : IsWeilPair (L.toGp ⟨s, hs⟩) k)
+`(δ • (ℓ ^ (k d)) ^ n) • Q(β) (1 ⊗ v)`, `β = linearFrob (decompRep σ.rep A) ⟨s, hs⟩ k`.
+-/
+private lemma periodTensorMap_sum_lTensor_eq
+    [L : PadicPlaceEmbedding E A ℓ]
+    {s : Gal(Ω/E)} (hs : s ∈ decompGroup Gal(Ω/E) A)
+    {k d n : ℕ} (hw : IsWeilPair (L.toGp ⟨s, hs⟩) k)
     {σ : PadicRep Gal(Ω/E) ℓ}
     (h_twist : IsCrystallineUpTo (2 * d) (viaGroupRing (tateTwistHom A d) σ))
-    (h_crys : IsCrystalline (decompRep σ.rep A)) {T : Type} [Ring T] [Algebra ℤ_[ℓ] T]
-    (u : T →ₐ[ℤ_[ℓ]] Matrix σ.Index σ.Index (PadicAlgCl ℓ)) (δ : Amax)
-    (Y : ℕ → Amax ⊗[ℤ_[ℓ]] T) (v : σ.Index → PadicAlgCl ℓ)
-    (hY : ∀ N : ℕ, periodTensorMap Amax Bmax (applyVec u.toLinearMap v) (Y N) =
-      linearFrob (viaGroupRing (tateTwistHom A d) σ) (⟨s, hs⟩ ^ N) (N * k)
-        (periodTensorMap Amax Bmax (applyVec u.toLinearMap v)
-          ((ℓ ^ (k * d)) ^ (n - N) • δ ⊗ₜ[ℤ_[ℓ]] 1)))
-    {Q : (PadicAlgCl ℓ)[X]} (hQ : Q.natDegree < n) :
-    periodTensorMap Amax Bmax id (∑ N ∈ range n, lTensor Amax (Q.coeff N • applyVec u v) (Y N)) =
-      (δ • (ℓ ^ (k * d) : Bmax) ^ n) • Q.eval₂ (coeffEnd (PadicAlgCl ℓ) (σ.Index → PadicAlgCl ℓ))
+    (h_crys : IsCrystalline (decompRep σ.rep A))
+    {T : Type} [Ring T] [Algebra ℤ_[ℓ] T]
+    (u : T →ₐ[ℤ_[ℓ]] Matrix σ.Index σ.Index (PadicAlgCl ℓ)) (δ : Amax) (Y : ℕ → Amax ⊗[ℤ_[ℓ]] T)
+    (v : σ.Index → PadicAlgCl ℓ)
+    (hY : ∀ N : ℕ,
+      periodTensorMap Amax Bmax (applyVec u.toLinearMap v) (Y N)
+        = linearFrob (viaGroupRing (tateTwistHom A d) σ) (⟨s, hs⟩ ^ N) (N * k)
+          (periodTensorMap Amax Bmax (applyVec u.toLinearMap v)
+            ((ℓ ^ (k * d)) ^ (n - N) • δ ⊗ₜ[ℤ_[ℓ]] 1)))
+    {Q : (PadicAlgCl ℓ)[X]} (hQ : Q.natDegree < n)
+    : periodTensorMap Amax Bmax id (∑ N ∈ range n, lTensor Amax (Q.coeff N • applyVec u v) (Y N))
+      = (δ • (ℓ ^ (k * d) : Bmax) ^ n) • Q.eval₂ (coeffEnd (PadicAlgCl ℓ) (σ.Index → PadicAlgCl ℓ))
         (linearFrob (decompRep σ.rep A) ⟨s, hs⟩ k) (1 ⊗ₜ v) := by
   -- Untwisting gives a factor ℓ ^ (k d N), which completes the exponent n - N to n.
-  have h_pow (N : ℕ) : linearFrob (viaGroupRing (tateTwistHom A d) σ) (⟨s, hs⟩ ^ N) (N * k) =
-      ((ℓ ^ (k * d) : Bmax) • linearFrob (decompRep σ.rep A) ⟨s, hs⟩ k) ^ N := by
+  have h_pow (N : ℕ)
+      : linearFrob (viaGroupRing (tateTwistHom A d) σ) (⟨s, hs⟩ ^ N) (N * k)
+        = ((ℓ ^ (k * d) : Bmax) • linearFrob (decompRep σ.rep A) ⟨s, hs⟩ k) ^ N := by
     rw [linearFrob_pow h_twist.left.isPotentiallyCrystalline hw,
       linearFrob_twist_cyclotomicGp h_crys.isPotentiallyCrystalline hw d viaGroupRing_tateTwistHom]
   choose G hG using fun N ↦ (Y N).exists_finset
   -- apply `Q.coeff N` to `hY N`, untwist by `h_pow`, and sum over `N < n`
-  have h_sum : ∑ N ∈ range n, coeffEnd (PadicAlgCl ℓ) (σ.Index → PadicAlgCl ℓ) (Q.coeff N)
-        (periodTensorMap Amax Bmax (applyVec u.toLinearMap v) (Y N)) =
-      ∑ N ∈ range n, coeffEnd (PadicAlgCl ℓ) (σ.Index → PadicAlgCl ℓ) (Q.coeff N)
-        ((((ℓ ^ (k * d) : Bmax) • linearFrob (decompRep σ.rep A) ⟨s, hs⟩ k) ^ N)
-          ((ℓ ^ (k * d)) ^ (n - N) •
-            periodTensorMap Amax Bmax (applyVec u.toLinearMap v) (δ ⊗ₜ[ℤ_[ℓ]] 1))) :=
+  have h_sum
+      : ∑ N ∈ range n, coeffEnd (PadicAlgCl ℓ) (σ.Index → PadicAlgCl ℓ) (Q.coeff N)
+          (periodTensorMap Amax Bmax (applyVec u.toLinearMap v) (Y N))
+        = ∑ N ∈ range n, coeffEnd (PadicAlgCl ℓ) (σ.Index → PadicAlgCl ℓ) (Q.coeff N)
+            ((((ℓ ^ (k * d) : Bmax) • linearFrob (decompRep σ.rep A) ⟨s, hs⟩ k) ^ N)
+              ((ℓ ^ (k * d)) ^ (n - N) •
+                periodTensorMap Amax Bmax (applyVec u.toLinearMap v) (δ ⊗ₜ[ℤ_[ℓ]] 1))) :=
     Finset.sum_congr rfl fun N _ ↦ by rw [hY N, h_pow N, map_nsmul]
   -- `pow_add` with `mem_range_le` (`N ≤ n`) merges `ℓ ^ (k d N)` and `ℓ ^ (k d (n - N))`
   simpa +contextual [eval₂_eq_sum_range' _ hQ, smul_sum, periodTensorMap, hG, smul_comm _ δ,
-    tmul_eq_smul_one_tmul δ, ← Nat.cast_smul_eq_nsmul Bmax, smul_smul, ← pow_add,
-    mem_range_le, _root_.smul_pow] using h_sum
+      tmul_eq_smul_one_tmul δ, ← Nat.cast_smul_eq_nsmul Bmax, smul_smul, ← pow_add, mem_range_le,
+      _root_.smul_pow]
+    using h_sum
 
 omit [PadicIso ℓ] in
-/-- Integral representatives. In the setting of `periodTensorMap_sum_lTensor_eq`, let `u ∘ q` be the
+/--
+Integral representatives. In the setting of `periodTensorMap_sum_lTensor_eq`, let `u ∘ q` be the
 action of the group ring on `σ` (`hu`), and let `q (y f N)` be the element that the linear form `f`
 reads off `Y N` (`hy`). Write `V` for the space `σ.Index → ℚ̄_ℓ` of `σ`. Then one `M ∈ Amax ⊗ V`
 has image `(δ • (ℓ ^ (k d)) ^ n) • Q(β) (1 ⊗ v)` in `Bmax ⊗ V`, and every `f` reads `M` as
-`(∑ N < n, Q.coeff N • y f N) *ᵥ v` on `σ`. -/
-private lemma exists_periodTensorMap_eq_and_lift_eq [L : PadicPlaceEmbedding E A ℓ] {s : Gal(Ω/E)}
-    (hs : s ∈ decompGroup Gal(Ω/E) A) {k d n : ℕ} (hw : IsWeilPair (L.toGp ⟨s, hs⟩) k)
+`(∑ N < n, Q.coeff N • y f N) *ᵥ v` on `σ`.
+-/
+private lemma exists_periodTensorMap_eq_and_lift_eq
+    [L : PadicPlaceEmbedding E A ℓ]
+    {s : Gal(Ω/E)} (hs : s ∈ decompGroup Gal(Ω/E) A)
+    {k d n : ℕ} (hw : IsWeilPair (L.toGp ⟨s, hs⟩) k)
     {σ : PadicRep Gal(Ω/E) ℓ}
     (h_twist : IsCrystallineUpTo (2 * d) (viaGroupRing (tateTwistHom A d) σ))
-    (h_crys : IsCrystalline (decompRep σ.rep A)) {T : Type} [Ring T] [Algebra ℤ_[ℓ] T]
+    (h_crys : IsCrystalline (decompRep σ.rep A))
+    {T : Type} [Ring T] [Algebra ℤ_[ℓ] T]
     (q : ℤ_[ℓ][Gal(Ω/E)] →ₐ[ℤ_[ℓ]] T) (u : T →ₐ[ℤ_[ℓ]] Matrix σ.Index σ.Index (PadicAlgCl ℓ))
-    (hu : ∀ z : ℤ_[ℓ][Gal(Ω/E)], u (q z) = groupRingHom σ z) (δ : Amax) (Y : ℕ → Amax ⊗[ℤ_[ℓ]] T)
+    (hu : ∀ z : ℤ_[ℓ][Gal(Ω/E)], u (q z) = groupRingHom σ z)
+    (δ : Amax) (Y : ℕ → Amax ⊗[ℤ_[ℓ]] T)
     (hY : ∀ (N : ℕ) (v : σ.Index → PadicAlgCl ℓ),
-      periodTensorMap Amax Bmax (applyVec u.toLinearMap v) (Y N) =
-        linearFrob (viaGroupRing (tateTwistHom A d) σ) (⟨s, hs⟩ ^ N) (N * k)
+      periodTensorMap Amax Bmax (applyVec u.toLinearMap v) (Y N)
+        = linearFrob (viaGroupRing (tateTwistHom A d) σ) (⟨s, hs⟩ ^ N) (N * k)
           (periodTensorMap Amax Bmax (applyVec u.toLinearMap v)
             ((ℓ ^ (k * d)) ^ (n - N) • δ ⊗ₜ[ℤ_[ℓ]] 1)))
     (y : (Amax →ₗ[ℤ_[ℓ]] ℤ_[ℓ]) → ℕ → ℤ_[ℓ][Gal(Ω/E)])
     (hy : ∀ (f : Amax →ₗ[ℤ_[ℓ]] ℤ_[ℓ]) (N : ℕ), q (y f N) = lift (lsmul ℤ_[ℓ] T ∘ₗ f) (Y N))
-    {Q : (PadicAlgCl ℓ)[X]} (hQ : Q.natDegree < n) (v : σ.Index → PadicAlgCl ℓ) :
-    ∃ M : Amax ⊗[ℤ_[ℓ]] (σ.Index → PadicAlgCl ℓ),
-      periodTensorMap Amax Bmax id M =
-        (δ • (ℓ ^ (k * d) : Bmax) ^ n) • Q.eval₂ (coeffEnd (PadicAlgCl ℓ) (σ.Index → PadicAlgCl ℓ))
-          (linearFrob (decompRep σ.rep A) ⟨s, hs⟩ k) (1 ⊗ₜ v) ∧
-      ∀ f : Amax →ₗ[ℤ_[ℓ]] ℤ_[ℓ], lift (lsmul ℤ_[ℓ] (σ.Index → PadicAlgCl ℓ) ∘ₗ f) M =
-        (∑ N ∈ range n, Q.coeff N • groupRingHom σ (y f N)) *ᵥ v := by
+    {Q : (PadicAlgCl ℓ)[X]} (hQ : Q.natDegree < n)
+    (v : σ.Index → PadicAlgCl ℓ)
+    : ∃ M : Amax ⊗[ℤ_[ℓ]] (σ.Index → PadicAlgCl ℓ),
+      periodTensorMap Amax Bmax id M
+          = (δ • (ℓ ^ (k * d) : Bmax) ^ n)
+            • Q.eval₂ (coeffEnd (PadicAlgCl ℓ) (σ.Index → PadicAlgCl ℓ))
+              (linearFrob (decompRep σ.rep A) ⟨s, hs⟩ k) (1 ⊗ₜ v)
+        ∧ ∀ f : Amax →ₗ[ℤ_[ℓ]] ℤ_[ℓ],
+          lift (lsmul ℤ_[ℓ] (σ.Index → PadicAlgCl ℓ) ∘ₗ f) M
+            = (∑ N ∈ range n, Q.coeff N • groupRingHom σ (y f N)) *ᵥ v := by
   refine ⟨∑ N ∈ range n, lTensor Amax (Q.coeff N • applyVec u v) (Y N), ?_, fun f ↦ ?_⟩
   · exact periodTensorMap_sum_lTensor_eq hs hw h_twist h_crys u δ Y v (fun N ↦ hY N v) hQ
   · choose G hG using fun N ↦ (Y N).exists_finset
     simp [← hu, hy, hG, sum_mulVec, smul_mulVec, smul_sum, smul_comm (Q.coeff _)]
 
-/-- The case of `polyKillsAt` at a place `A` above `ℓ`, given by an embedding `L` of Ω in ℚ̄_ℓ.
+/--
+The case of `polyKillsAt` at a place `A` above `ℓ`, given by an embedding `L` of Ω in ℚ̄_ℓ.
 Assume the trace of `r` is the uniform limit along `F` of ∑ᵢ `a η i`·tr `ρ η i` (`h`). Let `Q η i`
 kill `s` on `ρ η i`, let all degrees be below `n`, and let the traces also converge when weighted by
 each coefficient of `Q η i` and of `P` (`h_coeff`). If `(s, k)` is a Weil pair through `L` (`s⁻¹` is
 a Frobenius for `ℓ ^ k`), then the restriction of `r` to the decomposition group is potentially
-crystalline and `P` kills its linearized Frobenius in degree `k` (`IsKilledBy`). -/
-theorem isKilledBy (h : IsTraceLimit r A F a ρ) [L : PadicPlaceEmbedding E A ℓ] {s : Gal(Ω/E)}
-    (hs : s ∈ decompGroup Gal(Ω/E) A) {k n : ℕ} {P : (PadicAlgCl ℓ)[X]}
-    {Q : (η : I) → ι η → (PadicAlgCl ℓ)[X]} (hP : P.natDegree < n)
-    (hQ : ∀ (η : I) (i : ι η), (Q η i).natDegree < n)
+crystalline and `P` kills its linearized Frobenius in degree `k` (`IsKilledBy`).
+-/
+theorem isKilledBy
+    (h : IsTraceLimit r A F a ρ)
+    [L : PadicPlaceEmbedding E A ℓ]
+    {s : Gal(Ω/E)} (hs : s ∈ decompGroup Gal(Ω/E) A)
+    {k n : ℕ} {P : (PadicAlgCl ℓ)[X]} {Q : (η : I) → ι η → (PadicAlgCl ℓ)[X]}
+    (hP : P.natDegree < n) (hQ : ∀ (η : I) (i : ι η), (Q η i).natDegree < n)
     (h_kill : ∀ (η : I) (i : ι η), PolyKillsAt (ρ η i).rep A s (Q η i))
-    (h_coeff : ∀ l : ℕ, TendstoUniformly
+    (h_coeff : ∀ l : ℕ,
+      TendstoUniformly
         (fun (η : I) (g : Gal(Ω/E)) ↦
           ∑ i : ι η, a η i * (Q η i).coeff l * ((ρ η i).rep g).val.trace)
-        (fun g : Gal(Ω/E) ↦ P.coeff l * (r g).val.trace) F)
-    (hw : IsWeilPair (L.toGp ⟨s, hs⟩) k) :
-    IsKilledBy (decompRep r A) ⟨s, hs⟩ k P := by
+        (fun g : Gal(Ω/E) ↦ P.coeff l * (r g).val.trace)
+        F)
+    (hw : IsWeilPair (L.toGp ⟨s, hs⟩) k)
+    : IsKilledBy (decompRep r A) ⟨s, hs⟩ k P := by
   -- The powers of the Weil element have bounded denominators on the twisted lattices `T θ`, and
   -- linear forms on `Amax` turn relations between them into group ring relations.
   refine ⟨h.isCrystalline.isPotentiallyCrystalline, (isBaseChange ..).algHom_ext _ _ fun v ↦ ?_⟩
@@ -807,15 +954,16 @@ theorem isKilledBy (h : IsTraceLimit r A F a ρ) [L : PadicPlaceEmbedding E A �
   have hT_free (η : I) : Free ℤ_[ℓ] (T η) := (hT η).free
   have hT_finite (η : I) : Module.Finite ℤ_[ℓ] (T η) := (hT η).finite
   have hq (η : I) : (⇑(q η)).Surjective := (hT η).surjective
-  have hu (η : I) (o : Option (ι η)) (z : ℤ_[ℓ][Gal(Ω/E)]) :
-      u η o (q η z) = groupRingHom (X η o) z :=
+  have hu (η : I) (o : Option (ι η)) (z : ℤ_[ℓ][Gal(Ω/E)])
+      : u η o (q η z) = groupRingHom (X η o) z :=
     (hT η).factors o z
   -- `δ : Amax` is a unit in `Bmax`, and `δ ⊗ t` lies in the span of the invariants for every
   -- crystalline lattice with jumps in [0, 2 d]; `c` is an ℓ-adic basis of `Amax`.
   obtain ⟨δ, hδ, h_unif⟩ := Lift.uniform_period_bound Δ (2 * d)
   obtain ⟨c⟩ := nonempty_adicBasis_span_natCast ℓ
-  have h_span (θ : I) (N : ℕ) : (ℓ ^ (k * d)) ^ (n - N) • δ ⊗ₜ[ℤ_[ℓ]] (1 : T θ) ∈
-      span Amax (fixedPeriods (actionRep ℤ_[ℓ] (T θ) ((q θ).toMonoidHom.comp α)) Amax ⊤) :=
+  have h_span (θ : I) (N : ℕ)
+      : (ℓ ^ (k * d)) ^ (n - N) • δ ⊗ₜ[ℤ_[ℓ]] (1 : T θ)
+        ∈ span Amax (fixedPeriods (actionRep ℤ_[ℓ] (T θ) ((q θ).toMonoidHom.comp α)) Amax ⊤) :=
     nsmul_mem ((h_unif (finBasis ℤ_[ℓ] (T θ)) ((hT θ).isCrystallineUpTo (h_in θ))).left 1) _
   -- `frobPow θ N` represents `linearFrob` of s ^ N on the element of `h_span`.
   choose frobPow h_frobPow using fun θ N ↦ exists_periodTensorMap_eq_linearFrob
@@ -826,22 +974,30 @@ theorem isKilledBy (h : IsTraceLimit r A F a ρ) [L : PadicPlaceEmbedding E A �
     surjInv (hq θ) (lift (lsmul ℤ_[ℓ] (T θ) ∘ₗ f) (frobPow θ N))
   -- δ ℓ ^ (k d n) Q' (β) (1 ⊗ v) is the image of some `M θ o hQ' v ∈ Amax ⊗ _` (`hM`), and
   -- `h_read` says how each f reads that element as a relation in the `relElt f θ N`.
-  have h_int (θ : I) (o : Option (ι θ)) {Q' : (PadicAlgCl ℓ)[X]} (hQ' : Q'.natDegree < n)
+  have h_int
+      (θ : I) (o : Option (ι θ))
+      {Q' : (PadicAlgCl ℓ)[X]} (hQ' : Q'.natDegree < n)
       (v : (X θ o).Index → PadicAlgCl ℓ) :=
     exists_periodTensorMap_eq_and_lift_eq hs hw (h_in θ o) (h_crys θ o) (q θ) (u θ o) (hu θ o) δ
-      (frobPow θ) (fun N v ↦ h_frobPow θ N o v) (fun f N ↦ relElt f θ N)
-      (fun f N ↦ surjInv_eq (hq θ) _) hQ' v
+      (frobPow θ)
+      (fun N v ↦ h_frobPow θ N o v)
+      (fun f N ↦ relElt f θ N)
+      (fun f N ↦ surjInv_eq (hq θ) _)
+      hQ' v
   choose M hM h_read using h_int
-  have h_zero (f : Amax →ₗ[ℤ_[ℓ]] ℤ_[ℓ]) :
-      ∑ N ∈ range n, P.coeff N • groupRingHom ⟨r⟩ (relElt f t₀ N) = 0 := by
+  have h_zero (f : Amax →ₗ[ℤ_[ℓ]] ℤ_[ℓ])
+      : ∑ N ∈ range n, P.coeff N • groupRingHom ⟨r⟩ (relElt f t₀ N) = 0 := by
     refine h.eq_zero_of_relation (n := n) h_coeff (relElt f)
-      (fun θ x ↦ ext_iff_mulVec.mpr fun v ↦ ?_) fun θ ↦ ext_iff_mulVec.mpr fun v ↦ ?_
+      (fun θ x ↦ ext_iff_mulVec.mpr fun v ↦ ?_)
+      fun θ ↦ ext_iff_mulVec.mpr fun v ↦ ?_
     · -- `Q θ x` kills s on `ρ θ x`.
       have hMx : M θ x (hQ θ x) v = 0 := by
         obtain ⟨-, h_Q_zero⟩ := (h_kill θ x).right hw
-        have h_Q : (δ • (ℓ ^ (k * d) : Bmax) ^ n) • (Q θ x).eval₂
-            (coeffEnd (PadicAlgCl ℓ) ((ρ θ x).Index → PadicAlgCl ℓ))
-            (linearFrob (decompRep (ρ θ x).rep A) ⟨s, hs⟩ k) (1 ⊗ₜ v) = 0 := by
+        have h_Q
+            : (δ • (ℓ ^ (k * d) : Bmax) ^ n)
+                • (Q θ x).eval₂ (coeffEnd (PadicAlgCl ℓ) ((ρ θ x).Index → PadicAlgCl ℓ))
+                  (linearFrob (decompRep (ρ θ x).rep A) ⟨s, hs⟩ k) (1 ⊗ₜ v)
+              = 0 := by
           rw [h_Q_zero, LinearMap.zero_apply, smul_zero]
         refine periodTensorMap_injective ((hM θ x (hQ θ x) v).trans ?_)
         rw [map_zero]
@@ -854,66 +1010,79 @@ theorem isKilledBy (h : IsTraceLimit r A F a ρ) [L : PadicPlaceEmbedding E A �
     · -- For r the element M does not depend on θ.
       have h_indep : M θ none hP v = M t₀ none hP v :=
         periodTensorMap_injective ((hM θ none hP v).trans (hM t₀ none hP v).symm)
-      exact (h_read θ none hP v f).symm.trans
-        ((congrArg _ h_indep).trans (h_read t₀ none hP v f))
+      exact (h_read θ none hP v f).symm.trans ((congrArg _ h_indep).trans (h_read t₀ none hP v f))
   -- The coordinates of `Amax` separate points, so M vanishes; δ and ℓ are cancelled.
   have hMr : M t₀ none hP v = 0 := by
     refine tensor_eq_zero_of_separating c.eq_zero_of_coord _ fun i ↦ ?_
     -- each coordinate reads `M` as the relation `h_zero` applied to `v`
-    exact (h_read t₀ none hP v _).trans
-      ((congrArg (· *ᵥ v) (h_zero _)).trans (zero_mulVec v))
+    exact (h_read t₀ none hP v _).trans ((congrArg (· *ᵥ v) (h_zero _)).trans (zero_mulVec v))
   -- `hM` at `t₀` for `r` (`X t₀ none` unfolds to `r`): the scaled value is `0`
-  have h_scaled : (δ • (ℓ ^ (k * d) : Bmax) ^ n) •
-      P.eval₂ (coeffEnd (PadicAlgCl ℓ) (m → PadicAlgCl ℓ)) (linearFrob (decompRep r A) ⟨s, hs⟩ k)
-        (1 ⊗ₜ v) = 0 := by
+  have h_scaled
+      : (δ • (ℓ ^ (k * d) : Bmax) ^ n) • P.eval₂ (coeffEnd (PadicAlgCl ℓ) (m → PadicAlgCl ℓ))
+          (linearFrob (decompRep r A) ⟨s, hs⟩ k) (1 ⊗ₜ v)
+        = 0 := by
     have h_t₀ := hM t₀ none hP v
     rw [hMr, map_zero] at h_t₀
     exact h_t₀.symm
-  simpa [hδ.ne_zero, Algebra.smul_def δ, (NeZero.of_faithfulSMul ℚ_[ℓ] _ ℓ).out,
-    -map_eq_zero, -isUnit_map_iff] using h_scaled
+  simpa [hδ.ne_zero, Algebra.smul_def δ, (NeZero.of_faithfulSMul ℚ_[ℓ] _ ℓ).out, -map_eq_zero,
+      -isUnit_map_iff]
+    using h_scaled
 
-/-- If `Q η i` kills `s` on `ρ η i`, all degrees are below `n`, and the traces also converge when
-weighted by each coefficient of `Q η i` and of `P`, then `P` kills `s` on `r`. -/
-theorem polyKillsAt (h : IsTraceLimit r A F a ρ) {s : Gal(Ω/E)} {n : ℕ} {P : (PadicAlgCl ℓ)[X]}
-    {Q : (η : I) → ι η → (PadicAlgCl ℓ)[X]} (hP : P.natDegree < n)
-    (hQ : ∀ (η : I) (i : ι η), (Q η i).natDegree < n)
+/--
+If `Q η i` kills `s` on `ρ η i`, all degrees are below `n`, and the traces also converge when
+weighted by each coefficient of `Q η i` and of `P`, then `P` kills `s` on `r`.
+-/
+theorem polyKillsAt
+    (h : IsTraceLimit r A F a ρ)
+    {s : Gal(Ω/E)} {n : ℕ} {P : (PadicAlgCl ℓ)[X]} {Q : (η : I) → ι η → (PadicAlgCl ℓ)[X]}
+    (hP : P.natDegree < n) (hQ : ∀ (η : I) (i : ι η), (Q η i).natDegree < n)
     (h_kill : ∀ (η : I) (i : ι η), PolyKillsAt (ρ η i).rep A s (Q η i))
-    (h_coeff : ∀ l : ℕ, TendstoUniformly
+    (h_coeff : ∀ l : ℕ,
+      TendstoUniformly
         (fun (η : I) (g : Gal(Ω/E)) ↦
           ∑ i : ι η, a η i * (Q η i).coeff l * ((ρ η i).rep g).val.trace)
-        (fun g : Gal(Ω/E) ↦ P.coeff l * (r g).val.trace) F) :
-    PolyKillsAt r A s P := by
+        (fun g : Gal(Ω/E) ↦ P.coeff l * (r g).val.trace)
+        F)
+    : PolyKillsAt r A s P := by
   refine ⟨fun hA ↦ ?_, @fun chart hs k hw ↦ h.isKilledBy hs hP hQ h_kill h_coeff hw⟩
   -- Off ℓ, the relations `Q θ x (s) = 0` in the `ρ θ x` pass to `P (s) = 0` in `r`.
-  exact h.eq_zero_of_relation (n := n) h_coeff (fun _ l ↦ .single s 1 ^ l)
+  exact h.eq_zero_of_relation (n := n) h_coeff
+    (fun _ l ↦ .single s 1 ^ l)
     (by simp [← aeval_eq_sum_range', (h_kill _ _).left hA, hQ]) (by simp [aeval_eq_sum_range' hP])
 
 end IsTraceLimit
 
-/-- Limits of traces keep the local clauses: unramified or crystalline, the jumps, and the
-polynomials that kill a Weil element (`IsTraceLimit.isGoodAt`, `.jumpsRelAt`, `.polyKillsAt`). -/
-lemma local_clauses_of_trace_limit [PadicIso ℓ] {r : GalRep ℓ E m} {A : ClosurePlace}
-    {F : Filter I} [NeBot F] {a : (η : I) → ι η → PadicAlgCl ℓ}
-    {ρ : (η : I) → ι η → PadicRep Gal(Ω/E) ℓ}
-    (h : IsTraceLimit r A F a ρ) {R R' : ℕ → ℕ → Prop} {J : (E →+* ℂ) → Multiset ℤ}
-    {J' : (η : I) → ι η → (E →+* ℂ) → Multiset ℤ}
+/--
+Limits of traces keep the local clauses: unramified or crystalline, the jumps, and the
+polynomials that kill a Weil element (`IsTraceLimit.isGoodAt`, `.jumpsRelAt`, `.polyKillsAt`).
+-/
+lemma local_clauses_of_trace_limit
+    [PadicIso ℓ]
+    {r : GalRep ℓ E m} {A : ClosurePlace} {F : Filter I} [NeBot F]
+    {a : (η : I) → ι η → PadicAlgCl ℓ} {ρ : (η : I) → ι η → PadicRep Gal(Ω/E) ℓ}
+    (h : IsTraceLimit r A F a ρ)
+    {R R' : ℕ → ℕ → Prop} {J : (E →+* ℂ) → Multiset ℤ} {J' : (η : I) → ι η → (E →+* ℂ) → Multiset ℤ}
     (h_jump : ∀ (η : I) (i : ι η), JumpsRelAt (ρ η i).rep A R' (J' η i))
     (h_rel : ∀ (τ : E →+* ℂ) (u : ℤ) (x : (η : I) → ι η → ℕ) (n : ℕ),
-      (∀ (η : I) (i : ι η), R' ((J' η i τ).count u) (x η i)) →
-      Tendsto (fun η : I ↦ ∑ i : ι η, a η i * x η i) F (nhds n) →
-      R ((J τ).count u) n) :
-    IsGoodAt r A ∧
-    JumpsRelAt r A R J ∧
-    ∀ ⦃s : Gal(Ω/E)⦄ ⦃n : ℕ⦄ ⦃P : (PadicAlgCl ℓ)[X]⦄ ⦃Q : (η : I) → ι η → (PadicAlgCl ℓ)[X]⦄,
-      P.natDegree < n →
-      (∀ (η : I) (i : ι η), (Q η i).natDegree < n ∧ PolyKillsAt (ρ η i).rep A s (Q η i)) →
-      (∀ l : ℕ, TendstoUniformly
-          (fun (η : I) (g : Gal(Ω/E)) ↦
-            ∑ i : ι η, a η i * (Q η i).coeff l * ((ρ η i).rep g).val.trace)
-          (fun g : Gal(Ω/E) ↦ P.coeff l * (r g).val.trace) F) →
-      PolyKillsAt r A s P :=
-  ⟨h.isGoodAt, h.jumpsRelAt h_jump h_rel, fun _ _ _ _ hP hQ h_coeff ↦
-    h.polyKillsAt hP (fun η i ↦ (hQ η i).left) (fun η i ↦ (hQ η i).right) h_coeff⟩
+      (∀ (η : I) (i : ι η), R' ((J' η i τ).count u) (x η i))
+        → Tendsto (fun η : I ↦ ∑ i : ι η, a η i * x η i) F (nhds n)
+        → R ((J τ).count u) n)
+    : IsGoodAt r A ∧ JumpsRelAt r A R J
+      ∧ ∀ ⦃s : Gal(Ω/E)⦄ ⦃n : ℕ⦄ ⦃P : (PadicAlgCl ℓ)[X]⦄ ⦃Q : (η : I) → ι η → (PadicAlgCl ℓ)[X]⦄,
+        P.natDegree < n
+          → (∀ (η : I) (i : ι η), (Q η i).natDegree < n ∧ PolyKillsAt (ρ η i).rep A s (Q η i))
+          → (∀ l : ℕ,
+            TendstoUniformly
+              (fun (η : I) (g : Gal(Ω/E)) ↦
+                ∑ i : ι η, a η i * (Q η i).coeff l * ((ρ η i).rep g).val.trace)
+              (fun g : Gal(Ω/E) ↦ P.coeff l * (r g).val.trace)
+              F)
+          → PolyKillsAt r A s P := ⟨
+  h.isGoodAt,
+  h.jumpsRelAt h_jump h_rel,
+  fun _ _ _ _ hP hQ h_coeff ↦
+    h.polyKillsAt hP (fun η i ↦ (hQ η i).left) (fun η i ↦ (hQ η i).right) h_coeff
+⟩
 
 end New.GaloisRep
 

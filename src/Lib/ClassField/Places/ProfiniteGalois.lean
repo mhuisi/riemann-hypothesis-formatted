@@ -33,25 +33,32 @@ open Function MulSemiringAction InfiniteGalois Subgroup Units IntermediateField 
 
 namespace New
 
-/-- `Ω` is an algebraic closure of every field `K` of characteristic zero of which it is an
-algebra. -/
+/--
+`Ω` is an algebraic closure of every field `K` of characteristic zero of which it is an
+algebra.
+-/
 instance {K : Type*} [Field K] [CharZero K] [Algebra K Ω] : IsAlgClosure K Ω where
   isAlgClosed := inferInstance
   isAlgebraic := .tower_top (K := ℚ) K
 
-/-- A chosen embedding of the number field K into the fixed algebraic closure `Ω` of ℚ (the constant
-of the instance above, not the section variable `Ω`). -/
+/--
+A chosen embedding of the number field K into the fixed algebraic closure `Ω` of ℚ (the constant
+of the instance above, not the section variable `Ω`).
+-/
 noncomputable def Ω.fieldEmb (K : Type*) [Field K] [NumberField K] : K →+* Ω := Classical.ofNonempty
 
 section
 
-variable {Γ K Ω : Type*} [Group Γ] [TopologicalSpace Γ] [Field K] [Field Ω] [Algebra K Ω]
+variable
+  {Γ K Ω : Type*} [Group Γ] [TopologicalSpace Γ] [Field K] [Field Ω] [Algebra K Ω]
   (H U : Subgroup Γ) [h : IsClosed (X := Γ) H] [Fact (IsOpen (X := Γ) U)]
 
 instance (U : OpenSubgroup Γ) : Fact (IsOpen (X := Γ) U.toSubgroup) := ⟨U.isOpen⟩
 
-/-- The Galois group of a Galois extension `Ω / K`, with its Krull topology, acts on `Ω` as its
-profinite Galois group. -/
+/--
+The Galois group of a Galois extension `Ω / K`, with its Krull topology, acts on `Ω` as its
+profinite Galois group.
+-/
 instance [IsGalois K Ω] : IsProGalois Gal(Ω/K) K Ω := ⟨stabilizer_isOpen_of_isIntegral⟩
 
 /-- An open subgroup `U` of a topological group is closed. -/
@@ -62,11 +69,13 @@ instance [CompactSpace Γ] : CompactSpace H := isCompact_iff_compactSpace.mp h.i
 
 end
 
-variable {Γ K Ω : Type*} [Group Γ] [TopologicalSpace Γ] [Field K] [Field Ω] [Algebra K Ω]
+variable
+  {Γ K Ω : Type*} [Group Γ] [TopologicalSpace Γ] [Field K] [Field Ω] [Algebra K Ω]
   [MulSemiringAction Γ Ω] [G : IsProGalois Γ K Ω]
   (H U : Subgroup Γ) [h : IsClosed (X := Γ) H] [Fact (IsOpen (X := Γ) U)]
-  {Γ' L Ω' : Type*} [Group Γ'] [TopologicalSpace Γ'] [Field L] [Field Ω'] [Algebra L Ω']
-  [MulSemiringAction Γ' Ω'] (j : Ω →+* Ω')
+  {Γ' L Ω' : Type*}
+  [Group Γ'] [TopologicalSpace Γ'] [Field L] [Field Ω'] [Algebra L Ω'] [MulSemiringAction Γ' Ω']
+  (j : Ω →+* Ω')
 
 /-- A closed subgroup is the Galois group over its fixed field. -/
 instance : @IsProGalois H (fixedFieldOf H) Ω _ _ _ inferInstance _ _ :=
@@ -76,30 +85,37 @@ include G
 
 /-! ### The topology of `Γ` and its action on `Ω` -/
 
-/-- For each `x : Ω`, the orbit map `g ↦ g • x` on the profinite Galois group `Γ` is locally
-constant. -/
+/--
+For each `x : Ω`, the orbit map `g ↦ g • x` on the profinite Galois group `Γ` is locally
+constant.
+-/
 lemma isLocallyConstant_smul (x : Ω) : IsLocallyConstant fun g : Γ ↦ g • x := by
   -- The map factors through the quotient by the open stabilizer of `x`, which is discrete.
   have h_discrete : DiscreteTopology (Γ ⧸ stabilizer Γ x) :=
     QuotientGroup.discreteTopology (G.isOpen_stabilizer x)
   exact .of_discrete (ofQuotientStabilizer Γ x)
 
-/-- The elements `g` of the profinite Galois group `Γ` such that `g • x` satisfies a given predicate
-form a closed set. -/
+/--
+The elements `g` of the profinite Galois group `Γ` such that `g • x` satisfies a given predicate
+form a closed set.
+-/
 lemma isClosed_setOf_smul (x : Ω) (P : Ω → Prop) : IsClosed {g : Γ | P (g • x)} :=
   -- Its complement is the preimage of `{y | ¬ P y}` under the locally constant orbit map.
   isOpen_compl_iff.mp (isLocallyConstant_smul x {y : Ω | ¬P y})
 
-/-- Let `Γ` act as the Galois group of `Ω / K`, `Γ'` as that of `Ω' / L`, and let `j : Ω → Ω'` be a
+/--
+Let `Γ` act as the Galois group of `Ω / K`, `Γ'` as that of `Ω' / L`, and let `j : Ω → Ω'` be a
 ring homomorphism. A map `φ : Γ' → Γ` with `j (φ g • x) = g • j x` for all `g` and `x` is
-continuous. -/
-lemma continuous_of_equivariant_emb [IsProGalois Γ' L Ω'] {φ : Γ' → Γ}
-    (hφ : ∀ (g : Γ') (x : Ω), j (φ g • x) = g • j x) : Continuous φ := by
+continuous.
+-/
+lemma continuous_of_equivariant_emb
+    [IsProGalois Γ' L Ω'] {φ : Γ' → Γ} (hφ : ∀ (g : Γ') (x : Ω), j (φ g • x) = g • j x)
+    : Continuous φ := by
   -- With `Ω` discrete, `g ↦ (g • ·)` embeds the compact group `Γ` in the space of maps `Ω → Ω`.
   let uniformSpace_discrete : UniformSpace Ω := ⊥
   have h_emb : IsClosedEmbedding fun (g : Γ) (x : Ω) ↦ g • x :=
-    (continuous_pi fun x ↦ (isLocallyConstant_smul x).continuous).isClosedEmbedding
-      fun g g' h_eq ↦ G.faithful.eq_of_smul_eq_smul (congrFun h_eq)
+    (continuous_pi fun x ↦ (isLocallyConstant_smul x).continuous).isClosedEmbedding fun g g' h_eq ↦
+      G.faithful.eq_of_smul_eq_smul (congrFun h_eq)
   refine h_emb.continuous_iff.mpr (continuous_pi fun x ↦ IsLocallyConstant.continuous ?_)
   -- `g ↦ φ g • x` is locally constant because its composite with the injection `j` is.
   have h_const : IsLocallyConstant fun g ↦ j (φ g • x) := by
@@ -129,11 +145,13 @@ lemma DiscreteUnits.ofBase_bijective : Bijective (ofBase Γ Ω (K := K)) := by
     G.isInvariant.isInvariant _ h_fixed
   exact ⟨mk0 y (by grind [ne_zero]), val_injective (ext hy)⟩
 
-/-- Two ring homomorphisms `j, j' : Ω → Ω'` that agree on `K` differ by an element of `Γ`:
-`j (g • x) = j' x` for some `g` and all `x`. -/
-lemma exists_apply_smul_eq_of_comp_algebraMap_eq (j' : Ω →+* Ω')
-    (h_agree : j.comp (algebraMap K Ω) = j'.comp (algebraMap K Ω)) :
-    ∃ g : Γ, ∀ x : Ω, j (g • x) = j' x := by
+/--
+Two ring homomorphisms `j, j' : Ω → Ω'` that agree on `K` differ by an element of `Γ`:
+`j (g • x) = j' x` for some `g` and all `x`.
+-/
+lemma exists_apply_smul_eq_of_comp_algebraMap_eq
+    (j' : Ω →+* Ω') (h_agree : j.comp (algebraMap K Ω) = j'.comp (algebraMap K Ω))
+    : ∃ g : Γ, ∀ x : Ω, j (g • x) = j' x := by
   -- Through `j`, the field `Ω'` is an `Ω`-algebra and `j'` is a `K`-algebra map. As `Ω / K` is
   -- normal, every such map is `j` composed with a `K`-automorphism of `Ω`.
   algebraize [j, j.comp (algebraMap K Ω)]
@@ -143,13 +161,16 @@ lemma exists_apply_smul_eq_of_comp_algebraMap_eq (j' : Ω →+* Ω')
 
 /-! ### Restriction maps -/
 
-/-- Let `Γ` act as the Galois group of `Ω / K`, `Γ'` as that of `Ω' / L`, and let `j : Ω → Ω'` be a
+/--
+Let `Γ` act as the Galois group of `Ω / K`, `Γ'` as that of `Ω' / L`, and let `j : Ω → Ω'` be a
 ring homomorphism such that every element of `Γ'` fixes the image under `j` of each element of `K`.
 Then there is a continuous homomorphism `φ : Γ' → Γ` with `j (φ g • x) = g • j x` for all `g` and
-`x`. -/
-lemma exists_galois_restrict [IsProGalois Γ' L Ω']
-    (h_fix : ∀ (g : Γ') (x : K), g • j (algebraMap K Ω x) = j (algebraMap K Ω x)) :
-    ∃ φ : Γ' →ₜ* Γ, ∀ (g : Γ') (x : Ω), j (φ g • x) = g • j x := by
+`x`.
+-/
+lemma exists_galois_restrict
+    [IsProGalois Γ' L Ω']
+    (h_fix : ∀ (g : Γ') (x : K), g • j (algebraMap K Ω x) = j (algebraMap K Ω x))
+    : ∃ φ : Γ' →ₜ* Γ, ∀ (g : Γ') (x : Ω), j (φ g • x) = g • j x := by
   -- The embeddings `j` and `g • j` agree on `K`, so they differ by an element of `Γ`.
   have h_exists (g : Γ') : ∃ σ : Γ, ∀ x : Ω, j (σ • x) = g • j x :=
     exists_apply_smul_eq_of_comp_algebraMap_eq Γ j ((toRingHom Γ' Ω' g).comp j)
@@ -159,16 +180,20 @@ lemma exists_galois_restrict [IsProGalois Γ' L Ω']
     G.faithful.eq_of_smul_eq_smul fun x ↦ j.injective (by simp [hf, mul_smul])
   exact ⟨⟨.mk' f h_mul, continuous_of_equivariant_emb j hf⟩, hf⟩
 
-variable {Γ Γ'} [Algebra K L] [Algebra L Ω] [MulSemiringAction Γ' Ω] [IsScalarTower K L Ω]
-  [J : IsProGalois Γ' L Ω] (φ : Γ' →* Γ)
+variable
+  {Γ Γ'} [Algebra K L] [Algebra L Ω] [MulSemiringAction Γ' Ω] [IsScalarTower K L Ω]
+  [J : IsProGalois Γ' L Ω]
+  (φ : Γ' →* Γ)
 
 include J in
 omit [Algebra K L] [IsScalarTower K L Ω] in
-/-- For `K ⊆ Ω`, `L ⊆ Ω` with profinite Galois groups `Γ` of `Ω / K` (`G`) and `Γ'` of `Ω / L`
+/--
+For `K ⊆ Ω`, `L ⊆ Ω` with profinite Galois groups `Γ` of `Ω / K` (`G`) and `Γ'` of `Ω / L`
 (`J`), a homomorphism `φ: Γ' →* Γ` with `φ g • x = g • x` for all `g` and `x` (such as
-`AlgEquiv.restrictScalarsHom`) is a closed embedding. -/
-lemma isClosedEmbedding_of_smul_eq_smul (hφ : ∀ (g : Γ') (x : Ω), φ g • x = g • x) :
-    IsClosedEmbedding φ := by
+`AlgEquiv.restrictScalarsHom`) is a closed embedding.
+-/
+lemma isClosedEmbedding_of_smul_eq_smul (hφ : ∀ (g : Γ') (x : Ω), φ g • x = g • x)
+    : IsClosedEmbedding φ := by
   -- `φ` is injective because `Γ'` acts faithfully on `Ω`.
   have h_inj : Injective φ := fun g g' h_eq ↦
     J.faithful.eq_of_smul_eq_smul fun x ↦ by rw [← hφ, h_eq, hφ]
@@ -176,11 +201,13 @@ lemma isClosedEmbedding_of_smul_eq_smul (hφ : ∀ (g : Γ') (x : Ω), φ g • 
   exact (continuous_of_equivariant_emb (RingHom.id Ω) hφ).isClosedEmbedding h_inj
 
 omit [Algebra K L] [IsScalarTower K L Ω] in
-/-- For `K ⊆ Ω`, `L ⊆ Ω` with Galois groups `Γ` of `Ω / K` and `Γ'` of `Ω / L`, the range of a
+/--
+For `K ⊆ Ω`, `L ⊆ Ω` with Galois groups `Γ` of `Ω / K` and `Γ'` of `Ω / L`, the range of a
 homomorphism `φ: Γ' →* Γ` with `φ g • x = g • x` for all `g` and `x` is the subgroup of `Γ` fixing
-`L` pointwise. -/
-lemma range_eq_fixingSubgroup_of_smul_eq_smul (hφ : ∀ (g : Γ') (x : Ω), φ g • x = g • x) :
-    φ.range = fixingSubgroup Γ (Set.range (algebraMap L Ω)) := by
+`L` pointwise.
+-/
+lemma range_eq_fixingSubgroup_of_smul_eq_smul (hφ : ∀ (g : Γ') (x : Ω), φ g • x = g • x)
+    : φ.range = fixingSubgroup Γ (Set.range (algebraMap L Ω)) := by
   refine le_antisymm ?_ fun g hg ↦ ?_
   · -- The image of `φ` fixes `L`, since `Γ'` does.
     simp [IsConcreteLE.le_iff, mem_fixingSubgroup_iff, hφ]
@@ -192,11 +219,13 @@ lemma range_eq_fixingSubgroup_of_smul_eq_smul (hφ : ∀ (g : Γ') (x : Ω), φ 
       (RingHom.ext h_agree_L)
   exact ⟨g', G.faithful.eq_of_smul_eq_smul fun x ↦ (hφ g' x).trans (hg' x)⟩
 
-/-- For `K ⊆ L ⊆ Ω` with Galois groups `Γ` of `Ω / K` and `Γ'` of `Ω / L`, the range of a
+/--
+For `K ⊆ L ⊆ Ω` with Galois groups `Γ` of `Ω / K` and `Γ'` of `Ω / L`, the range of a
 homomorphism `φ : Γ' →* Γ` with `φ g • x = g • x` for all `g` and `x` has index `[L : K]` in `Γ`
-(both sides are `0` if the degree is infinite). -/
-lemma index_range_eq_finrank_of_smul_eq_smul (hφ : ∀ (g : Γ') (x : Ω), φ g • x = g • x) :
-    φ.range.index = finrank K L := by
+(both sides are `0` if the degree is infinite).
+-/
+lemma index_range_eq_finrank_of_smul_eq_smul (hφ : ∀ (g : Γ') (x : Ω), φ g • x = g • x)
+    : φ.range.index = finrank K L := by
   -- The index is that of the group fixing the image of `L`, pulled back along `Γ → Gal(Ω/K)`.
   rw [range_eq_fixingSubgroup_of_smul_eq_smul φ hφ,
     (toAlgHom K L Ω).equivFieldRange.toLinearEquiv.finrank_eq, finrank_eq_fixingSubgroup_index,
@@ -204,50 +233,61 @@ lemma index_range_eq_finrank_of_smul_eq_smul (hφ : ∀ (g : Γ') (x : Ω), φ g
   -- The subgroup of `Γ` fixing `L` is, by definition, the preimage of the one in `Gal(Ω/K)`.
   rfl
 
-/-- Restriction to a smaller base field. For `K ⊆ L ⊆ Ω` with Galois groups `Γ` of `Ω / K` and `Γ'`
+/--
+Restriction to a smaller base field. For `K ⊆ L ⊆ Ω` with Galois groups `Γ` of `Ω / K` and `Γ'`
 of `Ω / L`, a homomorphism `φ : Γ' →* Γ` compatible with the actions on `Ω` is (a) a closed
 embedding, (b) onto the subgroup fixing `L`, (c) whose index is `[L : K]` (both sides are `0` if the
-degree is infinite). -/
-lemma isClosedEmbedding_galois_restrict (hφ : ∀ (g : Γ') (x : Ω), φ g • x = g • x := by tauto) :
-    IsClosedEmbedding φ ∧
-    φ.range = fixingSubgroup Γ (Set.range (algebraMap L Ω)) ∧
-    φ.range.index = finrank K L :=
-  ⟨isClosedEmbedding_of_smul_eq_smul φ hφ, range_eq_fixingSubgroup_of_smul_eq_smul φ hφ,
-    index_range_eq_finrank_of_smul_eq_smul φ hφ⟩
+degree is infinite).
+-/
+lemma isClosedEmbedding_galois_restrict (hφ : ∀ (g : Γ') (x : Ω), φ g • x = g • x := by tauto)
+    : IsClosedEmbedding φ ∧ φ.range = fixingSubgroup Γ (Set.range (algebraMap L Ω))
+      ∧ φ.range.index = finrank K L := ⟨
+  isClosedEmbedding_of_smul_eq_smul φ hφ,
+  range_eq_fixingSubgroup_of_smul_eq_smul φ hφ,
+  index_range_eq_finrank_of_smul_eq_smul φ hφ
+⟩
 
-/-- For `K ⊆ L ⊆ Ω` with `L / K` finite and Galois groups `Γ` of `Ω / K` and `Γ'` of `Ω / L`, a
-homomorphism `φ : Γ' →* Γ` with `φ g • x = g • x` for all `g` and `x` is an open embedding. -/
-lemma isOpenEmbedding_galois_restrict (hφ : ∀ (g : Γ') (x : Ω), φ g • x = g • x)
-    [Module.Finite K L] : IsOpenEmbedding φ := by
+/--
+For `K ⊆ L ⊆ Ω` with `L / K` finite and Galois groups `Γ` of `Ω / K` and `Γ'` of `Ω / L`, a
+homomorphism `φ : Γ' →* Γ` with `φ g • x = g • x` for all `g` and `x` is an open embedding.
+-/
+lemma isOpenEmbedding_galois_restrict (hφ : ∀ (g : Γ') (x : Ω), φ g • x = g • x) [Module.Finite K L]
+    : IsOpenEmbedding φ := by
   -- The image is a closed subgroup of finite index.
   have h_closedEmb := isClosedEmbedding_of_smul_eq_smul φ hφ
   have h_finiteIndex : φ.range.FiniteIndex :=
     ⟨(index_range_eq_finrank_of_smul_eq_smul φ hφ).trans_ne finrank_pos.ne'⟩
-  exact ⟨h_closedEmb.isEmbedding,
-    isOpen_of_isClosed_of_finiteIndex φ.range h_closedEmb.isClosed_range⟩
+  exact
+    ⟨h_closedEmb.isEmbedding, isOpen_of_isClosed_of_finiteIndex φ.range h_closedEmb.isClosed_range⟩
 
 /-! ### The Galois correspondence -/
 
-/-- Galois correspondence: the fixed field of the subgroup of `Γ` fixing an intermediate field `L`
-of `Ω / K` pointwise is `L`. -/
-lemma fixedFieldOf_fixingSubgroup (L : IntermediateField K Ω) :
-    fixedFieldOf (fixingSubgroup Γ (L : Set Ω)) = L := by
+/--
+Galois correspondence: the fixed field of the subgroup of `Γ` fixing an intermediate field `L`
+of `Ω / K` pointwise is `L`.
+-/
+lemma fixedFieldOf_fixingSubgroup (L : IntermediateField K Ω)
+    : fixedFieldOf (fixingSubgroup Γ (L : Set Ω)) = L := by
   -- Transfer the statement for `Gal(Ω/K)` along the surjection `Γ → Gal(Ω/K)`.
   refine .trans (ext fun x ↦ ?_) (fixedField_fixingSubgroup L)
   simp [(toAlgAut_surjective Γ).forall, mem_fixingSubgroup_iff]
 
-/-- Let Γ act as the Galois group of Ω/K, and K ⊆ L ⊆ Ω. A subgroup V of Γ that acts as the
+/--
+Let Γ act as the Galois group of Ω/K, and K ⊆ L ⊆ Ω. A subgroup V of Γ that acts as the
 Galois group of Ω/L is the subgroup fixing L pointwise, and its index is [L : K] (both read as 0 if
-infinite). -/
-lemma eq_fixingSubgroup_of_isProGalois {V : Subgroup Γ} [J : IsProGalois V L Ω] :
-    V = fixingSubgroup Γ (Set.range (algebraMap L Ω)) ∧ V.index = finrank K L := by
+infinite).
+-/
+lemma eq_fixingSubgroup_of_isProGalois {V : Subgroup Γ} [J : IsProGalois V L Ω]
+    : V = fixingSubgroup Γ (Set.range (algebraMap L Ω)) ∧ V.index = finrank K L := by
   obtain ⟨-, h_range, h_index⟩ :=
     isClosedEmbedding_galois_restrict (K := K) (L := L) V.subtype fun _ _ ↦ rfl
   rw [V.range_subtype] at h_range h_index
   exact ⟨h_range, h_index⟩
 
-/-- Galois correspondence: the subgroup of `Γ` fixing the fixed field of a closed subgroup `H`
-pointwise is `H`. -/
+/--
+Galois correspondence: the subgroup of `Γ` fixing the fixed field of a closed subgroup `H`
+pointwise is `H`.
+-/
 lemma fixingSubgroup_fixedFieldOf : fixingSubgroup Γ (fixedFieldOf H : Set Ω) = H := by
   -- `H` acts as the Galois group of `Ω` over its fixed field.
   obtain ⟨h_eq, -⟩ := eq_fixingSubgroup_of_isProGalois (K := K) (L := fixedFieldOf H) (V := H)

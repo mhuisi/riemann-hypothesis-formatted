@@ -23,16 +23,20 @@ open Polynomial IsLocalization
 
 namespace New.Variety
 
-/-- The ring endomorphism `x ↦ x ^ p ^ f` of a commutative ring `B` in which the prime `p` is
-zero. -/
+/--
+The ring endomorphism `x ↦ x ^ p ^ f` of a commutative ring `B` in which the prime `p` is
+zero.
+-/
 @[simps! -fullyApplied]
-def frobPow {p : ℕ} {B : Type*} [Fact (Nat.Prime p)] [CommRing B] (h : (p : B) = 0) (f : ℕ) :
-    B →+* B :=
+def frobPow {p : ℕ} {B : Type*} [Fact (Nat.Prime p)] [CommRing B] (h : (p : B) = 0) (f : ℕ)
+    : B →+* B :=
   -- The map is additive because the mixed terms of the binomial expansion are multiples of `p`.
   RingHom.mk' (powMonoidHom (p ^ f)) (by simp [add_pow_prime_pow_eq Fact.out, h])
 
-/-- `A` is absolutely integrally closed: every monic polynomial over `A` of positive degree has a
-root in `A`. -/
+/--
+`A` is absolutely integrally closed: every monic polynomial over `A` of positive degree has a
+root in `A`.
+-/
 class IsAbsIntegrallyClosed (A : Type*) [CommRing A] : Prop where
   /-- Every monic polynomial over `A` of positive degree has a root in `A`. -/
   exists_root (P : A[X]) : Monic P → 0 < P.natDegree → ∃ x : A, P.IsRoot x
@@ -49,18 +53,24 @@ namespace IsAbsIntegrallyClosed
 lemma isAlgClosed (hK : IsAbsIntegrallyClosed K) : IsAlgClosed K :=
   .of_exists_root K fun P hP h_irr ↦ hK.exists_root P hP h_irr.natDegree_pos
 
-/-- If `A` is absolutely integrally closed and `f : B →+* A` is a ring map, then every monic
-polynomial over `B` of positive degree has a root in `A` along `f`. -/
-lemma exists_eval₂_eq_zero [hA : IsAbsIntegrallyClosed A] (f : B →+* A) {P : B[X]} (hP : Monic P)
-    (h_deg : 0 < P.natDegree) : ∃ x : A, P.eval₂ f x = 0 := by
+/--
+If `A` is absolutely integrally closed and `f : B →+* A` is a ring map, then every monic
+polynomial over `B` of positive degree has a root in `A` along `f`.
+-/
+lemma exists_eval₂_eq_zero
+    [hA : IsAbsIntegrallyClosed A] (f : B →+* A) {P : B[X]} (hP : Monic P) (h_deg : 0 < P.natDegree)
+    : ∃ x : A, P.eval₂ f x = 0 := by
   nontriviality A
   simpa [eval_map] using hA.exists_root (P.map f) (hP.map f) (by rwa [hP.natDegree_map f])
 
 variable (A) in
-/-- If `A` is absolutely integrally closed and `B` is integrally closed in the `B`-algebra `A`
-(in particular `B → A` is injective), then `B` is absolutely integrally closed. -/
-lemma of_isIntegrallyClosedIn [hA : IsAbsIntegrallyClosed A] [Algebra B A]
-    [h_closed : IsIntegrallyClosedIn B A] : IsAbsIntegrallyClosed B := by
+/--
+If `A` is absolutely integrally closed and `B` is integrally closed in the `B`-algebra `A`
+(in particular `B → A` is injective), then `B` is absolutely integrally closed.
+-/
+lemma of_isIntegrallyClosedIn
+    [hA : IsAbsIntegrallyClosed A] [Algebra B A] [h_closed : IsIntegrallyClosedIn B A]
+    : IsAbsIntegrallyClosed B := by
   refine ⟨fun P hP h_deg ↦ ?_⟩
   obtain ⟨h_inj, h_range⟩ := isIntegrallyClosedIn_iff.1 h_closed
   obtain ⟨x, hx⟩ := hA.exists_eval₂_eq_zero (algebraMap B A) hP h_deg
@@ -68,11 +78,15 @@ lemma of_isIntegrallyClosedIn [hA : IsAbsIntegrallyClosed A] [Algebra B A]
   obtain ⟨b, rfl⟩ : ∃ b : B, algebraMap B A b = x := h_range ⟨P, hP, hx⟩
   exact ⟨b, h_inj (by simpa using hx)⟩
 
-/-- Let `A` be absolutely integrally closed and `f : A →+* B` a ring map. A monic polynomial over
-`B` of positive degree whose coefficients lie in the image of `f` has a root in `B`. -/
-lemma exists_root_of_coeffs_subset_range [hA : IsAbsIntegrallyClosed A] {f : A →+* B} {P : B[X]}
-    (h_coeffs : (P.coeffs : Set B) ⊆ Set.range f) (hP : P.Monic) (h_deg : 0 < P.natDegree) :
-    ∃ x : B, P.IsRoot x := by
+/--
+Let `A` be absolutely integrally closed and `f : A →+* B` a ring map. A monic polynomial over
+`B` of positive degree whose coefficients lie in the image of `f` has a root in `B`.
+-/
+lemma exists_root_of_coeffs_subset_range
+    [hA : IsAbsIntegrallyClosed A]
+    {f : A →+* B} {P : B[X]}
+    (h_coeffs : (P.coeffs : Set B) ⊆ Set.range f) (hP : P.Monic) (h_deg : 0 < P.natDegree)
+    : ∃ x : B, P.IsRoot x := by
   -- `P` is the image of a monic `Q` of the same degree, and `f` maps a root of `Q` to one of `P`.
   obtain ⟨Q, rfl, hQ_deg, hQ⟩ :=
     lifts_and_natDegree_eq_and_monic ((lifts_iff_coeffs_subset_range P).2 h_coeffs) hP
@@ -80,16 +94,19 @@ lemma exists_root_of_coeffs_subset_range [hA : IsAbsIntegrallyClosed A] {f : A �
   exact ⟨f x, hx.map f⟩
 
 /-- In an absolutely integrally closed ring, every element has an `n`-th root for `n ≠ 0`. -/
-lemma exists_pow_eq [hA : IsAbsIntegrallyClosed A] (n : ℕ) [hn : NeZero n] (a : A) :
-    ∃ x : A, x ^ n = a := by
+lemma exists_pow_eq [hA : IsAbsIntegrallyClosed A] (n : ℕ) [hn : NeZero n] (a : A)
+    : ∃ x : A, x ^ n = a := by
   nontriviality A
   simpa [sub_eq_zero] using
     hA.exists_root (X ^ n - C a) (monic_X_pow_sub_C a hn.ne) (by simpa using hn.pos)
 
-/-- In a nonzero absolutely integrally closed ring `A`, for `n > 1` and any `c`, `b` in `A`, the
-equation `x ^ n - c * x = b` has a solution `x` in `A`. -/
-lemma exists_pow_sub_mul_eq [hA : IsAbsIntegrallyClosed A] [Nontrivial A] (n : ℕ)
-    [hn : Fact (1 < n)] (c b : A) : ∃ x : A, x ^ n - c * x = b := by
+/--
+In a nonzero absolutely integrally closed ring `A`, for `n > 1` and any `c`, `b` in `A`, the
+equation `x ^ n - c * x = b` has a solution `x` in `A`.
+-/
+lemma exists_pow_sub_mul_eq
+    [hA : IsAbsIntegrallyClosed A] [Nontrivial A] (n : ℕ) [hn : Fact (1 < n)] (c b : A)
+    : ∃ x : A, x ^ n - c * x = b := by
   -- The solutions are the roots of a monic polynomial of degree `n > 1`.
   let P : A[X] := X ^ n - (C c * X + C b)
   have hP : P.IsMonicOfDegree n :=
@@ -97,16 +114,21 @@ lemma exists_pow_sub_mul_eq [hA : IsAbsIntegrallyClosed A] [Nontrivial A] (n : �
   have h_deg : 0 < P.natDegree := (zero_lt_one.trans hn.out).trans_eq hP.natDegree_eq.symm
   simpa [P, ← sub_sub, sub_eq_zero] using hA.exists_root P hP.monic h_deg
 
-/-- If `A` is absolutely integrally closed and `f : A →+* B` is a surjective ring map, then `B` is
-absolutely integrally closed. -/
-lemma of_surjective [hA : IsAbsIntegrallyClosed A] {f : A →+* B} (hf : Function.Surjective f) :
-    IsAbsIntegrallyClosed B :=
+/--
+If `A` is absolutely integrally closed and `f : A →+* B` is a surjective ring map, then `B` is
+absolutely integrally closed.
+-/
+lemma of_surjective [hA : IsAbsIntegrallyClosed A] {f : A →+* B} (hf : Function.Surjective f)
+    : IsAbsIntegrallyClosed B :=
   ⟨fun _ ↦ hA.exists_root_of_coeffs_subset_range fun b _ ↦ hf b⟩
 
-/-- A localization `B` of an absolutely integrally closed ring `A` at a submonoid is absolutely
-integrally closed. -/
-lemma of_isLocalization [hA : IsAbsIntegrallyClosed A] (S : Submonoid A) [Algebra A B]
-    [IsLocalization S B] : IsAbsIntegrallyClosed B := by
+/--
+A localization `B` of an absolutely integrally closed ring `A` at a submonoid is absolutely
+integrally closed.
+-/
+lemma of_isLocalization
+    [hA : IsAbsIntegrallyClosed A] (S : Submonoid A) [Algebra A B] [IsLocalization S B]
+    : IsAbsIntegrallyClosed B := by
   -- Scaling the roots of `P` by a common denominator `d` of its coefficients gives a monic
   -- polynomial with coefficients from `A`; it has a root `x`, and `x / d` is a root of `P`.
   refine ⟨fun P hP h_deg ↦ ?_⟩
@@ -114,19 +136,25 @@ lemma of_isLocalization [hA : IsAbsIntegrallyClosed A] (S : Submonoid A) [Algebr
   have hd : IsUnit d := map_units B _
   have h_mem : P.scaleRoots d ∈ lifts (algebraMap A B) :=
     scaleRoots_commonDenom_mem_lifts S P ⟨1, by simp [hP.leadingCoeff]⟩
-  obtain ⟨x, hx⟩ : ∃ x : B, (P.scaleRoots d).IsRoot x := hA.exists_root_of_coeffs_subset_range
-    ((lifts_iff_coeffs_subset_range _).1 h_mem) ((monic_scaleRoots_iff d).2 hP) (by simpa)
+  obtain ⟨x, hx⟩ : ∃ x : B, (P.scaleRoots d).IsRoot x :=
+    hA.exists_root_of_coeffs_subset_range ((lifts_iff_coeffs_subset_range _).1 h_mem)
+      ((monic_scaleRoots_iff d).2 hP) (by simpa)
   obtain ⟨y, rfl⟩ : d ∣ x := hd.dvd
   have h_eval : d ^ P.natDegree * P.eval y = 0 := by rwa [← scaleRoots_eval_mul]
   exact ⟨y, (hd.pow _).mul_right_eq_zero.1 h_eval⟩
 
 /-! ### Maps to a domain -/
 
-/-- Let `A` be absolutely integrally closed, `f : A →+* B` a ring map to a domain, and `P` a monic
+/--
+Let `A` be absolutely integrally closed, `f : A →+* B` a ring map to a domain, and `P` a monic
 polynomial over `A`. Every root `x` in `B` of the image of `P` is `f a` for some root `a` of `P`
-in `A`. -/
-lemma exists_root_map_eq [hA : IsAbsIntegrallyClosed A] {f : A →+* B} [IsDomain B] {x : B}
-    {P : A[X]} (hP : Monic P) (hx : P.eval₂ f x = 0) : ∃ a : A, P.IsRoot a ∧ f a = x := by
+in `A`.
+-/
+lemma exists_root_map_eq
+    [hA : IsAbsIntegrallyClosed A]
+    {f : A →+* B} [IsDomain B]
+    {x : B} {P : A[X]} (hP : Monic P) (hx : P.eval₂ f x = 0)
+    : ∃ a : A, P.IsRoot a ∧ f a = x := by
   -- Induction on the degree: split off a linear factor `X - C a`; as `B` is a domain, `x` is
   -- `f a` or a root of the image of the cofactor.
   induction h_deg : P.natDegree generalizing P with
@@ -142,10 +170,13 @@ lemma exists_root_map_eq [hA : IsAbsIntegrallyClosed A] {f : A →+* B} [IsDomai
     · obtain ⟨b, hb, rfl⟩ := ih hQ hx_root (by lia)
       exact ⟨b, root_mul_left_of_isRoot _ hb, rfl⟩
 
-/-- If `A` is absolutely integrally closed and `f : A →+* B` is a ring map to a domain, then every
-element of `B` that is integral along `f` lies in the image of `f`. -/
-lemma mem_range_of_isIntegralElem [hA : IsAbsIntegrallyClosed A] {f : A →+* B} [IsDomain B] {x : B}
-    (hx : f.IsIntegralElem x) : x ∈ f.range := by
+/--
+If `A` is absolutely integrally closed and `f : A →+* B` is a ring map to a domain, then every
+element of `B` that is integral along `f` lies in the image of `f`.
+-/
+lemma mem_range_of_isIntegralElem
+    [hA : IsAbsIntegrallyClosed A] {f : A →+* B} [IsDomain B] {x : B} (hx : f.IsIntegralElem x)
+    : x ∈ f.range := by
   obtain ⟨P, hP, hPx⟩ := hx
   obtain ⟨a, -, rfl⟩ := hA.exists_root_map_eq hP hPx
   exact ⟨a, rfl⟩

@@ -43,23 +43,28 @@ A transcendental number can be sent to any transcendental element of `PadicAlgCl
 `New.exists_ringEquiv_extend`, and these elements have unbounded norm.
 -/
 
-/-- Let `ℓ` be a prime. If the `ℓ`-adic norms of the images of `x : ℂ` under all field isomorphisms
+/--
+Let `ℓ` be a prime. If the `ℓ`-adic norms of the images of `x : ℂ` under all field isomorphisms
 `ι` from `ℂ` onto the algebraic closure of `ℚ_ℓ` have a common bound `c`, then `x` is algebraic over
 `ℚ`. The norm is taken in `ℂ_[ℓ]`: `complexToCp ι` is `ι` followed by the isometric embedding into
-`ℂ_[ℓ]`. -/
-lemma New.isAlgebraic_of_norm_complexToCp_le {ℓ : ℕ} [Fact ℓ.Prime] {x : ℂ} {c : ℝ}
-    (h_bound : ∀ ι : ℂ ≃+* PadicAlgCl ℓ, ‖complexToCp (p := ℓ) ι x‖ ≤ c) : IsAlgebraic ℚ x := by
+`ℂ_[ℓ]`.
+-/
+lemma New.isAlgebraic_of_norm_complexToCp_le
+    {ℓ : ℕ} [Fact ℓ.Prime]
+    {x : ℂ} {c : ℝ} (h_bound : ∀ ι : ℂ ≃+* PadicAlgCl ℓ, ‖complexToCp (p := ℓ) ι x‖ ≤ c)
+    : IsAlgebraic ℚ x := by
   by_contra hx
   -- The elements algebraic over `ℚ` are countable, so the others are dense; take one of norm `> c`.
-  obtain ⟨y, hy, hcy⟩ : ∃ y : PadicAlgCl ℓ, ¬IsAlgebraic ℚ y ∧ c < ‖y‖ :=
+  obtain ⟨y, hy, hcy⟩ : ∃ y : PadicAlgCl ℓ, ¬ IsAlgebraic ℚ y ∧ c < ‖y‖ :=
     ((Algebraic.countable ℚ (PadicAlgCl ℓ)).dense_compl ℚ_[ℓ]).exists_mem_open
       (isOpen_Ioi.preimage continuous_norm) (NormedField.exists_lt_norm _ c)
   -- Evaluation at `x` and at `y` embed the countable ring `ℚ[X]` in two algebraically closed fields
   -- of the same uncountable cardinality; an isomorphism `ι` matching them sends `x` to `y`.
   have : Countable (Polynomial ℚ) := (Polynomial.basisMonomials ℚ).repr.injective.countable
   rw [isAlgebraic_iff_not_injective, not_not] at hx hy
-  obtain ⟨ι, hι⟩ : ∃ ι : ℂ ≃+* PadicAlgCl ℓ, ∀ P : Polynomial ℚ,
-      ι (Polynomial.aeval x P) = Polynomial.aeval y P :=
+  obtain ⟨ι, hι⟩
+      : ∃ ι : ℂ ≃+* PadicAlgCl ℓ, ∀ P : Polynomial ℚ,
+        ι (Polynomial.aeval x P) = Polynomial.aeval y P :=
     exists_ringEquiv_extend mk_complex_eq_mk_padicAlgCl _ _ hx hy
   exact hcy.not_ge (by simpa [show ι x = y by simpa using hι .X] using h_bound ι)
 
@@ -83,8 +88,8 @@ instance : CharP (ResidueField (valRingCp p)) p := by
   simpa [← NNReal.coe_lt_coe] using norm_p_lt_one
 
 /-- If `‖u - 1‖ < 1` in `ℂ_p` and `p ∣ q`, then `u ^ q ^ n` tends to `1` as `n → ∞`. -/
-lemma tendsto_pow_pow_of_norm_sub_one_lt {u : ℂ_[p]} (hu : ‖u - 1‖ < 1) {q : ℕ} (hq : p ∣ q) :
-    Filter.Tendsto (fun n : ℕ ↦ u ^ q ^ n) Filter.atTop (nhds 1) := by
+lemma tendsto_pow_pow_of_norm_sub_one_lt {u : ℂ_[p]} (hu : ‖u - 1‖ < 1) {q : ℕ} (hq : p ∣ q)
+    : Filter.Tendsto (fun n : ℕ ↦ u ^ q ^ n) Filter.atTop (nhds 1) := by
   -- `k ↦ u ^ k` extends to a continuous character `κ` of `ℤ_p`, the one attached to `u - 1`,
   -- and `q ^ n → 0` in `ℤ_p`. The correspondence needs a bounded action of `ℤ_p` on `ℂ_p`.
   let alg : Algebra ℤ_[p] ℂ_[p] := .compHom _ Coe.ringHom
@@ -95,15 +100,19 @@ lemma tendsto_pow_pow_of_norm_sub_one_lt {u : ℂ_[p]} (hu : ‖u - 1‖ < 1) {q
     (continuousAddCharEquiv_of_norm_mul p ℂ_[p]).symm ⟨u - 1, hu⟩
   have hκ (k : ℕ) : κ.val k = u ^ k := by simpa [κ] using κ.val.map_nsmul_eq_pow k 1
   -- by continuity, `κ (q ^ n) → κ 0 = 1`, as `q ^ n → 0`
-  simpa [Function.comp_def, ← hκ] using (κ.prop.tendsto 0).comp
-    (tendsto_pow_atTop_nhds_zero_of_norm_lt_one (norm_natCast_lt_one_iff.mpr hq))
+  simpa [Function.comp_def, ← hκ] using
+    (κ.prop.tendsto 0).comp
+      (tendsto_pow_atTop_nhds_zero_of_norm_lt_one (norm_natCast_lt_one_iff.mpr hq))
 
-/-- If `x` and `y` in the valuation ring of `ℂ_p` have the same residue, `‖y‖ = 1`, `p ∣ q` and
-`y ^ q ^ n = y` for all `n`, then `x ^ q ^ n` tends to `y`. -/
-lemma tendsto_pow_pow_of_residue_eq {q : ℕ} (hq : p ∣ q) {x y : valRingCp p}
-    (hxy : residue (valRingCp p) x = residue (valRingCp p) y) (hy : ‖y.val‖ = 1)
-    (hy_fixed : ∀ n : ℕ, y.val ^ q ^ n = y.val) :
-    Filter.Tendsto (fun n : ℕ ↦ x.val ^ q ^ n) Filter.atTop (nhds y.val) := by
+/--
+If `x` and `y` in the valuation ring of `ℂ_p` have the same residue, `‖y‖ = 1`, `p ∣ q` and
+`y ^ q ^ n = y` for all `n`, then `x ^ q ^ n` tends to `y`.
+-/
+lemma tendsto_pow_pow_of_residue_eq
+    {q : ℕ} (hq : p ∣ q)
+    {x y : valRingCp p} (hxy : residue (valRingCp p) x = residue (valRingCp p) y) (hy : ‖y.val‖ = 1)
+    (hy_fixed : ∀ n : ℕ, y.val ^ q ^ n = y.val)
+    : Filter.Tendsto (fun n : ℕ ↦ x.val ^ q ^ n) Filter.atTop (nhds y.val) := by
   have hy_ne : y.val ≠ 0 := norm_pos_iff.1 (one_pos.trans_eq hy.symm)
   have h_sub : ‖x.val - y.val‖ < 1 := residue_eq_iff_valuation_sub_lt_one.1 hxy
   have h_div : ‖x.val / y.val - 1‖ < 1 := by simpa [div_sub_one hy_ne, hy] using h_sub
@@ -114,13 +123,17 @@ variable (d : ℕ) [PrimeSevenModEight d]
 
 lemma I_mul_sqrt_mem_quadInt : I * √d ∈ quadInt d := ⟨sqrtNegDInt d, by simp [two_mul]⟩
 
-/-- Let `p` be a prime, `d` a prime congruent to 7 modulo 8, and let `φ` map the integers of
+/--
+Let `p` be a prime, `d` a prime congruent to 7 modulo 8, and let `φ` map the integers of
 `K = ℚ(√-d)` to a field of characteristic `p`. An element `z` with `z ^ q_p = z`, where
 `q_p = primeNorm d p` is `p ^ 2` if the Legendre symbol `chiK d p = (p/d)` is `-1` and `p`
-otherwise, is the image of an integer whose conjugate has the image `z ^ p`. -/
-lemma QuadField.exists_map_eq_and_map_star_eq_pow {k : Type*} [Field k] [CharP k p]
-    (φ : 𝓞 (QuadField d) →+* k) (z : k) (hz_pow : z ^ primeNorm d p = z) :
-    ∃ a : 𝓞 (QuadField d), φ a = z ∧ φ (star a) = z ^ p := by
+otherwise, is the image of an integer whose conjugate has the image `z ^ p`.
+-/
+lemma QuadField.exists_map_eq_and_map_star_eq_pow
+    {k : Type*} [Field k] [CharP k p]
+    (φ : 𝓞 (QuadField d) →+* k)
+    (z : k) (hz_pow : z ^ primeNorm d p = z)
+    : ∃ a : 𝓞 (QuadField d), φ a = z ∧ φ (star a) = z ^ p := by
   -- The fixed points of Frobenius lie in the prime field, so they are images of integers.
   have prime_field (x : k) (hx : frobenius k p x = x) : ∃ n : ℤ, n = x :=
     (mem_bot_iff_intCast p k).1 ((Subfield.mem_bot_iff_pow_eq_self _ p).2 hx)
@@ -141,8 +154,8 @@ lemma QuadField.exists_map_eq_and_map_star_eq_pow {k : Type*} [Field k] [CharP k
     ring
   -- `2 e - 1`, a square root of `-d`, has the `(p - 1)`-st power `-1`, so it is not `0`.
   have hδ_ne : 2 * φ (betaK d) - 1 ≠ 0 := fun h_zero ↦ by
-    simpa [h_inert, h_zero, map_ofNat, Nat.sub_ne_zero_of_lt hp.out.one_lt]
-      using chiK_eq_pow_of_sq_eq_neg hp_ne_two (map_sqrtNegDInt_sq φ)
+    simpa [h_inert, h_zero, map_ofNat, Nat.sub_ne_zero_of_lt hp.out.one_lt] using
+      chiK_eq_pow_of_sq_eq_neg hp_ne_two (map_sqrtNegDInt_sq φ)
   -- Frobenius negates both `z - z ^ p` and `2 e - 1`, so it fixes their quotient `n`.
   have hδ_frob : frobenius k p (2 * φ (betaK d) - 1) = -(2 * φ (betaK d) - 1) := by
     rw [map_sub, map_mul, map_one, he, map_ofNat]
@@ -151,9 +164,10 @@ lemma QuadField.exists_map_eq_and_map_star_eq_pow {k : Type*} [Field k] [CharP k
     prime_field _ (by rw [map_div₀, map_sub, hz, hδ_frob, div_neg, ← neg_div, neg_sub])
   rw [eq_div_iff hδ_ne] at hn
   -- Frobenius sends `z - n e` to `z ^ p - n (1 - e)`, and `z - z ^ p = n (2 e - 1)`.
-  obtain ⟨m, hm⟩ : ∃ m : ℤ, m = z - n * φ (betaK d) := prime_field _ <| by
-    rw [map_sub, map_mul, map_intCast, he]
-    linear_combination hn
+  obtain ⟨m, hm⟩ : ∃ m : ℤ, m = z - n * φ (betaK d) :=
+    prime_field _ <| by
+      rw [map_sub, map_mul, map_intCast, he]
+      linear_combination hn
   -- Frobenius sends `z` to `z - n (2 e - 1)`, which is `m + n (1 - e)`, the image of `star a`.
   have h_frob_z : frobenius k p z = m + n * (1 - φ (betaK d)) := by linear_combination hn - hm
   exact ⟨m + n * betaK d, by simp [hm], by simp [h_frob_z, star_add, star_mul']⟩
@@ -164,25 +178,30 @@ omit [PrimeSevenModEight d] in
 lemma map_I_mul_sqrt_sq : ιₚ (I * √d) ^ 2 = -d := by
   simpa using congrArg (fun w : QuadField d ↦ ιₚ (w : ℂ)) (sqrtNegD_sq d)
 
-/-- The closure in `ℂ_p²` of the set of images under `ιₚ` of the pairs `(α, α ᾱ)`, with `α` an
-integer of `K = ℚ(√-d)`. -/
+/--
+The closure in `ℂ_p²` of the set of images under `ιₚ` of the pairs `(α, α ᾱ)`, with `α` an
+integer of `K = ℚ(√-d)`.
+-/
 noncomputable def normPairClosure : Set (ℂ_[p] × ℂ_[p]) :=
   closure {(ιₚ a, ιₚ (a * conj a)) | a ∈ quadInt d}
 
-/-- If `ζ` is an element of `ℂ_p` of norm `1` with `ζ ^ q_p = ζ`, where `q_p = primeNorm d p`
+/--
+If `ζ` is an element of `ℂ_p` of norm `1` with `ζ ^ q_p = ζ`, where `q_p = primeNorm d p`
 (`p ^ 2` if `chiK d p = -1`, else `p`), then `(ζ, ζ ^ (p + 1))` lies in `normPairClosure d`: it is a
-limit of images under `ιₚ` of pairs `(α, α ᾱ)` with `α` an integer of `K = ℚ(√-d)`. -/
-lemma mem_normPairClosure_of_pow_eq {ζ : ℂ_[p]} (hζ_norm : ‖ζ‖ = 1)
-    (hζ_pow : ζ ^ primeNorm d p = ζ) : (ζ, ζ ^ (p + 1)) ∈ normPairClosure d := by
+limit of images under `ιₚ` of pairs `(α, α ᾱ)` with `α` an integer of `K = ℚ(√-d)`.
+-/
+lemma mem_normPairClosure_of_pow_eq {ζ : ℂ_[p]} (hζ_norm : ‖ζ‖ = 1) (hζ_pow : ζ ^ primeNorm d p = ζ)
+    : (ζ, ζ ^ (p + 1)) ∈ normPairClosure d := by
   -- Lift the residue of `ζ` to an integer `a` of `K` whose conjugate lifts that of `ζ ^ p`.
   -- With `q = q_p`, the powers `a ^ q ^ n` tend to `ζ` and their conjugates to `ζ ^ p`.
   let φ : 𝓞 (QuadField d) →+* valRingCp p :=
     ((ιₚ.domRestrict (QuadField d)).comp (algebraMap _ _)).codRestrict (valRingCp p)
       (norm_ringOfIntegers_le (ιₚ.domRestrict (QuadField d)))
   let z : valRingCp p := ⟨ζ, hζ_norm.le⟩
-  obtain ⟨a, ha, ha_star⟩ : ∃ a : 𝓞 (QuadField d),
-      residue (valRingCp p) (φ a) = residue (valRingCp p) z ∧
-      residue (valRingCp p) (φ (star a)) = residue (valRingCp p) z ^ p :=
+  obtain ⟨a, ha, ha_star⟩
+      : ∃ a : 𝓞 (QuadField d),
+        residue (valRingCp p) (φ a) = residue (valRingCp p) z
+          ∧ residue (valRingCp p) (φ (star a)) = residue (valRingCp p) z ^ p :=
     exists_map_eq_and_map_star_eq_pow d ((residue (valRingCp p)).comp φ) _
       (by rw [← map_pow]; exact congrArg _ (Subtype.ext hζ_pow))
   set q : ℕ := primeNorm d p
@@ -218,10 +237,11 @@ variable {ℓ : ℕ} [ThePrime ℓ] {O : CoeffRing ℓ} {x y : PadicAlgCl ℓ} {
 
 /-! ### The valuation on ℚ̄_ℓ -/
 
-/-- For `x`, `y` in ℚ̄_ℓ with `‖y‖ ≤ 1` and a real `c ≥ 0`, the inequality v(x) ≤ c + v(y) means
-`ℓ ^ (-c) * ‖y‖ ≤ ‖x‖`, where v = `ellVal` is the normalised valuation. -/
-lemma ellVal_le_add_iff (hy : ‖y‖ ≤ 1) :
-    ellVal x ≤ c + ellVal y ↔ ℓ ^ (-c.toReal) * ‖y‖ ≤ ‖x‖ := by
+/--
+For `x`, `y` in ℚ̄_ℓ with `‖y‖ ≤ 1` and a real `c ≥ 0`, the inequality v(x) ≤ c + v(y) means
+`ℓ ^ (-c) * ‖y‖ ≤ ‖x‖`, where v = `ellVal` is the normalised valuation.
+-/
+lemma ellVal_le_add_iff (hy : ‖y‖ ≤ 1) : ellVal x ≤ c + ellVal y ↔ ℓ ^ (-c.toReal) * ‖y‖ ≤ ‖x‖ := by
   have hℓ : (1 : ℝ) < ℓ := mod_cast (Fact.out : ℓ.Prime).one_lt
   -- the cases `y = 0` and `x = 0` are immediate
   obtain rfl | hy_ne := eq_or_ne y 0
@@ -230,8 +250,8 @@ lemma ellVal_le_add_iff (hy : ‖y‖ ≤ 1) :
   obtain rfl | hx_ne := eq_or_ne x 0
   · simpa [ellVal, hy_ne] using (by positivity : 0 < (ℓ : ℝ) ^ (-c.toReal) * ‖y‖)
   -- away from `0`, take logarithms in base `ℓ`
-  have hy_log : 0 ≤ -logb ℓ ‖y‖ := neg_nonneg.2 (logb_nonpos hℓ hy_pos.le hy)
-  have h_val : ellVal x ≤ c + ellVal y ↔ -logb ℓ ‖x‖ ≤ c.toReal + -logb ℓ ‖y‖ := by
+  have hy_log : 0 ≤ - logb ℓ ‖y‖ := neg_nonneg.2 (logb_nonpos hℓ hy_pos.le hy)
+  have h_val : ellVal x ≤ c + ellVal y ↔ - logb ℓ ‖x‖ ≤ c.toReal + - logb ℓ ‖y‖ := by
     simp [ellVal, hx_ne, hy_ne, ofReal_le_iff_le_toReal, toReal_add, toReal_ofReal hy_log]
   rw [h_val, ← le_div_iff₀ hy_pos, ← le_logb_iff_rpow_le hℓ (by positivity),
     logb_div (by simpa) hy_pos.ne']
@@ -241,10 +261,14 @@ lemma ellVal_le_add_iff (hy : ‖y‖ ≤ 1) :
 lemma ellVal_le_iff : ellVal x ≤ c ↔ ℓ ^ (-c.toReal) ≤ ‖x‖ := by
   simpa [ellVal] using ellVal_le_add_iff norm_one.le
 
-/-- For `x`, `y` in `intQpBar ℓ`, the valuation ring of ℚ̄_ℓ, `x` divides `y` exactly if
-v(x) ≤ v(y), where v = `ellVal` is the normalised valuation. -/
+/--
+For `x`, `y` in `intQpBar ℓ`, the valuation ring of ℚ̄_ℓ, `x` divides `y` exactly if
+v(x) ≤ v(y), where v = `ellVal` is the normalised valuation.
+-/
 lemma Selmer.dvd_iff_ellVal_le {x y : intQpBar ℓ} : x ∣ y ↔ ellVal x.val ≤ ellVal y.val :=
-  calc x ∣ y ↔ ‖y.val‖ ≤ ‖x.val‖ := (Valuation.integer.integers _).dvd_iff_le
+  calc
+    x ∣ y
+      ↔ ‖y.val‖ ≤ ‖x.val‖ := (Valuation.integer.integers _).dvd_iff_le
     _ ↔ _ := by simpa using (ellVal_le_add_iff (x := x.val) (c := 0) y.prop).symm
 
 /-- The valuation v = `ellVal` is antitone in the norm: if `‖y‖ ≤ ‖x‖`, then v(x) ≤ v(y). -/
@@ -256,8 +280,10 @@ lemma ellVal_le_ellVal (h_le : ‖y‖ ≤ ‖x‖) : ellVal x ≤ ellVal y := b
   gcongr
   exact mod_cast (Fact.out : ℓ.Prime).one_lt
 
-/-- The normalised valuation v = `ellVal` on ℚ̄_ℓ (v(x) is the positive part of −log_ℓ ‖x‖, and v(0)
-= ∞) is subadditive on products: v(xy) ≤ v(x) + v(y). -/
+/--
+The normalised valuation v = `ellVal` on ℚ̄_ℓ (v(x) is the positive part of −log_ℓ ‖x‖, and v(0)
+= ∞) is subadditive on products: v(xy) ≤ v(x) + v(y).
+-/
 lemma ellVal_mul_le : ellVal (x * y) ≤ ellVal x + ellVal y := by
   -- if a factor is `0`, the right side is `∞`
   obtain hx | hx := eq_or_ne ‖x‖ 0
@@ -301,26 +327,32 @@ protected noncomputable def uniformizer : ↑O := (exists_irreducible O).choose
 variable (O) in
 lemma irreducible_uniformizer : Irreducible O.uniformizer := (exists_irreducible O).choose_spec
 
-/-- Normalised length: the additive map sending n to n·v(ϖ) and ∞ to ∞, where ϖ is the chosen
+/--
+Normalised length: the additive map sending n to n·v(ϖ) and ∞ to ∞, where ϖ is the chosen
 uniformiser `O.uniformizer` and v(ℓ) = 1. The value does not depend on the choice of ϖ
-(`normLength_natCast_of_irreducible`). -/
+(`normLength_natCast_of_irreducible`).
+-/
 noncomputable def normLength : ℕ∞ →+ ℝ≥0∞ :=
-  AddMonoidHom.ENatMap
-    { toFun n := n * (-logb ℓ ‖O.uniformizer.val‖).toNNReal
-      map_zero' := by simp
-      map_add' := by simp [add_mul] }
+  AddMonoidHom.ENatMap {
+    toFun n := n * (- logb ℓ ‖O.uniformizer.val‖).toNNReal
+    map_zero' := by simp
+    map_add' := by simp [add_mul]
+  }
 
 lemma normLength_top : O.normLength ⊤ = ∞ := rfl
 
 /-- The normalised length of `n` is `-n log_ℓ ‖ϖ‖`, with `ϖ` the chosen uniformiser of `O`. -/
-lemma normLength_natCast (n : ℕ) :
-    O.normLength n = n * ENNReal.ofReal (-logb ℓ ‖O.uniformizer.val‖) := rfl
+lemma normLength_natCast (n : ℕ)
+    : O.normLength n = n * ENNReal.ofReal (- logb ℓ ‖O.uniformizer.val‖) :=
+  rfl
 
-/-- Let `O` be a coefficient ring, the ring of integers of a finite Galois extension of ℚ_ℓ inside
+/--
+Let `O` be a coefficient ring, the ring of integers of a finite Galois extension of ℚ_ℓ inside
 ℚ̄_ℓ, with chosen uniformiser ϖ. For x ∈ O, let `addVal O x` be the number of factors of ϖ in x, and
 let the normalised length `normLength` send n to n·v(ϖ) (and ∞ to ∞). Then the normalised length of
 `addVal O x` equals v(x), where v = `ellVal` equals −log_ℓ|·| on elements of ℚ̄_ℓ of norm ≤ 1,
-normalised by v(ℓ) = 1. -/
+normalised by v(ℓ) = 1.
+-/
 @[simp]
 lemma normLength_addVal (x : ↑O) : O.normLength (addVal O x) = ellVal x.val := by
   have hϖ : Irreducible O.uniformizer := O.irreducible_uniformizer
@@ -329,15 +361,18 @@ lemma normLength_addVal (x : ↑O) : O.normLength (addVal O x) = ellVal x.val :=
   -- `x = u * ϖ ^ n` with `‖u‖ = 1`, and both sides are `n` times the valuation of `ϖ`
   obtain ⟨n, u, rfl⟩ := eq_unit_mul_pow_irreducible hx hϖ
   have hu_norm : ‖(u : ↑O).val‖ = 1 := (isUnit_iff_norm_eq_one _).1 u.isUnit
-  have h_ellVal : ellVal (u * O.uniformizer ^ n : ↑O).val =
-      n * ENNReal.ofReal (-logb ℓ ‖O.uniformizer.val‖) := by
+  have h_ellVal
+      : ellVal (u * O.uniformizer ^ n : ↑O).val
+        = n * ENNReal.ofReal (- logb ℓ ‖O.uniformizer.val‖) := by
     simp [← mul_neg, hϖ.ne_zero, hu_norm, ellVal, logb_pow]
   rw [addVal_def' u hϖ n, h_ellVal, normLength_natCast]
 
-/-- The normalised length of `n` is `n v(ϖ)` for every uniformiser `ϖ` of `O`, where v = `ellVal`
-is the normalised valuation on ℚ̄_ℓ. -/
-lemma normLength_natCast_of_irreducible {ϖ : ↑O} (hϖ : Irreducible ϖ) (n : ℕ) :
-    O.normLength n = n * ellVal ϖ.val := by
+/--
+The normalised length of `n` is `n v(ϖ)` for every uniformiser `ϖ` of `O`, where v = `ellVal`
+is the normalised valuation on ℚ̄_ℓ.
+-/
+lemma normLength_natCast_of_irreducible {ϖ : ↑O} (hϖ : Irreducible ϖ) (n : ℕ)
+    : O.normLength n = n * ellVal ϖ.val := by
   rw [← hϖ.addVal_pow n, normLength_addVal, SubmonoidClass.coe_pow, ellVal_pow]
 
 @[simp]
@@ -349,18 +384,22 @@ lemma normLength_mono : Monotone O.normLength := fun a b hab ↦ by
   obtain ⟨c, rfl⟩ := le_iff_exists_add.1 hab
   simp
 
-/-- For `k ≠ 0`, all coefficient rings `O` (rings of integers of finite Galois extensions of ℚ_ℓ
+/--
+For `k ≠ 0`, all coefficient rings `O` (rings of integers of finite Galois extensions of ℚ_ℓ
 inside ℚ̄_ℓ) that are sufficiently large with respect to inclusion contain a primitive `k`-th root
-of unity. -/
-lemma eventually_exists_isPrimitiveRoot (k : ℕ) [NeZero k] :
-    ∀ᶠ O : CoeffRing ℓ in Filter.atTop, ∃ ζ : ↑O, IsPrimitiveRoot ζ k := by
+of unity.
+-/
+lemma eventually_exists_isPrimitiveRoot (k : ℕ) [NeZero k]
+    : ∀ᶠ O : CoeffRing ℓ in Filter.atTop, ∃ ζ : ↑O, IsPrimitiveRoot ζ k := by
   obtain ⟨ζ, hζ⟩ := HasEnoughRootsOfUnity.exists_isPrimitiveRoot (PadicAlgCl ℓ) k
   -- a root of unity has norm `1`, so it lies in all large enough `O`
   filter_upwards [eventually_mem (hζ.isOfFinOrder (NeZero.ne k)).norm_eq_one.le] with O hO
   exact ⟨⟨ζ, hO⟩, .coe_submonoidClass_iff.1 hζ⟩
 
-/-- A coefficient ring is an ℓ-adic integer ring; its quotients by nonzero ideals are finite, as
-these ideals are open and the ring is compact. -/
+/--
+A coefficient ring is an ℓ-adic integer ring; its quotients by nonzero ideals are finite, as
+these ideals are open and the ring is compact.
+-/
 noncomputable instance : PadicIntegerRing O ℓ where
   finiteQuotient hI := AddSubgroup.quotient_finite_of_isOpen _ (isOpen_iff.mpr hI)
 

@@ -23,13 +23,15 @@ namespace New
 
 open MonoidAlgebra
 
-variable {G M : Type*} [Group G] [AddCommGroup M] [Module ℂ M]
-  (ρ : Representation ℂ G M) (K : Subgroup G)
+variable
+  {G M : Type*} [Group G] [AddCommGroup M] [Module ℂ M] (ρ : Representation ℂ G M) (K : Subgroup G)
 
-/-- Pushing an element of `H`'s group algebra forward along `f : H →* G` and letting it act by `ρ`
-is letting it act by the restricted representation `ρ ∘ f`. -/
-lemma asAlgebraHom_mapDomain {H : Type*} [Group H] (f : H →* G) (a : ℂ[H]) :
-    ρ.asAlgebraHom (mapDomain f a) = Representation.asAlgebraHom (ρ.comp f) a := by
+/--
+Pushing an element of `H`'s group algebra forward along `f : H →* G` and letting it act by `ρ`
+is letting it act by the restricted representation `ρ ∘ f`.
+-/
+lemma asAlgebraHom_mapDomain {H : Type*} [Group H] (f : H →* G) (a : ℂ[H])
+    : ρ.asAlgebraHom (mapDomain f a) = Representation.asAlgebraHom (ρ.comp f) a := by
   induction a using induction_linear with
   | zero => simp
   | add a b ha hb => simp [mapDomain_add, ha, hb]
@@ -37,8 +39,8 @@ lemma asAlgebraHom_mapDomain {H : Type*} [Group H] (f : H →* G) (a : ℂ[H]) :
 
 variable {ρ} in
 /-- An operator that commutes with the group commutes with the group algebra. -/
-lemma commute_asAlgebraHom {T : Module.End ℂ M} (hT : ∀ g : G, Commute T (ρ g)) (a : ℂ[G]) :
-    Commute T (ρ.asAlgebraHom a) := by
+lemma commute_asAlgebraHom {T : Module.End ℂ M} (hT : ∀ g : G, Commute T (ρ g)) (a : ℂ[G])
+    : Commute T (ρ.asAlgebraHom a) := by
   induction a using induction_linear with
   | zero => simp
   | add a b ha hb => simpa using ha.add_right hb
@@ -47,16 +49,13 @@ lemma commute_asAlgebraHom {T : Module.End ℂ M} (hT : ∀ g : G, Commute T (ρ
 /-- The elements of the group algebra that map `K`-fixed vectors of `ρ` to `K`-fixed vectors. -/
 def levelAlgebra : Subalgebra ℂ ℂ[G] where
   carrier := {a : ℂ[G] | ∀ y ∈ levelSpace ρ K, ρ.asAlgebraHom a y ∈ levelSpace ρ K}
-  mul_mem' {a b} ha hb y hy := by
-    simpa using ha _ (hb y hy)
-  add_mem' {a b} ha hb y hy := by
-    simpa using add_mem (ha y hy) (hb y hy)
-  algebraMap_mem' c y hy := by
-    simpa using Submodule.smul_mem (levelSpace ρ K) c hy
+  mul_mem' {a b} ha hb y hy := by simpa using ha _ (hb y hy)
+  add_mem' {a b} ha hb y hy := by simpa using add_mem (ha y hy) (hb y hy)
+  algebraMap_mem' c y hy := by simpa using Submodule.smul_mem (levelSpace ρ K) c hy
 
 variable {ρ K} in
-lemma mem_levelAlgebra {a : ℂ[G]} :
-    a ∈ levelAlgebra ρ K ↔ ∀ y ∈ levelSpace ρ K, ρ.asAlgebraHom a y ∈ levelSpace ρ K :=
+lemma mem_levelAlgebra {a : ℂ[G]}
+    : a ∈ levelAlgebra ρ K ↔ ∀ y ∈ levelSpace ρ K, ρ.asAlgebraHom a y ∈ levelSpace ρ K :=
   Iff.rfl
 
 /-- The action of `levelAlgebra ρ K` on the `K`-fixed vectors. -/
@@ -76,29 +75,37 @@ def levelAction : levelAlgebra ρ K →ₐ[ℂ] Module.End ℂ (levelSpace ρ K)
 
 variable {ρ K} in
 /-- The operator `levelAction ρ K a` sends a `K`-fixed vector `y` to `ρ.asAlgebraHom a y`. -/
-@[simp] lemma coe_levelAction_apply (a : levelAlgebra ρ K) (y : levelSpace ρ K) :
-    (levelAction ρ K a y : M) = ρ.asAlgebraHom a y :=
+@[simp]
+lemma coe_levelAction_apply (a : levelAlgebra ρ K) (y : levelSpace ρ K)
+    : (levelAction ρ K a y : M) = ρ.asAlgebraHom a y :=
   rfl
 
-/-- The elements of the group algebra that keep the `K`-fixed vectors in every representation of
-`G` on a complex vector space in `Type`. -/
+/--
+The elements of the group algebra that keep the `K`-fixed vectors in every representation of
+`G` on a complex vector space in `Type`.
+-/
 def universalLevelAlgebra : Subalgebra ℂ ℂ[G] :=
   ⨅ (M : Type) (_ : AddCommGroup M) (_ : Module ℂ M) (ρ : Representation ℂ G M), levelAlgebra ρ K
 
 variable {K} in
-/-- An element of `ℂ[G]` lies in `universalLevelAlgebra K` iff, for every representation `ρ` of `G`
+/--
+An element of `ℂ[G]` lies in `universalLevelAlgebra K` iff, for every representation `ρ` of `G`
 on a complex vector space in `Type`, it lies in `levelAlgebra ρ K`, i.e. keeps the `K`-fixed
-vectors. -/
-lemma mem_universalLevelAlgebra {a : ℂ[G]} :
-    a ∈ universalLevelAlgebra K ↔ ∀ (M : Type) [AddCommGroup M] [Module ℂ M]
-      (ρ : Representation ℂ G M), a ∈ levelAlgebra ρ K := by
+vectors.
+-/
+lemma mem_universalLevelAlgebra {a : ℂ[G]}
+    : a ∈ universalLevelAlgebra K
+      ↔ ∀ (M : Type) [AddCommGroup M] [Module ℂ M] (ρ : Representation ℂ G M),
+        a ∈ levelAlgebra ρ K := by
   simp only [universalLevelAlgebra, Algebra.mem_iInf]
 
-/-- For every representation `ρ` of `G` on a complex vector space in `Type`, the algebra
-`universalLevelAlgebra K` is contained in `levelAlgebra ρ K`. -/
-lemma universalLevelAlgebra_le {M : Type} [AddCommGroup M] [Module ℂ M] (ρ : Representation ℂ G M) :
-    universalLevelAlgebra K ≤ levelAlgebra ρ K :=
-  fun _ ha ↦ mem_universalLevelAlgebra.mp ha M ρ
+/--
+For every representation `ρ` of `G` on a complex vector space in `Type`, the algebra
+`universalLevelAlgebra K` is contained in `levelAlgebra ρ K`.
+-/
+lemma universalLevelAlgebra_le {M : Type} [AddCommGroup M] [Module ℂ M] (ρ : Representation ℂ G M)
+    : universalLevelAlgebra K ≤ levelAlgebra ρ K := fun _ ha ↦
+  mem_universalLevelAlgebra.mp ha M ρ
 
 end New
 

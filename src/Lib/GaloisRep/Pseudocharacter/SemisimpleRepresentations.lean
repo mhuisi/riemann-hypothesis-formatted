@@ -56,32 +56,39 @@ open Matrix Submodule Fintype ConjAct IsArtinianRing Set Algebra Pi Units Linear
 
 namespace New
 
-variable {k G H n N B : Type} [Field k] [Group G] [Fintype n] [DecidableEq n] [Fintype N]
-  [DecidableEq N] {m : ℕ} {d : Fin m → ℕ}
-  {r : G →* GL n k} [∀ i, NeZero (d i)]
+variable
+  {k G H n N B : Type} [Field k] [Group G] [Fintype n] [DecidableEq n] [Fintype N] [DecidableEq N]
+  {m : ℕ} {d : Fin m → ℕ} {r : G →* GL n k} [∀ i, NeZero (d i)]
 
 /-! ### Products of matrix algebras and idempotents -/
 
 /-- The product over i of the matrix algebras M_{d_i}(k). -/
-abbrev PiMatrix (k : Type*) (d : Fin m → ℕ) : Type _ := ∀ i : Fin m,
-  Matrix (Fin (d i)) (Fin (d i)) k
+abbrev PiMatrix (k : Type*) (d : Fin m → ℕ) : Type _ :=
+  ∀ i : Fin m, Matrix (Fin (d i)) (Fin (d i)) k
 
-/-- The R-algebra homomorphism from ∏_i M_{m_i}(R) to matrices indexed by the disjoint union of
-the m_i, sending a family of square matrices to the block diagonal matrix. -/
+/--
+The R-algebra homomorphism from ∏_i M_{m_i}(R) to matrices indexed by the disjoint union of
+the m_i, sending a family of square matrices to the block diagonal matrix.
+-/
 @[simps!]
-def blockDiagonalAlgHom {R o : Type*} {m : o → Type} [CommRing R] [DecidableEq o] [Fintype o]
-    [∀ i, Fintype (m i)] [∀ i, DecidableEq (m i)] :
-    (∀ i : o, Matrix (m i) (m i) R) →ₐ[R] Matrix (Σ i : o, m i) (Σ i : o, m i) R :=
+def blockDiagonalAlgHom
+    {R o : Type*} {m : o → Type}
+    [CommRing R] [DecidableEq o] [Fintype o] [∀ i, Fintype (m i)] [∀ i, DecidableEq (m i)]
+    : (∀ i : o, Matrix (m i) (m i) R) →ₐ[R] Matrix (Σ i : o, m i) (Σ i : o, m i) R :=
   AlgHom.mk'
-    { toFun := blockDiagonal'
+    {
+      toFun := blockDiagonal'
       map_one' := by simp
       map_mul' := by simp [Pi.mul_def]
       map_zero' := by simp
-      map_add' := by simp }
+      map_add' := by simp
+    }
     (by simp)
 
-/-- The element of the product of matrix algebras M_{d_i}(k) that is the matrix unit E_ab in
-factor i and zero elsewhere; a, b default to 0. -/
+/--
+The element of the product of matrix algebras M_{d_i}(k) that is the matrix unit E_ab in
+factor i and zero elsewhere; a, b default to 0.
+-/
 abbrev piMatrixUnit (i : Fin m) (a b : Fin (d i) := 0) : PiMatrix k d :=
   Pi.single i (Matrix.single a b 1)
 
@@ -91,8 +98,8 @@ lemma sum_piMatrixUnit : ∑ i : Fin m, ∑ a : Fin (d i), (piMatrixUnit i a a :
   simp_all [sum_eq_single i, sum_single_one]
 
 /-- If `A'` has rank at most that of `A`, then `A' = U' * A * U` for some matrices `U`, `U'`. -/
-lemma exists_mul_mul_eq_of_rank_le {A : Matrix N N k} {A' : Matrix n n k} (h : A'.rank ≤ A.rank) :
-    ∃ (U : Matrix N n k) (U' : Matrix n N k), U' * A * U = A' := by
+lemma exists_mul_mul_eq_of_rank_le {A : Matrix N N k} {A' : Matrix n n k} (h : A'.rank ≤ A.rank)
+    : ∃ (U : Matrix N n k) (U' : Matrix n N k), U' * A * U = A' := by
   -- The range of `A'` embeds by some `J` in the range of `A`. A lift of `J` through `A` gives `U`,
   -- and a left inverse of `J` gives `U'`.
   let R : Submodule k (N → k) := range A.mulVecLin
@@ -102,53 +109,63 @@ lemma exists_mul_mul_eq_of_rank_le {A : Matrix N N k} {A' : Matrix n n k} (h : A
   obtain ⟨lift, h_lift⟩ : ∃ lift : R' →ₗ[k] N → k, A.mulVecLin.rangeRestrict ∘ₗ lift = J :=
     Module.projective_lifting_property _ J A.mulVecLin.surjective_rangeRestrict
   obtain ⟨L, hL⟩ : ∃ L : (N → k) →ₗ[k] R', L ∘ₗ R.subtype ∘ₗ J = .id :=
-    (R.subtype ∘ₗ J).exists_leftInverse_of_injective
-      (ker_eq_bot.2 (R.injective_subtype.comp J_inj))
+    (R.subtype ∘ₗ J).exists_leftInverse_of_injective (ker_eq_bot.2 (R.injective_subtype.comp J_inj))
   have left_inv (y : R') : L (A *ᵥ lift y) = y := by
     rw [show A *ᵥ lift y = J y from congrArg Subtype.val (LinearMap.congr_fun h_lift y)]
     exact LinearMap.congr_fun hL y
-  refine ⟨(lift ∘ₗ A'.mulVecLin.rangeRestrict).toMatrix', (R'.subtype ∘ₗ L).toMatrix',
-    ext_iff_mulVec.2 fun x ↦ ?_⟩
+  refine ⟨
+    (lift ∘ₗ A'.mulVecLin.rangeRestrict).toMatrix',
+    (R'.subtype ∘ₗ L).toMatrix',
+    ext_iff_mulVec.2 fun x ↦ ?_
+  ⟩
   simp [← mulVec_mulVec, left_inv]
 
-variable {p : Matrix n n k} (f : PiMatrix k d →ₐ[k] Matrix N N k)
-  (f' : PiMatrix k d →ₐ[k] Matrix n n k) [Ring B] [Group H] [Algebra k B] [Module.Finite k B]
+variable
+  {p : Matrix n n k}
+  (f : PiMatrix k d →ₐ[k] Matrix N N k) (f' : PiMatrix k d →ₐ[k] Matrix n n k)
+  [Ring B] [Group H] [Algebra k B] [Module.Finite k B]
   (ρ : G →* B)
 
-lemma eq_zero_iff_trace_eq_zero_of_isIdempotentElem [CharZero k] [IsAlgClosed k]
-    (hp : IsIdempotentElem p) :
-    p = 0 ↔ p.trace = 0 := by
+lemma eq_zero_iff_trace_eq_zero_of_isIdempotentElem
+    [CharZero k] [IsAlgClosed k] (hp : IsIdempotentElem p)
+    : p = 0 ↔ p.trace = 0 := by
   have h_rank : p.rank = 0 ↔ p = 0 := by
-    rw [← finrank_range_mulVecLin, finrank_eq_zero, range_eq_bot, ← toLin'_apply', toLin'.map_eq_zero_iff]
+    rw [← finrank_range_mulVecLin, finrank_eq_zero, range_eq_bot, ← toLin'_apply',
+      toLin'.map_eq_zero_iff]
   rw [trace_eq_rank_of_isIdempotentElem hp, Nat.cast_eq_zero, h_rank]
 
-/-- The trace of an idempotent matrix is its rank. In characteristic zero, the matrix is zero
-exactly when its trace is zero. -/
-lemma trace_of_idempotent [CharZero k] [IsAlgClosed k] (hp : IsIdempotentElem p) :
-    p.trace = p.rank ∧ (p = 0 ↔ p.trace = 0) :=
+/--
+The trace of an idempotent matrix is its rank. In characteristic zero, the matrix is zero
+exactly when its trace is zero.
+-/
+lemma trace_of_idempotent [CharZero k] [IsAlgClosed k] (hp : IsIdempotentElem p)
+    : p.trace = p.rank ∧ (p = 0 ↔ p.trace = 0) :=
   ⟨trace_eq_rank_of_isIdempotentElem hp, eq_zero_iff_trace_eq_zero_of_isIdempotentElem hp⟩
 
 attribute [local ext] ext_linearMap
 
 omit [Module.Finite k B] in
-lemma isIdempotentElem_map_piMatrixUnit (f : PiMatrix k d →ₐ[k] B) (i : Fin m) :
-    IsIdempotentElem (f (piMatrixUnit i)) :=
+lemma isIdempotentElem_map_piMatrixUnit (f : PiMatrix k d →ₐ[k] B) (i : Fin m)
+    : IsIdempotentElem (f (piMatrixUnit i)) :=
   IsIdempotentElem.map (by simp [IsIdempotentElem, ← Pi.single_mul]) f
 
 omit [∀ i, NeZero (d i)] in
-/-- Let `k` be algebraically closed of characteristic zero. If `r = f' ∘ s`, where the image of
+/--
+Let `k` be algebraically closed of characteristic zero. If `r = f' ∘ s`, where the image of
 `s` spans a finite product of matrix algebras and `f'` is an algebra map to `M_n(k)`, then the
-trace form on the span of `r(G)` is non-degenerate. -/
-lemma IsTraceNondeg.of_span_piMatrix [CharZero k] [IsAlgClosed k]
-    {s : G → PiMatrix k d} (s_span : span k (Set.range s) = ⊤) (hr : ∀ g : G, f' (s g) = r g) :
-    IsTraceNondeg r := by
+trace form on the span of `r(G)` is non-degenerate.
+-/
+lemma IsTraceNondeg.of_span_piMatrix
+    [CharZero k] [IsAlgClosed k]
+    {s : G → PiMatrix k d} (s_span : span k (Set.range s) = ⊤) (hr : ∀ g : G, f' (s g) = r g)
+    : IsTraceNondeg r := by
   -- Write `x = f' a`. The left ideal spanned by `a` is spanned by an idempotent `c * a`. Its image
   -- has trace zero, so it is zero (characteristic zero), and `a` is a multiple of `c * a`.
   intro x hx h_trace
   obtain ⟨a, rfl⟩ : ∃ a : PiMatrix k d, f' a = x :=
     mem_span.1 hx f'.range.toSubmodule (range_subset_iff.2 fun g ↦ ⟨s g, hr g⟩)
-  obtain ⟨c, idem, b, hb⟩ :
-      ∃ c : PiMatrix k d, IsIdempotentElem (c * a) ∧ ∃ b : PiMatrix k d, b * (c * a) = a := by
+  obtain ⟨c, idem, b, hb⟩
+      : ∃ c : PiMatrix k d, IsIdempotentElem (c * a) ∧ ∃ b : PiMatrix k d, b * (c * a) = a := by
     simpa [le_antisymm_iff, mem_span_singleton] using
       IsSemisimpleRing.ideal_eq_span_idempotent (PiMatrix k d ∙ a)
   -- The trace of `f' (y * a)` is linear in `y` and vanishes on the spanning family `s`.
@@ -160,24 +177,28 @@ lemma IsTraceNondeg.of_span_piMatrix [CharZero k] [IsAlgClosed k]
     (eq_zero_iff_trace_eq_zero_of_isIdempotentElem (idem.map f')).2 (trace_zero c)
   rw [← hb, map_mul, idem_zero, mul_zero]
 
-/-- Let `k` be an algebraically closed field of characteristic zero, and let `s : G →* PiMatrix k d`
+/--
+Let `k` be an algebraically closed field of characteristic zero, and let `s : G →* PiMatrix k d`
 be a homomorphism into the product ∏_i M_{d_i}(k) of matrix algebras whose image spans the product.
 Let `τ` be a `k`-linear form on the product with `τ (x * y) = τ (y * x)`, taking a natural number
 value on `piMatrixUnit i` (the matrix unit E_00 in factor `i`, zero elsewhere) for each `i`, and
 with `τ 1 = card n`. Then there is a representation `r : G →* GL n k` with trace `τ ∘ s` whose trace
 form is non-degenerate on the span of the `r g`, meaning any `x` in that span with
-`tr (x * r g) = 0` for all `g` is zero. -/
-lemma exists_rep_of_trace [CharZero k] [IsAlgClosed k]
+`tr (x * r g) = 0` for all `g` is zero.
+-/
+lemma exists_rep_of_trace
+    [CharZero k] [IsAlgClosed k]
     {s : G →* PiMatrix k d} (h_span : span k (Set.range s) = ⊤)
     (τ : PiMatrix k d →ₗ[k] k) (h_comm : ∀ x y : PiMatrix k d, τ (x * y) = τ (y * x))
-    (h_nat : ∀ i : Fin m, ∃ c : ℕ, τ (piMatrixUnit i) = c) (h_one : τ 1 = Fintype.card n) :
-    ∃ r : G →* GL n k, IsTraceNondeg r ∧ ∀ g : G, (r g).val.trace = τ (s g) := by
+    (h_nat : ∀ i : Fin m, ∃ c : ℕ, τ (piMatrixUnit i) = c) (h_one : τ 1 = Fintype.card n)
+    : ∃ r : G →* GL n k, IsTraceNondeg r ∧ ∀ g : G, (r g).val.trace = τ (s g) := by
   choose c hc using h_nat
   -- A tracial form is a combination of the traces of the blocks, with coefficients `c i`.
-  have τ_unit (i : Fin m) (a b : Fin (d i)) :
-      τ (piMatrixUnit i a b) = if a = b then (c i : k) else 0 := by
-    have h_swap : τ (piMatrixUnit i a * piMatrixUnit i 0 b) =
-        τ (piMatrixUnit i 0 b * piMatrixUnit i a) := h_comm _ _
+  have τ_unit (i : Fin m) (a b : Fin (d i))
+      : τ (piMatrixUnit i a b) = if a = b then (c i : k) else 0 := by
+    have h_swap
+        : τ (piMatrixUnit i a * piMatrixUnit i 0 b) = τ (piMatrixUnit i 0 b * piMatrixUnit i a) :=
+      h_comm _ _
     split_ifs with hab
     · simpa [hab, hc, ← single_mul_left] using h_swap
     · simpa [Ne.symm hab, ← single_mul_left] using h_swap
@@ -204,62 +225,77 @@ lemma exists_rep_of_trace [CharZero k] [IsAlgClosed k]
 
 /-! ### Intertwiners between algebra maps -/
 
-/-- Given algebra maps f, f' from the product of the M_{d_i}(k) to matrix algebras and matrices U_i,
-this is the matrix Σ_i Σ_a f(E^i_{a0}) U_i f'(E^i_{0a}). -/
+/--
+Given algebra maps f, f' from the product of the M_{d_i}(k) to matrix algebras and matrices U_i,
+this is the matrix Σ_i Σ_a f(E^i_{a0}) U_i f'(E^i_{0a}).
+-/
 def intertwiner (U : Fin m → Matrix N n k) : Matrix N n k :=
   ∑ i : Fin m, ∑ a : Fin (d i), f (piMatrixUnit i a) * U i * f' (piMatrixUnit i 0 a)
 
-/-- Multiplying `intertwiner f f' U` on the right by the image under `f'` of the matrix unit
-E^i_{ab} gives f(E^i_{a0}) U_i f'(E^i_{0b}). -/
-lemma intertwiner_mul_map_piMatrixUnit (U : Fin m → Matrix N n k) (i : Fin m) (a b : Fin (d i)) :
-    intertwiner f f' U * f' (piMatrixUnit i a b) =
-      f (piMatrixUnit i a) * U i * f' (piMatrixUnit i 0 b) := by
+/--
+Multiplying `intertwiner f f' U` on the right by the image under `f'` of the matrix unit
+E^i_{ab} gives f(E^i_{a0}) U_i f'(E^i_{0b}).
+-/
+lemma intertwiner_mul_map_piMatrixUnit (U : Fin m → Matrix N n k) (i : Fin m) (a b : Fin (d i))
+    : intertwiner f f' U * f' (piMatrixUnit i a b)
+      = f (piMatrixUnit i a) * U i * f' (piMatrixUnit i 0 b) := by
   -- Products of matrix units vanish unless block and index match, so one term of the sum is left.
-  simp +contextual [intertwiner, ← map_mul, eq_comm, sum_eq_single i,
-    sum_eq_single a, Matrix.mul_assoc, Matrix.sum_mul, ← single_mul_left]
+  simp +contextual [intertwiner, ← map_mul, eq_comm, sum_eq_single i, sum_eq_single a,
+    Matrix.mul_assoc, Matrix.sum_mul, ← single_mul_left]
 
-/-- Multiplying `intertwiner f f' U` on the left by the image under `f` of the matrix unit
-E^i_{ab} gives the same matrix f(E^i_{a0}) U_i f'(E^i_{0b}). -/
-lemma map_piMatrixUnit_mul_intertwiner (U : Fin m → Matrix N n k) (i : Fin m) (a b : Fin (d i)) :
-    f (piMatrixUnit i a b) * intertwiner f f' U =
-      f (piMatrixUnit i a) * U i * f' (piMatrixUnit i 0 b) := by
+/--
+Multiplying `intertwiner f f' U` on the left by the image under `f` of the matrix unit
+E^i_{ab} gives the same matrix f(E^i_{a0}) U_i f'(E^i_{0b}).
+-/
+lemma map_piMatrixUnit_mul_intertwiner (U : Fin m → Matrix N n k) (i : Fin m) (a b : Fin (d i))
+    : f (piMatrixUnit i a b) * intertwiner f f' U
+      = f (piMatrixUnit i a) * U i * f' (piMatrixUnit i 0 b) := by
   -- Products of matrix units vanish unless block and index match, so one term of the sum is left.
   simp +contextual [intertwiner, ← map_mul, ← (f _).mul_assoc (f _), eq_comm, sum_eq_single i,
     sum_eq_single b, Matrix.mul_assoc, ← single_mul_left, Matrix.mul_sum]
 
-/-- Multiplying `intertwiner f f' U` by the image of the matrix unit E^i_{ab}, on the right under
-`f'` or on the left under `f`, gives the same matrix f(E^i_{a0}) U_i f'(E^i_{0b}). -/
-lemma intertwiner_mul_piMatrixUnit (U : Fin m → Matrix N n k) (i : Fin m) (a b : Fin (d i)) :
-    intertwiner f f' U * f' (piMatrixUnit i a b) =
-      f (piMatrixUnit i a) * U i * f' (piMatrixUnit i 0 b) ∧
-    f (piMatrixUnit i a b) * intertwiner f f' U =
-      f (piMatrixUnit i a) * U i * f' (piMatrixUnit i 0 b) :=
+/--
+Multiplying `intertwiner f f' U` by the image of the matrix unit E^i_{ab}, on the right under
+`f'` or on the left under `f`, gives the same matrix f(E^i_{a0}) U_i f'(E^i_{0b}).
+-/
+lemma intertwiner_mul_piMatrixUnit (U : Fin m → Matrix N n k) (i : Fin m) (a b : Fin (d i))
+    : intertwiner f f' U * f' (piMatrixUnit i a b)
+        = f (piMatrixUnit i a) * U i * f' (piMatrixUnit i 0 b)
+      ∧ f (piMatrixUnit i a b) * intertwiner f f' U
+        = f (piMatrixUnit i a) * U i * f' (piMatrixUnit i 0 b) :=
   ⟨intertwiner_mul_map_piMatrixUnit f f' U i a b, map_piMatrixUnit_mul_intertwiner f f' U i a b⟩
 
 /-- `intertwiner f f' U` intertwines the two actions of the product of matrix algebras. -/
-lemma mul_intertwiner (U : Fin m → Matrix N n k) (z : PiMatrix k d) :
-    f z * intertwiner f f' U = intertwiner f f' U * f' z := by
+lemma mul_intertwiner (U : Fin m → Matrix N n k) (z : PiMatrix k d)
+    : f z * intertwiner f f' U = intertwiner f f' U * f' z := by
   -- Both sides are linear in `z`: expand `z` in the matrix units.
   rw [← (Pi.basis fun i ↦ stdBasis k (Fin (d i)) (Fin (d i))).sum_repr z]
   simp [sum_prod_type, stdBasis_eq_single, intertwiner_mul_map_piMatrixUnit,
     map_piMatrixUnit_mul_intertwiner, sum_sigma, Matrix.sum_mul, Matrix.mul_sum]
 
-/-- Let `f` and `f'` be matrix representations of a product of matrix algebras. The rank of
+/--
+Let `f` and `f'` be matrix representations of a product of matrix algebras. The rank of
 `f (piMatrixUnit i)` is the multiplicity of the block `i` in `f`. If each block occurs in `f'` at
-most as often as in `f`, then there is an intertwiner `P` from `f'` to `f` with a left inverse. -/
+most as often as in `f`, then there is an intertwiner `P` from `f'` to `f` with a left inverse.
+-/
 lemma exists_piMatrix_retract
-    (h_rank : ∀ i : Fin m, (f' (piMatrixUnit i)).rank ≤ (f (piMatrixUnit i)).rank) :
-    ∃ (P : Matrix N n k) (Q : Matrix n N k), Q * P = 1 ∧ ∀ z : PiMatrix k d,
-      f z * P = P * f' z := by
+    (h_rank : ∀ i : Fin m, (f' (piMatrixUnit i)).rank ≤ (f (piMatrixUnit i)).rank)
+    : ∃ (P : Matrix N n k) (Q : Matrix n N k),
+      Q * P = 1 ∧ ∀ z : PiMatrix k d, f z * P = P * f' z := by
   -- The inequality of ranks gives matrices `U i`, `U' i` that cut `f' (piMatrixUnit i)` out of
   -- `f (piMatrixUnit i)`. The sums `intertwiner` made of them are `P` and `Q`.
-  have exists_retract (i : Fin m) : ∃ (U : Matrix N n k) (U' : Matrix n N k),
-      U' * f (piMatrixUnit i) * U = f' (piMatrixUnit i) := exists_mul_mul_eq_of_rank_le (h_rank i)
+  have exists_retract (i : Fin m)
+      : ∃ (U : Matrix N n k) (U' : Matrix n N k),
+        U' * f (piMatrixUnit i) * U = f' (piMatrixUnit i) :=
+    exists_mul_mul_eq_of_rank_le (h_rank i)
   choose U U' retract using exists_retract
-  have unit_mul (i : Fin m) (a : Fin (d i)) : (piMatrixUnit i a * piMatrixUnit i *
-      piMatrixUnit i 0 a : PiMatrix k d) = piMatrixUnit i a a := by simp [← single_mul_left]
+  have unit_mul (i : Fin m) (a : Fin (d i))
+      : (piMatrixUnit i a * piMatrixUnit i * piMatrixUnit i 0 a : PiMatrix k d)
+        = piMatrixUnit i a a := by
+    simp [← single_mul_left]
   refine ⟨intertwiner f f' U, intertwiner f' f U', ?_, mul_intertwiner f f' U⟩
-  calc intertwiner f' f U' * intertwiner f f' U
+  calc
+    intertwiner f' f U' * intertwiner f f' U
     _ = ∑ i : Fin m, ∑ a : Fin (d i),
         f' (piMatrixUnit i a) * (U' i * f (piMatrixUnit i) * U i) * f' (piMatrixUnit i 0 a) := by
       simp [intertwiner.eq_1 f', map_piMatrixUnit_mul_intertwiner, Matrix.mul_assoc, Matrix.sum_mul]
@@ -275,16 +311,17 @@ def HasSemiprimeSpan : Prop := ∀ x ∈ span k (Set.range ρ), (∀ g : G, x * 
 
 /-! ### The Wedderburn decomposition and its consequences -/
 
-/-- The Wedderburn–Artin theorem for the span of `ρ ∘ f`. Let `ρ : G →* B` have semiprime span and
+/--
+The Wedderburn–Artin theorem for the span of `ρ ∘ f`. Let `ρ : G →* B` have semiprime span and
 let `f : H →* G` have normal range. Then `ρ ∘ f = F ∘ s`, where the image of `s` spans a product of
-matrix algebras and the algebra map `F` kills no block of that product. -/
-lemma exists_wedderburn [CharZero k] (f : H →* G) (h_semiprime : HasSemiprimeSpan k ρ)
-    (h_normal : f.range.Normal) :
-    ∃ (b : ℕ) (d : Fin b → ℕ) (_ : ∀ i : Fin b, NeZero (d i))
-      (s : H →* PiMatrix k d) (F : PiMatrix k d →ₐ[k] B),
-      (∀ i : Fin b, F (piMatrixUnit i) ≠ 0) ∧
-      span k (Set.range s) = ⊤ ∧
-      ∀ g : H, F (s g) = ρ (f g) := by
+matrix algebras and the algebra map `F` kills no block of that product.
+-/
+lemma exists_wedderburn
+    [CharZero k] (f : H →* G) (h_semiprime : HasSemiprimeSpan k ρ) (h_normal : f.range.Normal)
+    : ∃ (b : ℕ) (d : Fin b → ℕ) (_ : ∀ i : Fin b, NeZero (d i)) (s : H →* PiMatrix k d)
+        (F : PiMatrix k d →ₐ[k] B),
+      (∀ i : Fin b, F (piMatrixUnit i) ≠ 0) ∧ span k (Set.range s) = ⊤
+        ∧ ∀ g : H, F (s g) = ρ (f g) := by
   -- The span `A` of `ρ (f H)` is an algebra stable under conjugation by `ρ G`. Its radical is zero,
   -- so by the Wedderburn–Artin theorem it is a product of matrix algebras.
   let A : Subalgebra k B := adjoin k (range (ρ.comp f))
@@ -328,11 +365,13 @@ lemma exists_wedderburn [CharZero k] (f : H →* G) (h_semiprime : HasSemiprimeS
     simpa [Set.range_comp, ← span_image, range_eq_top.2 e_surj] using
       congrArg (Submodule.map e.toLinearMap) ρA_span
 
-/-- If the trace form of `r : G →* GL n k` is non-degenerate on the span of `r(G)`, then this span
+/--
+If the trace form of `r : G →* GL n k` is non-degenerate on the span of `r(G)`, then this span
 is semiprime: any `x` in it with `x * r g * x = 0` for all `g` is zero. This is the hypothesis of
-`New.exists_wedderburn`. -/
-lemma IsTraceNondeg.hasSemiprimeSpan (h : IsTraceNondeg r) :
-    HasSemiprimeSpan k ((coeHom (Matrix n n k)).comp r) := by
+`New.exists_wedderburn`.
+-/
+lemma IsTraceNondeg.hasSemiprimeSpan (h : IsTraceNondeg r)
+    : HasSemiprimeSpan k ((coeHom (Matrix n n k)).comp r) := by
   -- If `x * r g * x = 0`, then `x * r g` has square zero, so its trace is zero.
   refine fun x hx h_zero ↦ h x hx fun g ↦ ?_
   have h_sandwich : x * (r g).val * x = 0 := h_zero g
@@ -340,36 +379,40 @@ lemma IsTraceNondeg.hasSemiprimeSpan (h : IsTraceNondeg r) :
     ⟨2, by rw [sq, ← mul_assoc, h_sandwich, zero_mul]⟩
   exact (Matrix.isNilpotent_trace_of_isNilpotent h_nilpotent).eq_zero
 
-/-- Clifford's theorem for the trace form. Let `k` be algebraically closed of characteristic zero.
+/--
+Clifford's theorem for the trace form. Let `k` be algebraically closed of characteristic zero.
 If the trace form of `r : G →* GL n k` is non-degenerate and `f : H →* G` has normal range, then
-the trace form of `r ∘ f` is non-degenerate. -/
-lemma IsTraceNondeg.comp [CharZero k]
-    (h : IsTraceNondeg r) (f : H →* G) (h_normal : f.range.Normal) :
-    IsTraceNondeg (r.comp f) := by
+the trace form of `r ∘ f` is non-degenerate.
+-/
+lemma IsTraceNondeg.comp [CharZero k] (h : IsTraceNondeg r) (f : H →* G) (h_normal : f.range.Normal)
+    : IsTraceNondeg (r.comp f) := by
   -- the span of `r (f H)` is the image of a product of matrix algebras
   obtain ⟨b, d, hd, s, F, -, s_span, hF⟩ := exists_wedderburn _ f h.hasSemiprimeSpan h_normal
   exact of_span_piMatrix F s_span hF
 
-/-- Brauer–Nesbitt in the form used here: over an algebraically closed field `k` of characteristic
+/--
+Brauer–Nesbitt in the form used here: over an algebraically closed field `k` of characteristic
 `0`, let `r` have non-degenerate trace form, `ρ : G →* B` into a finite-dimensional algebra have
 semiprime span, and `φ : B →ₐ[k] Matrix n n k`. If `r` and `φ ∘ ρ` have equal traces, then
-`r g * P = P * φ (ρ g)` for one invertible `P`. -/
-lemma IsTraceNondeg.exists_conj_of_trace_eq [CharZero k]
-    (hr : IsTraceNondeg r) (φ : B →ₐ[k] Matrix n n k)
-    (hρ : HasSemiprimeSpan k ρ) (h_trace : ∀ g : G, (r g).val.trace = (φ (ρ g)).trace) :
-    ∃ P : GL n k, ∀ g : G, (r g).val * P = P * φ (ρ g) := by
+`r g * P = P * φ (ρ g)` for one invertible `P`.
+-/
+lemma IsTraceNondeg.exists_conj_of_trace_eq
+    [CharZero k]
+    (hr : IsTraceNondeg r)
+    (φ : B →ₐ[k] Matrix n n k)
+    (hρ : HasSemiprimeSpan k ρ) (h_trace : ∀ g : G, (r g).val.trace = (φ (ρ g)).trace)
+    : ∃ P : GL n k, ∀ g : G, (r g).val * P = P * φ (ρ g) := by
   -- Apply `exists_wedderburn` to the pair `(r, ρ)`. It writes `r = F₁ ∘ s` and `φ ∘ ρ = F₂ ∘ s` for
   -- algebra maps `F₁`, `F₂` of equal trace, and `exists_piMatrix_retract` intertwines these.
   let pair : G →* Matrix n n k × B := ((coeHom (Matrix n n k)).comp r).prod ρ
   have pair_semiprime : HasSemiprimeSpan k pair := by
     rintro ⟨x, y⟩ h_mem h_zero
-    obtain ⟨x_mem, y_mem⟩ :
-        x ∈ span k (range ((coeHom (Matrix n n k)).comp r)) ∧ y ∈ span k (range ρ) :=
+    obtain ⟨x_mem, y_mem⟩
+        : x ∈ span k (range ((coeHom (Matrix n n k)).comp r)) ∧ y ∈ span k (range ρ) :=
       span_prod_le _ _ (span_mono (range_pair_subset ..) h_mem)
     exact Prod.ext (hr.hasSemiprimeSpan x x_mem fun g ↦ congrArg Prod.fst (h_zero g))
       (hρ y y_mem fun g ↦ congrArg Prod.snd (h_zero g))
-  obtain ⟨b, d, _, s, F, -, s_span, hF⟩ :=
-    exists_wedderburn pair (.id G) pair_semiprime ⟨by simp⟩
+  obtain ⟨b, d, _, s, F, -, s_span, hF⟩ := exists_wedderburn pair (.id G) pair_semiprime ⟨by simp⟩
   let F₁ : PiMatrix k d →ₐ[k] Matrix n n k := (AlgHom.fst k (Matrix n n k) B).comp F
   let F₂ : PiMatrix k d →ₐ[k] Matrix n n k := φ.comp ((AlgHom.snd k (Matrix n n k) B).comp F)
   have F₁_s (g : G) : F₁ (s g) = r g := congrArg Prod.fst (hF g)
@@ -377,8 +420,7 @@ lemma IsTraceNondeg.exists_conj_of_trace_eq [CharZero k]
   -- The traces agree on the spanning family `s`, hence everywhere; an idempotent has its rank as
   -- trace.
   have trace_eq (y : PiMatrix k d) : (F₁ y).trace = (F₂ y).trace := by
-    have h_lin :
-        traceLinearMap n k k ∘ₗ F₁.toLinearMap = traceLinearMap n k k ∘ₗ F₂.toLinearMap :=
+    have h_lin : traceLinearMap n k k ∘ₗ F₁.toLinearMap = traceLinearMap n k k ∘ₗ F₂.toLinearMap :=
       LinearMap.ext_on_range s_span fun g ↦ by simp [F₁_s, F₂_s, h_trace]
     simpa using LinearMap.congr_fun h_lin y
   have rank_eq (i : Fin b) : (F₂ (piMatrixUnit i)).rank = (F₁ (piMatrixUnit i)).rank := by
@@ -391,13 +433,15 @@ lemma IsTraceNondeg.exists_conj_of_trace_eq [CharZero k]
 /-! ### Continuity -/
 
 omit [IsAlgClosed k] in
-/-- Let k be a field with a ring topology. Let r be a representation of a topological group into
+/--
+Let k be a field with a ring topology. Let r be a representation of a topological group into
 GL_n(k) whose trace form is non-degenerate on the span of its image. If the trace of r is
-continuous, then r is continuous. -/
-lemma IsTraceNondeg.continuous_of_trace [TopologicalSpace k] [IsTopologicalRing k]
-    [TopologicalSpace G] [IsTopologicalGroup G] (h : IsTraceNondeg r)
-    (h_trace : Continuous fun g : G ↦ (r g).val.trace) :
-    Continuous r := by
+continuous, then r is continuous.
+-/
+lemma IsTraceNondeg.continuous_of_trace
+    [TopologicalSpace k] [IsTopologicalRing k] [TopologicalSpace G] [IsTopologicalGroup G]
+    (h : IsTraceNondeg r) (h_trace : Continuous fun g : G ↦ (r g).val.trace)
+    : Continuous r := by
   -- On the span `S` of `r G` the trace form is non-degenerate, so each matrix entry is a linear
   -- combination of the functionals `L g : x ↦ trace (x * r g)`. These are continuous along `r`.
   refine .of_coeHom_comp (continuous_matrix fun i j ↦ ?_)
@@ -434,43 +478,51 @@ section CharacterCancellation
 
 open Matrix Submodule Pi Fintype Function
 
-variable {k G m n t : Type} [Field k] [Group G] [Fintype m] [DecidableEq m] [Fintype n] [Fintype t]
+variable
+  {k G m n t : Type} [Field k] [Group G] [Fintype m] [DecidableEq m] [Fintype n] [Fintype t]
   (μ : G →* kˣ) (R : G →* GL m k)
 
-/-- For a character μ of G and a matrix representation R over k, the representation g ↦
-μ(g)R(g). -/
+/--
+For a character μ of G and a matrix representation R over k, the representation g ↦
+μ(g)R(g).
+-/
 noncomputable abbrev New.twistByChar : G →* GL m k :=
   MonoidHom.mk' (fun g ↦ μ g • R g) (by aesop (add simp smul_mul_smul))
 
 /-- Twisting by a character `μ` keeps the trace form non-degenerate on the span of the image. -/
-lemma New.IsTraceNondeg.twist {R : G →* GL m k} (h : IsTraceNondeg R) (μ : G →* kˣ) :
-    IsTraceNondeg (twistByChar μ R) := by
+lemma New.IsTraceNondeg.twist {R : G →* GL m k} (h : IsTraceNondeg R) (μ : G →* kˣ)
+    : IsTraceNondeg (twistByChar μ R) := by
   -- Scaling each `R g` by the unit `μ g` changes neither the span nor which traces vanish.
   intro x hx h_trace
   have twist_apply (g : G) : (twistByChar μ R g).val = (μ g).val • (R g).val := rfl
-  have span_le_span : span k (Set.range fun g : G ↦ (twistByChar μ R g).val) ≤
-      span k (Set.range fun g : G ↦ (R g).val) :=
+  have span_le_span
+      : span k (Set.range fun g : G ↦ (twistByChar μ R g).val)
+        ≤ span k (Set.range fun g : G ↦ (R g).val) :=
     span_le.2 (Set.range_subset_iff.2 fun g ↦ smul_mem _ (μ g).val (subset_span ⟨g, rfl⟩))
   refine h x (span_le_span hx) fun g ↦ ?_
   simpa [twist_apply, smul_eq_zero_iff_eq] using h_trace g
 
-/-- Cancellation of characters over an algebraically closed field of characteristic `0`. Let `r 0`,
+/--
+Cancellation of characters over an algebraically closed field of characteristic `0`. Let `r 0`,
 `r 1` of dimension `card n + card t` have nondegenerate trace form, and let no character `ψ 0 i`
 equal a `ψ 1 j`. If `tr (r i) - ∑ j, ψ i j` is the same function `T` for `i = 0, 1`, then `T` is
-the trace of some `s` of dimension `card n` with nondegenerate trace form. -/
-lemma New.IsTraceNondeg.exists_cancel_chars [DecidableEq n] [CharZero k] [IsAlgClosed k]
-    (h_card : card m = card n + card t) {r : Fin 2 → G →* GL m k}
-    (h_nondeg : ∀ i : Fin 2, IsTraceNondeg (r i))
-    {ψ : Fin 2 → t → G →* kˣ} (h_ne : ∀ i j : t, ψ 0 i ≠ ψ 1 j) {T : G → k}
-    (h_trace : ∀ (i : Fin 2) (g : G), (r i g).val.trace = T g + ∑ j : t, (ψ i j g).val) :
-    ∃ s : G →* GL n k, IsTraceNondeg s ∧ ∀ g : G, T g = (s g).val.trace := by
+the trace of some `s` of dimension `card n` with nondegenerate trace form.
+-/
+lemma New.IsTraceNondeg.exists_cancel_chars
+    [DecidableEq n] [CharZero k] [IsAlgClosed k]
+    (h_card : card m = card n + card t)
+    {r : Fin 2 → G →* GL m k} (h_nondeg : ∀ i : Fin 2, IsTraceNondeg (r i))
+    {ψ : Fin 2 → t → G →* kˣ} (h_ne : ∀ i j : t, ψ 0 i ≠ ψ 1 j)
+    {T : G → k} (h_trace : ∀ (i : Fin 2) (g : G), (r i g).val.trace = T g + ∑ j : t, (ψ i j g).val)
+    : ∃ s : G →* GL n k, IsTraceNondeg s ∧ ∀ g : G, T g = (s g).val.trace := by
   -- Decompose `ρ = (r i, ψ i)_i` through a product of matrix algebras. The virtual character
   -- `τ = tr (r i) - ∑ ψ i j` is `T` for both `i`; it is the trace of a representation as soon as it
   -- takes natural values on the primitive idempotents `piMatrixUnit c`.
-  let ρ : G →* Fin 2 → Matrix m m k × (t → k) :=
-    { toFun := fun g i ↦ ((r i g : Matrix m m k), fun j ↦ (ψ i j g : k))
-      map_one' := by aesop
-      map_mul' := by aesop }
+  let ρ : G →* Fin 2 → Matrix m m k × (t → k) := {
+    toFun := fun g i ↦ ((r i g : Matrix m m k), fun j ↦ (ψ i j g : k))
+    map_one' := by aesop
+    map_mul' := by aesop
+  }
   -- The span of `ρ` has no `x ≠ 0` with all `x * ρ g * x = 0`: test each component.
   have hsemi : HasSemiprimeSpan k ρ := by
     intro x hx h_zero
@@ -480,27 +532,27 @@ lemma New.IsTraceNondeg.exists_cancel_chars [DecidableEq n] [CharZero k] [IsAlgC
       refine span_mono ?_ (apply_mem_span_image_of_mem_span (LinearMap.fst k _ _ ∘ₗ .proj i) hx)
       rintro _ ⟨_, ⟨g, rfl⟩, rfl⟩
       exact ⟨g, rfl⟩
-    have h_mat : (x i).fst = 0 := (h_nondeg i).hasSemiprimeSpan (x i).fst hspan fun g ↦ by
-      simpa [ρ] using congrArg (fun y ↦ (y i).fst) (h_zero g)
+    have h_mat : (x i).fst = 0 :=
+      (h_nondeg i).hasSemiprimeSpan (x i).fst hspan fun g ↦ by
+        simpa [ρ] using congrArg (fun y ↦ (y i).fst) (h_zero g)
     -- at `g = 1` the character components give `(x i).snd j ^ 2 = 0`
     have h_chars : (x i).snd = 0 :=
       funext fun j ↦ by simpa [ρ] using congrArg (fun y ↦ (y i).snd j) (h_zero 1)
     exact Prod.ext h_mat h_chars
   -- Wedderburn: `ρ = F ∘ s`, where `s G` spans a product `PiMatrix k d` of matrix algebras and `F`
   -- is an algebra map on it.
-  obtain ⟨b, d, hd, s, F, -, hs, hF⟩ : ∃ (b : ℕ) (d : Fin b → ℕ) (_ : ∀ i : Fin b, NeZero (d i))
-      (s : G →* PiMatrix k d) (F : PiMatrix k d →ₐ[k] Fin 2 → Matrix m m k × (t → k)),
-      (∀ i : Fin b, F (piMatrixUnit i) ≠ 0) ∧ span k (Set.range s) = ⊤ ∧
-      ∀ g : G, F (s g) = ρ g :=
+  obtain ⟨b, d, hd, s, F, -, hs, hF⟩
+      : ∃ (b : ℕ) (d : Fin b → ℕ) (_ : ∀ i : Fin b, NeZero (d i)) (s : G →* PiMatrix k d)
+          (F : PiMatrix k d →ₐ[k] Fin 2 → Matrix m m k × (t → k)),
+        (∀ i : Fin b, F (piMatrixUnit i) ≠ 0) ∧ span k (Set.range s) = ⊤ ∧ ∀ g : G, F (s g) = ρ g :=
     exists_wedderburn ρ (.id G) hsemi ⟨by simp⟩
-  replace hF (g : G) (i : Fin 2) :
-      F (s g) i = ((r i g : Matrix m m k), fun j ↦ (ψ i j g : k)) := congrFun (hF g) i
+  replace hF (g : G) (i : Fin 2) : F (s g) i = ((r i g : Matrix m m k), fun j ↦ (ψ i j g : k)) :=
+    congrFun (hF g) i
   let τ (i : Fin 2) : PiMatrix k d →ₗ[k] k :=
-    (traceLinearMap m k k).coprod (-∑ j, .proj j) ∘ₗ .proj i ∘ₗ F.toLinearMap
+    (traceLinearMap m k k).coprod (- ∑ j, .proj j) ∘ₗ .proj i ∘ₗ F.toLinearMap
   have hτ (i : Fin 2) (x : PiMatrix k d) : τ i x = (F x i).fst.trace - ∑ j, (F x i).snd j := by
     simp [τ, sub_eq_add_neg]
-  have hτ_eq (i : Fin 2) : τ 0 = τ i :=
-    LinearMap.ext_on_range hs fun g ↦ by simp [hτ, hF, h_trace]
+  have hτ_eq (i : Fin 2) : τ 0 = τ i := LinearMap.ext_on_range hs fun g ↦ by simp [hτ, hF, h_trace]
   have hcomm (x y : PiMatrix k d) : τ 0 (x * y) = τ 0 (y * x) := by
     simp [hτ, trace_mul_comm (F x 0).fst, mul_comm ((F x 0).snd _)]
   have hnat (c : Fin b) : ∃ N : ℕ, τ 0 (piMatrixUnit c) = N := by
@@ -541,21 +593,25 @@ namespace New
 
 open Matrix Filter Set Prod IntermediateField InfiniteGalois Units CoeffRing
 
-variable {ℓ : ℕ} [ThePrime ℓ]
-  {n : Type} [Fintype n] [DecidableEq n] {G : Type} [Group G] {O : CoeffRing ℓ}
+variable
+  {ℓ : ℕ} [ThePrime ℓ] {n : Type} [Fintype n] [DecidableEq n] {G : Type} [Group G] {O : CoeffRing ℓ}
 
-/-- The `O`-valued representation `u` is a lattice in `r`: there is one `P` in `GL n ℚ̄_ℓ` with
+/--
+The `O`-valued representation `u` is a lattice in `r`: there is one `P` in `GL n ℚ̄_ℓ` with
 `P⁻¹ * r g * P = u g` for all `g` in `G`, where `u g` is read in `ℚ̄_ℓ` through the inclusion
-`O.val.val` of `O` into `ℚ̄_ℓ`. -/
+`O.val.val` of `O` into `ℚ̄_ℓ`.
+-/
 def Selmer.IsLatticeIn (r : G →* GL n (PadicAlgCl ℓ)) (u : G →* Matrix n n O) : Prop :=
   ∃ P : GL n (PadicAlgCl ℓ), ∀ g : G, ↑(P⁻¹ * r g * P) = (u g).map O.val.val
 
 variable {r : G →* GL n (PadicAlgCl ℓ)} {u : G →* Matrix n n O}
 
-/-- If `u` is a lattice in `r`, then for every `g` the characteristic polynomial of `r g` is the
-image of that of `u g` under the inclusion `O.val.val` of `O` into `ℚ̄_ℓ`. -/
-lemma Selmer.IsLatticeIn.charpoly_eq_map (h_lattice : IsLatticeIn r u) (g : G) :
-    (r g).val.charpoly = (u g).charpoly.map O.val.val := by
+/--
+If `u` is a lattice in `r`, then for every `g` the characteristic polynomial of `r g` is the
+image of that of `u g` under the inclusion `O.val.val` of `O` into `ℚ̄_ℓ`.
+-/
+lemma Selmer.IsLatticeIn.charpoly_eq_map (h_lattice : IsLatticeIn r u) (g : G)
+    : (r g).val.charpoly = (u g).charpoly.map O.val.val := by
   obtain ⟨P, hP⟩ : ∃ P : GL n (PadicAlgCl ℓ), ∀ g : G, ↑(P⁻¹ * r g * P) = (u g).map O.val.val :=
     h_lattice
   -- Conjugation by `P` does not change the characteristic polynomial.
@@ -564,13 +620,15 @@ lemma Selmer.IsLatticeIn.charpoly_eq_map (h_lattice : IsLatticeIn r u) (g : G) :
   rw [← h_conj, hP g]
   simpa using charpoly_map (u g) (O.val.val : O.val →+* PadicAlgCl ℓ)
 
-/-- A continuous representation `r : G →* GL n ℚ̄_ℓ` of a compact group `G` has a lattice over
+/--
+A continuous representation `r : G →* GL n ℚ̄_ℓ` of a compact group `G` has a lattice over
 every large enough coefficient ring: for all `O` in `CoeffRing ℓ` that contain some fixed one,
 there is a representation `u` with entries in `O` that is a lattice in `r`
-(`Selmer.IsLatticeIn r u`, that is, `u` is conjugate to `r` in `GL n ℚ̄_ℓ`). -/
-lemma eventually_exists_isLatticeIn [TopologicalSpace G] [IsTopologicalGroup G] [CompactSpace G]
-    (hr : Continuous r) :
-    ∀ᶠ O : CoeffRing ℓ in atTop, ∃ u : G →* Matrix n n O, Selmer.IsLatticeIn r u := by
+(`Selmer.IsLatticeIn r u`, that is, `u` is conjugate to `r` in `GL n ℚ̄_ℓ`).
+-/
+lemma eventually_exists_isLatticeIn
+    [TopologicalSpace G] [IsTopologicalGroup G] [CompactSpace G] (hr : Continuous r)
+    : ∀ᶠ O : CoeffRing ℓ in atTop, ∃ u : G →* Matrix n n O, Selmer.IsLatticeIn r u := by
   -- Auerbach's lemma conjugates `r` to `s` with entries of norm at most 1. By Baire's theorem the
   -- entries lie in fixed rings `O _` on a nonempty open set; finitely many translates cover `G`.
   -- The family of linear forms `v ↦ (r g v) i`, for `⟨i, g⟩` in the compact space `Σ _ : n, G`.
@@ -578,15 +636,15 @@ lemma eventually_exists_isLatticeIn [TopologicalSpace G] [IsTopologicalGroup G] 
     .proj x.fst ∘ₗ (r x.snd).val.toLin'
   have h_sep (v : n → PadicAlgCl ℓ) (hv : ∀ x : Σ _ : n, G, forms x v = 0) : v = 0 :=
     funext fun i ↦ by simpa [forms] using hv ⟨i, 1⟩
-  have h_forms_cont (v : n → PadicAlgCl ℓ) :
-      Continuous fun x : Σ _ : n, G ↦ RingHom.id (PadicAlgCl ℓ) (forms x v) := by
+  have h_forms_cont (v : n → PadicAlgCl ℓ)
+      : Continuous fun x : Σ _ : n, G ↦ RingHom.id (PadicAlgCl ℓ) (forms x v) := by
     refine continuous_sigma fun i ↦ ?_
     change Continuous fun g : G ↦ ∑ j : n, (r g).val i j * v j
     fun_prop
-  obtain ⟨c, z, hz, h_norm⟩ : ∃ (c : n → Σ _ : n, G)
-      (z : Module.Basis n (PadicAlgCl ℓ) (n → PadicAlgCl ℓ)),
-      (∀ k : n, z.coord k = forms (c k)) ∧
-      ∀ (x : Σ _ : n, G) (k : n), ‖RingHom.id (PadicAlgCl ℓ) (forms x (z k))‖ ≤ 1 :=
+  obtain ⟨c, z, hz, h_norm⟩
+      : ∃ (c : n → Σ _ : n, G) (z : Module.Basis n (PadicAlgCl ℓ) (n → PadicAlgCl ℓ)),
+        (∀ k : n, z.coord k = forms (c k))
+          ∧ ∀ (x : Σ _ : n, G) (k : n), ‖RingHom.id (PadicAlgCl ℓ) (forms x (z k))‖ ≤ 1 :=
     exists_auerbach (Pi.basisFun (PadicAlgCl ℓ) n) forms h_sep (.id _) h_forms_cont
   -- The rows of `P` are the forms chosen by `c`, the columns of `P⁻¹` are the vectors `z k`. An
   -- entry of `s g = P * r g * P⁻¹` is the value of a form of the family at some `z k`.
@@ -605,14 +663,16 @@ lemma eventually_exists_isLatticeIn [TopologicalSpace G] [IsTopologicalGroup G] 
   -- The values of an entry lie in the closure of a countable set `D p`, hence in the field that
   -- `D p` generates, as what fixes `D p` fixes its closure; finitely many generators suffice.
   choose D hD_count hD_dense using fun p : n × n ↦ (isCompact_range (hs_cont p)).isSeparable
-  have h_gen (g : G) (p : n × n) : ∃ S : Finset (PadicAlgCl ℓ),
-      ↑S ⊆ D p ∧ s g p.fst p.snd ∈ adjoin ℚ_[ℓ] (S : Set (PadicAlgCl ℓ)) := by
+  have h_gen (g : G) (p : n × n)
+      : ∃ S : Finset (PadicAlgCl ℓ),
+        ↑S ⊆ D p ∧ s g p.fst p.snd ∈ adjoin ℚ_[ℓ] (S : Set (PadicAlgCl ℓ)) := by
     refine exists_finset_of_mem_adjoin ((fixedField_fixingSubgroup _).le fun σ ↦ ?_)
     -- `σ` fixes `D p`, hence its closure, which contains `s g p.fst p.snd`
-    exact EqOn.closure (fun x hx ↦ σ.prop ⟨x, subset_adjoin ℚ_[ℓ] _ hx⟩) (by fun_prop) continuous_id
-      (hD_dense p ⟨g, rfl⟩)
-  have h_coeff (S : Finset (PadicAlgCl ℓ)) : ∃ O : CoeffRing ℓ,
-      ∀ x ∈ adjoin ℚ_[ℓ] (S : Set (PadicAlgCl ℓ)), ‖x‖ ≤ 1 → x ∈ O.val :=
+    exact EqOn.closure
+      (fun x hx ↦ σ.prop ⟨x, subset_adjoin ℚ_[ℓ] _ hx⟩)
+      (by fun_prop) continuous_id (hD_dense p ⟨g, rfl⟩)
+  have h_coeff (S : Finset (PadicAlgCl ℓ))
+      : ∃ O : CoeffRing ℓ, ∀ x ∈ adjoin ℚ_[ℓ] (S : Set (PadicAlgCl ℓ)), ‖x‖ ≤ 1 → x ∈ O.val :=
     CoeffRing.exists_mem_of_mem_adjoin S
   choose O hO using h_coeff
   -- Baire: `G` is the union of countably many closed sets `Z m`, one for each choice `m` of finite
@@ -621,10 +681,11 @@ lemma eventually_exists_isLatticeIn [TopologicalSpace G] [IsTopologicalGroup G] 
   have h_count (p : n × n) : Countable (I p) := by
     simpa using (countable_ofPred_finite_subset (hD_count p)).preimage Finset.coe_injective
   let Z (m : ∀ p, I p) : Set G := ⋂ p : n × n, {g | s g p.fst p.snd ∈ (O (m p)).val}
-  have hZ_closed (m : ∀ p, I p) : IsClosed (Z m) := isClosed_iInter fun p ↦
-    -- `O (m p)` is compact, hence closed; `Z m` is an intersection of preimages of it
-    .preimage (hs_cont p) <| by
-      simpa using (isCompact_range (X := O (m p)) continuous_subtype_val).isClosed
+  have hZ_closed (m : ∀ p, I p) : IsClosed (Z m) :=
+    isClosed_iInter fun p ↦
+      -- `O (m p)` is compact, hence closed; `Z m` is an intersection of preimages of it
+      .preimage (hs_cont p) <| by
+        simpa using (isCompact_range (X := O (m p)) continuous_subtype_val).isClosed
   have hZ_cover : ⋃ m, Z m = univ := by
     refine eq_univ_of_forall fun g ↦ ?_
     choose m hm hg using h_gen g
@@ -639,13 +700,17 @@ lemma eventually_exists_isLatticeIn [TopologicalSpace G] [IsTopologicalGroup G] 
       eventually_all.mpr fun p ↦ CoeffRing.eventually_mem (hs_norm g⁻¹ p)] with O' h_le h_inv
   have h_mem (x : G) (i j : n) : s x i j ∈ O'.val := by
     obtain ⟨g, hg, hgx⟩ := ht x
-    simpa using O'.val.matrix.mul_mem (fun i j ↦ h_inv g hg (i, j))
-      (fun i j ↦ h_le _ (mem_iInter.mp hgx (i, j))) i j
+    simpa using
+      O'.val.matrix.mul_mem
+        (fun i j ↦ h_inv g hg (i, j))
+        (fun i j ↦ h_le _ (mem_iInter.mp hgx (i, j)))
+        i j
   -- The entries of `s` as a representation with values in matrices over `O'`.
-  let u : G →* Matrix n n O' :=
-    { toFun := fun x ↦ of fun i j ↦ ⟨s x i j, h_mem x i j⟩
-      map_one' := by simp [← ext_iff, Subtype.ext_iff, Matrix.one_apply, apply_ite]
-      map_mul' x y := by simp [← ext_iff, Subtype.ext_iff, Matrix.mul_apply] }
+  let u : G →* Matrix n n O' := {
+    toFun := fun x ↦ of fun i j ↦ ⟨s x i j, h_mem x i j⟩
+    map_one' := by simp [← ext_iff, Subtype.ext_iff, Matrix.one_apply, apply_ite]
+    map_mul' x y := by simp [← ext_iff, Subtype.ext_iff, Matrix.mul_apply]
+  }
   -- `(P⁻¹)⁻¹ * r g * P⁻¹ = s g`, whose entries are those of `u g`
   exact ⟨u, P⁻¹, fun g ↦ by ext i j; simp [u, s]⟩
 

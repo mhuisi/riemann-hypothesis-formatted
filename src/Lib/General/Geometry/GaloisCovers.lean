@@ -56,16 +56,19 @@ section ExtendEmbedding
 
 open Cardinal IsAlgClosed
 
-/-- Let `K` be a countable ring, `L` an algebraically closed field with the cardinality of `ℂ`, and
+/--
+Let `K` be a countable ring, `L` an algebraically closed field with the cardinality of `ℂ`, and
 `f : K → ℂ`, `g : K → L` injective ring maps. Then some isomorphism `σ : ℂ ≃+* L` satisfies
 `σ ∘ f = g`.
 
 A form of Steinitz's theorem (characteristic and cardinality determine an uncountable algebraically
-closed field up to isomorphism), refined so that the isomorphism respects the given embeddings. -/
-lemma New.exists_ringEquiv_extend {L : Type} {K : Type*} [Field L] [IsAlgClosed L] [CommRing K]
-    [Countable K] (h_mk : #ℂ = #L) (f : K →+* ℂ) (g : K →+* L)
-    (hf : Function.Injective f) (hg : Function.Injective g) :
-    ∃ σ : ℂ ≃+* L, ∀ a : K, σ (f a) = g a := by
+closed field up to isomorphism), refined so that the isomorphism respects the given embeddings.
+-/
+lemma New.exists_ringEquiv_extend
+    {L : Type} {K : Type*} [Field L] [IsAlgClosed L] [CommRing K] [Countable K]
+    (h_mk : #ℂ = #L)
+    (f : K →+* ℂ) (g : K →+* L) (hf : Function.Injective f) (hg : Function.Injective g)
+    : ∃ σ : ℂ ≃+* L, ∀ a : K, σ (f a) = g a := by
   -- Both fields are algebraic closures of `K` adjoined a transcendence basis, and, `K` being
   -- countable, the two bases have the cardinality of the uncountable fields.
   algebraize [f, g]
@@ -76,11 +79,12 @@ lemma New.exists_ringEquiv_extend {L : Type} {K : Type*} [Field L] [IsAlgClosed 
   obtain ⟨t, ht⟩ := exists_isTranscendenceBasis K L
   have h_uncountable : ℵ₀ < #ℂ := by simp [aleph0_lt_continuum]
   have hs_card : #ℂ = #s := by
-    simpa using cardinal_eq_cardinal_transcendence_basis_of_aleph0_lt _ hs mk_le_aleph0
-      h_uncountable
+    simpa using
+      cardinal_eq_cardinal_transcendence_basis_of_aleph0_lt _ hs mk_le_aleph0 h_uncountable
   have ht_card : #L = #t := by
-    simpa using cardinal_eq_cardinal_transcendence_basis_of_aleph0_lt _ ht mk_le_aleph0
-      (h_uncountable.trans_eq h_mk)
+    simpa using
+      cardinal_eq_cardinal_transcendence_basis_of_aleph0_lt _ ht mk_le_aleph0
+        (h_uncountable.trans_eq h_mk)
   obtain ⟨e⟩ : Nonempty (s ≃ t) := Cardinal.eq.1 (by rw [← hs_card, ← ht_card, h_mk])
   -- The bijection of the bases gives a `K`-algebra isomorphism `K[s] ≃ K[t]`, which extends to
   -- the algebraic closures.
@@ -92,7 +96,8 @@ lemma New.exists_ringEquiv_extend {L : Type} {K : Type*} [Field L] [IsAlgClosed 
   have : IsAlgClosure Kt L := isAlgClosure_of_transcendence_basis Subtype.val ht
   refine ⟨IsAlgClosure.equivOfEquiv ℂ L φ.toRingEquiv, fun a ↦ ?_⟩
   -- `f` and `g` are the structure maps of the `K`-algebras `ℂ` and `L`
-  calc _ = algebraMap Kt L (φ (algebraMap K Ks a)) :=
+  calc
+    _ = algebraMap Kt L (φ (algebraMap K Ks a)) :=
       IsAlgClosure.equivOfEquiv_algebraMap ℂ L φ.toRingEquiv (algebraMap K Ks a)
     _ = g a := by rw [φ.commutes]; rfl
 
@@ -104,12 +109,15 @@ section ComplexExtension
 
 open Cardinal
 
-/-- Let `D` be a countable ring, `K` a field with `#K ≤ #ℂ`, and `f : D → K`, `φ : D → ℂ`
-injective ring maps. Then `φ` extends along `f` to a ring map `ψ : K → ℂ`. -/
-lemma New.exists_ringHom_complex_extend {D : Type*} {K : Type} [CommRing D] [Countable D] [Field K]
+/--
+Let `D` be a countable ring, `K` a field with `#K ≤ #ℂ`, and `f : D → K`, `φ : D → ℂ`
+injective ring maps. Then `φ` extends along `f` to a ring map `ψ : K → ℂ`.
+-/
+lemma New.exists_ringHom_complex_extend
+    {D : Type*} {K : Type} [CommRing D] [Countable D] [Field K]
     {f : D →+* K} {φ : D →+* ℂ} (hf : Function.Injective f) (hφ : Function.Injective φ)
-    (h_le : #K ≤ #ℂ) :
-    ∃ ψ : K →+* ℂ, ψ.comp f = φ := by
+    (h_le : #K ≤ #ℂ)
+    : ∃ ψ : K →+* ℂ, ψ.comp f = φ := by
   -- The algebraic closure `L` of `K(X_z : z ∈ ℂ)` contains `K` and has the cardinality of `ℂ`, so
   -- some isomorphism `σ : ℂ ≃ L` is compatible with the two embeddings of the countable ring `D`.
   let F : Type := FractionRing (MvPolynomial ℂ K)
@@ -120,10 +128,11 @@ lemma New.exists_ringHom_complex_extend {D : Type*} {K : Type} [CommRing D] [Cou
     rw [← hF]
     refine le_antisymm (by simpa using mk_le_of_module F L) ?_
     simpa [hF, aleph0_le_continuum] using Algebra.IsAlgebraic.cardinalMk_le_max F L
-  obtain ⟨σ, hσ⟩ := exists_ringEquiv_extend h_card φ ((algebraMap K L).comp f) hφ
-    ((algebraMap K L).injective.comp hf)
-  exact ⟨(σ.symm : L →+* ℂ).comp (algebraMap K L),
-    RingHom.ext fun a ↦ σ.symm_apply_eq.2 (hσ a).symm⟩
+  obtain ⟨σ, hσ⟩ :=
+    exists_ringEquiv_extend h_card φ ((algebraMap K L).comp f) hφ
+      ((algebraMap K L).injective.comp hf)
+  exact
+    ⟨(σ.symm : L →+* ℂ).comp (algebraMap K L), RingHom.ext fun a ↦ σ.symm_apply_eq.2 (hσ a).symm⟩
 
 end ComplexExtension
 
@@ -141,8 +150,8 @@ section FaithfulChar
 open WittVector Algebra IsIntegral Function RingHom
 
 /-- The algebraic closure of a finite field has an injective multiplicative character to `ℂ`. -/
-theorem New.exists_injective_mulChar (k : Type*) [Field k] [Finite k] :
-    ∃ T : MulChar (AlgebraicClosure k) ℂ, Injective T := by
+theorem New.exists_injective_mulChar (k : Type*) [Field k] [Finite k]
+    : ∃ T : MulChar (AlgebraicClosure k) ℂ, Injective T := by
   -- Teichmüller lifts are integral over `ℤ`, and the ring `R` of Witt vectors integral over
   -- `ℤ` is a domain of characteristic zero, so it embeds in `ℂ`.
   have : CharZero (WittVector (ringChar k) (AlgebraicClosure k)) :=
@@ -162,9 +171,10 @@ theorem New.exists_injective_mulChar (k : Type*) [Field k] [Finite k] :
     have h_single : _root_.IsIntegral ℤ (MonoidAlgebra.single x' (1 : ℤ)) := isIntegral _
     rw [← h_apply]
     exact h_single.map toWitt
-  let lift : MulChar (AlgebraicClosure k) R :=
-    { (teichmuller (ringChar k)).codRestrict R h_int with
-      map_nonunit' := by simp [Subtype.ext_iff] }
+  let lift : MulChar (AlgebraicClosure k) R := {
+    (teichmuller (ringChar k)).codRestrict R h_int with
+    map_nonunit' := by simp [Subtype.ext_iff]
+  }
   let emb : R →ₐ[ℤ] ℂ := IsAlgClosed.lift
   -- The kernel of `emb` is a prime of `R` lying over `(0)`, and `R` is integral over `ℤ`.
   have h_emb : Injective emb :=
@@ -176,11 +186,13 @@ theorem New.exists_injective_mulChar (k : Type*) [Field k] [Finite k] :
     congrArg (fun w : R ↦ (w : WittVector (ringChar k) (AlgebraicClosure k)).coeff 0) h_lift
   simpa only [teichmuller_coeff_zero] using h_coeff
 
-/-- For a finite field `k` the character `faithfulChar k`, chosen among the multiplicative
+/--
+For a finite field `k` the character `faithfulChar k`, chosen among the multiplicative
 characters from the algebraic closure of `k` to `ℂ`, is injective, so it is faithful
-(`IsFaithfulMulChar`). -/
-instance New.faithfulChar_injective {k : Type*} [Field k] [Finite k] :
-    IsFaithfulMulChar (AlgebraicClosure k) (faithfulChar k) where
+(`IsFaithfulMulChar`).
+-/
+instance New.faithfulChar_injective {k : Type*} [Field k] [Finite k]
+    : IsFaithfulMulChar (AlgebraicClosure k) (faithfulChar k) where
   injective := Classical.epsilon_spec (exists_injective_mulChar k)
 
 end FaithfulChar
@@ -199,10 +211,14 @@ section GenericPoint
 
 open CategoryTheory AlgebraicGeometry IsLocalRing PointFn Algebra Spec
 
-/-- If `X` is locally of finite type over a countable ring, the ring of sections of `X` over an
-affine open `W` is countable. -/
-lemma countable_sections {X : Scheme} {R : CommRingCat} (s : X ⟶ Spec R) [Countable R]
-    [LocallyOfFiniteType s] {W : X.Opens} (h : IsAffineOpen W) : Countable Γ(X, W) := by
+/--
+If `X` is locally of finite type over a countable ring, the ring of sections of `X` over an
+affine open `W` is countable.
+-/
+lemma countable_sections
+    {X : Scheme} {R : CommRingCat} (s : X ⟶ Spec R) [Countable R] [LocallyOfFiniteType s]
+    {W : X.Opens} (h : IsAffineOpen W)
+    : Countable Γ(X, W) := by
   -- The ring of sections is of finite type over `R`, so a quotient of a polynomial ring in finitely
   -- many variables, whose elements are finitely supported families of coefficients.
   have h_ring : (preimage (h.fromSpec ≫ s)).hom.FiniteType := by
@@ -213,14 +229,18 @@ lemma countable_sections {X : Scheme} {R : CommRingCat} (s : X ⟶ Spec R) [Coun
   have := (MvPolynomial.basisMonomials (Fin n) R).repr.injective.countable
   exact hf.countable
 
-/-- Let `X` be locally of finite type over a countable ring. Every point `t : Spec K ⟶ X` with
+/--
+Let `X` be locally of finite type over a countable ring. Every point `t : Spec K ⟶ X` with
 values in a field `K` factors through the residue field of a point `z` of `X`, as `Spec` of a ring
 map `φ` (written `specMap φ`) followed by the canonical map to `X`, and this residue field is
-countable. -/
-lemma exists_countable_residue_point {X : Scheme} {R : CommRingCat} (s : X ⟶ Spec R) [Countable R]
-    [LocallyOfFiniteType s] {K : Type} [Field K] (t : Spec (CommRingCat.of K) ⟶ X) :
-    ∃ᵉ (z : X) (φ : X.residueField z →+* K),
-      specMap φ ≫ X.fromSpecResidueField z = t ∧ Countable (X.residueField z) := by
+countable.
+-/
+lemma exists_countable_residue_point
+    {X : Scheme} {R : CommRingCat} (s : X ⟶ Spec R) [Countable R] [LocallyOfFiniteType s]
+    {K : Type} [Field K]
+    (t : Spec (CommRingCat.of K) ⟶ X)
+    : ∃ᵉ (z : X) (φ : X.residueField z →+* K),
+        specMap φ ≫ X.fromSpecResidueField z = t ∧ Countable (X.residueField z) := by
   let z : X := t (closedPoint K)
   refine ⟨z, (X.SpecToEquivOfField K t).2.hom, (X.SpecToEquivOfField K).left_inv t, ?_⟩
   -- The stalk at the image `z` of `t` is a localisation of the countable ring of sections over an
@@ -232,59 +252,73 @@ lemma exists_countable_residue_point {X : Scheme} {R : CommRingCat} (s : X ⟶ S
   have : Countable (X.presheaf.stalk z) := (hW.isLocalization_stalk z').mk'_surjective.countable
   exact (residue_surjective (R := X.presheaf.stalk z)).countable
 
-/-- For countably many analytic functions on a connected open set `N` and an open set `V` meeting
-`N`, some point of `N ∩ V` is a zero only of those functions that vanish on all of `N`. -/
-lemma exists_mem_forall_ne_zero_of_analyticOnNhd {P : Type} [FinComplexSpace P] {ι : Type*}
-    [Countable ι] (g : ι → P → ℂ) {N V : Set P} (hN_open : IsOpen N) (hN_conn : IsPreconnected N)
-    (hg : ∀ i : ι, AnalyticOnNhd ℂ (g i) N) (hV : IsOpen V) (h_nonempty : (N ∩ V).Nonempty) :
-    ∃ b ∈ N, b ∈ V ∧ ∀ i : ι, ∀ e ∈ N, g i e ≠ 0 → g i b ≠ 0 := by
+/--
+For countably many analytic functions on a connected open set `N` and an open set `V` meeting
+`N`, some point of `N ∩ V` is a zero only of those functions that vanish on all of `N`.
+-/
+lemma exists_mem_forall_ne_zero_of_analyticOnNhd
+    {P : Type} [FinComplexSpace P]
+    {ι : Type*} [Countable ι]
+    (g : ι → P → ℂ)
+    {N V : Set P} (hN_open : IsOpen N) (hN_conn : IsPreconnected N)
+    (hg : ∀ i : ι, AnalyticOnNhd ℂ (g i) N) (hV : IsOpen V) (h_nonempty : (N ∩ V).Nonempty)
+    : ∃ b ∈ N, b ∈ V ∧ ∀ i : ι, ∀ e ∈ N, g i e ≠ 0 → g i b ≠ 0 := by
   -- Each non-vanishing set `Z i` is open, so agrees with its closure on a residual set.
   let Z (i : ι) : Set P := N ∩ g i ⁻¹' {x : ℂ | x ≠ 0}
-  have hZ (i : ι) : closure (Z i) =ᶠ[residual P] Z i := closure_residualEq
-    ((hg i).continuousOn.isOpen_inter_preimage hN_open isOpen_ne).isLocallyClosed
+  have hZ (i : ι) : closure (Z i) =ᶠ[residual P] Z i :=
+    closure_residualEq ((hg i).continuousOn.isOpen_inter_preimage hN_open isOpen_ne).isLocallyClosed
   -- Baire: there are countably many `i`, so some `b ∈ N ∩ V` is good for all of them.
   have h_dense : Dense {e : P | ∀ i : ι, (e ∈ closure (Z i)) = (e ∈ Z i)} :=
-    dense_of_mem_residual
-      (eventually_countable_forall.2 fun i ↦ Filter.eventuallyEqSet_iff'.1 (hZ i))
+    dense_of_mem_residual (eventually_countable_forall.2 fun i ↦
+      Filter.eventuallyEqSet_iff'.1 (hZ i))
   obtain ⟨b, hb_gen, hbN, hbV⟩ := h_dense.exists_mem_open (hN_open.inter hV) h_nonempty
   refine ⟨b, hbN, hbV, fun i e he hne ↦ ?_⟩
   -- By the identity theorem `g i` is non-zero arbitrarily near `b`, hence at `b`.
-  have h_freq : ∃ᶠ x in nhds b, g i x ≠ 0 := Filter.not_eventually.1 fun h_zero ↦
-    hne ((hg i).eqOn_zero_of_preconnected_of_eventuallyEq_zero hN_conn hbN h_zero he)
+  have h_freq : ∃ᶠ x in nhds b, g i x ≠ 0 :=
+    Filter.not_eventually.1 fun h_zero ↦
+      hne ((hg i).eqOn_zero_of_preconnected_of_eventuallyEq_zero hN_conn hbN h_zero he)
   exact ((hb_gen i).mp (hN_open.inter_closure ⟨hbN, h_freq.mem_closure⟩ : b ∈ closure (Z i))).2
 
-/-- Let `X` be locally of finite type over a countable ring and `φ` a family of complex points of
+/--
+Let `X` be locally of finite type over a countable ring and `φ` a family of complex points of
 `X`, parametrised by a finite-dimensional complex space and holomorphic on the open set `U`
 (`HolomorphicAt`: regular functions pull back to analytic ones). If `c ∈ U` lies in the closure of
 an open set `V`, there is `b ∈ V` such that the image point of `φ b` specialises to that of `φ e`
-for all `e` near `c`. -/
-lemma exists_mem_eventually_specializes {P : Type} [FinComplexSpace P] {U : Set P} {X : Scheme}
-    {R : CommRingCat} (s : X ⟶ Spec R) [Countable R] [LocallyOfFiniteType s]
-    {φ : P → (Spec (CommRingCat.of ℂ) ⟶ X)} (hU : IsOpen U) (hφ : ∀ b ∈ U, HolomorphicAt φ b)
-    {V : Set P} (hV : IsOpen V) {c : P} (hcV : c ∈ closure V) (hcU : c ∈ U) :
-    ∃ b ∈ V, ∀ᶠ e in nhds c, φ b (closedPoint ℂ) ⤳ φ e (closedPoint ℂ) := by
+for all `e` near `c`.
+-/
+lemma exists_mem_eventually_specializes
+    {P : Type} [FinComplexSpace P]
+    {U : Set P} {X : Scheme} {R : CommRingCat} (s : X ⟶ Spec R)
+    [Countable R] [LocallyOfFiniteType s]
+    {φ : P → (Spec (CommRingCat.of ℂ) ⟶ X)}
+    (hU : IsOpen U) (hφ : ∀ b ∈ U, HolomorphicAt φ b)
+    {V : Set P} (hV : IsOpen V)
+    {c : P} (hcV : c ∈ closure V) (hcU : c ∈ U)
+    : ∃ b ∈ V, ∀ᶠ e in nhds c, φ b (closedPoint ℂ) ⤳ φ e (closedPoint ℂ) := by
   -- Baire's theorem gives a `b` at which no section over an affine open around `φ c` vanishes,
   -- unless it vanishes identically along `φ` near `c`.
   obtain ⟨W, hW, hcW⟩ := exists_isAffineOpen_landsIn (φ c)
   have : Countable Γ(X, W) := countable_sections s hW
   let val (f : Γ(X, W)) (e : P) : ℂ := PointFn.ofSection f _ (φ e)
   -- A connected open neighbourhood `N ⊆ U` of `c` that `φ` maps into the affine open `W`.
-  obtain ⟨N, ⟨hN_open, hcN, hN_conn⟩, hN⟩ : ∃ N : Set P,
-      (IsOpen N ∧ c ∈ N ∧ _root_.IsConnected N) ∧ ∀ e ∈ N, e ∈ U ∧ LandsIn (φ e) W :=
+  obtain ⟨N, ⟨hN_open, hcN, hN_conn⟩, hN⟩
+      : ∃ N : Set P, (IsOpen N ∧ c ∈ N ∧ _root_.IsConnected N) ∧ ∀ e ∈ N, e ∈ U ∧ LandsIn (φ e) W :=
     -- holomorphy, applied to any section over `W`, says that `φ e` lands in `W` for `e` near `c`
-    (LocallyConnectedSpace.open_connected_basis c).mem_iff.1
-      ((hU.eventually_mem hcU).and (hφ c hcU (isRegularOn_ofSection 0) hcW).1)
+    (LocallyConnectedSpace.open_connected_basis c).mem_iff.1 ((hU.eventually_mem hcU).and
+      (hφ c hcU (isRegularOn_ofSection 0) hcW).1)
   have h_an (f : Γ(X, W)) : AnalyticOnNhd ℂ (val f) N := fun e he ↦ by
     obtain ⟨heU, heW⟩ := hN e he
     exact (hφ e heU (isRegularOn_ofSection f) heW).2
-  obtain ⟨b, hbN, hbV, h_ne⟩ : ∃ b ∈ N,
-      b ∈ V ∧ ∀ f : Γ(X, W), ∀ e ∈ N, val f e ≠ 0 → val f b ≠ 0 :=
+  obtain ⟨b, hbN, hbV, h_ne⟩ : ∃ b ∈ N, b ∈ V ∧ ∀ f : Γ(X, W), ∀ e ∈ N, val f e ≠ 0 → val f b ≠ 0 :=
     exists_mem_forall_ne_zero_of_analyticOnNhd val hN_open hN_conn.isPreconnected h_an hV
       (mem_closure_iff.1 hcV N hN_open hcN)
   -- Test the specialisation on basic opens of `W`: a point lies in the basic open of `f` exactly
   -- when the value of `f` there is a unit (`landsIn_basicOpen`).
-  refine ⟨b, hbV, (hN_open.eventually_mem hcN).mono fun e he ↦
-    specializes_iff_forall_open.2 fun O hO heO ↦ ?_⟩
+  refine ⟨
+    b,
+    hbV,
+    (hN_open.eventually_mem hcN).mono fun e he ↦ specializes_iff_forall_open.2 fun O hO heO ↦ ?_
+  ⟩
   obtain ⟨-, heW⟩ := hN e he
   obtain ⟨f, hfO, hef⟩ := hW.exists_basicOpen_le (V := ⟨O, hO⟩) ⟨_, heO⟩ (landsIn_iff_mem.1 heW)
   have hfe : val f e ≠ 0 := ((landsIn_basicOpen heW f).1 (landsIn_iff_mem.2 hef)).ne_zero
@@ -292,15 +326,19 @@ lemma exists_mem_eventually_specializes {P : Type} [FinComplexSpace P] {U : Set 
     (landsIn_basicOpen (hN b hbN).2 f).2 (h_ne f e he hfe).isUnit
   exact hfO (landsIn_iff_mem.1 hb_lands)
 
-/-- Let `X` be locally of finite type over a countable ring and `φ` a family of complex points of
+/--
+Let `X` be locally of finite type over a countable ring and `φ` a family of complex points of
 `X`, parametrised by a finite-dimensional complex space and holomorphic (regular functions pull back
 to analytic ones) on a connected open set `U`. There is `b ∈ U` such that the image point of
-`φ b` specialises to the image point of `φ c` for every `c ∈ U`. -/
-lemma exists_generic_member {P : Type} [FinComplexSpace P] {U : Set P} {X : Scheme}
-    {R : CommRingCat} (s : X ⟶ Spec R) [Countable R] [LocallyOfFiniteType s]
-    {φ : P → (Spec (CommRingCat.of ℂ) ⟶ X)} (hU : IsOpen U)
-    (h_conn : IsConnected U) (hφ : ∀ b ∈ U, HolomorphicAt φ b) :
-    ∃ b ∈ U, ∀ c ∈ U, φ b (closedPoint ℂ) ⤳ φ c (closedPoint ℂ) := by
+`φ b` specialises to the image point of `φ c` for every `c ∈ U`.
+-/
+lemma exists_generic_member
+    {P : Type} [FinComplexSpace P]
+    {U : Set P} {X : Scheme} {R : CommRingCat} (s : X ⟶ Spec R)
+    [Countable R] [LocallyOfFiniteType s]
+    {φ : P → (Spec (CommRingCat.of ℂ) ⟶ X)}
+    (hU : IsOpen U) (h_conn : IsConnected U) (hφ : ∀ b ∈ U, HolomorphicAt φ b)
+    : ∃ b ∈ U, ∀ c ∈ U, φ b (closedPoint ℂ) ⤳ φ c (closedPoint ℂ) := by
   -- Locally there is a `b` such that `φ b` specialises to all nearby `φ e`
   -- (`exists_mem_eventually_specializes`). Connectedness spreads this over `U`.
   obtain ⟨c, hc⟩ := h_conn.nonempty
@@ -326,11 +364,14 @@ open CategoryTheory AlgebraicGeometry Limits RingHom Over Set Scheme IsArtinianR
 
 attribute [local instance low] Fintype.ofFinite
 
-/-- Let `b` be a complex point of a scheme `S`, let `Z j` be finitely many schemes over `S`, and let
+/--
+Let `b` be a complex point of a scheme `S`, let `Z j` be finitely many schemes over `S`, and let
 `F j a` be a complex point of `Z j` over `b` for each `a : A`. A reduced closure of the tuples
 `(F j a)_j` is a reduced closed subscheme `W` (the field `scheme`) of the product of the `Z j` over
-`S`, with a dense family of complex points that lift these tuples. -/
-structure ReducedClosure {S : Scheme} {b : Spec (of ℂ) ⟶ S} {J A : Type} [Finite J]
+`S`, with a dense family of complex points that lift these tuples.
+-/
+structure ReducedClosure
+    {S : Scheme} {b : Spec (of ℂ) ⟶ S} {J A : Type} [Finite J]
     {Z : J → Over S} (F : (j : J) → A → (Over.mk b ⟶ Z j)) where
   /-- The closure, a scheme over `S`. -/
   scheme : Over S
@@ -349,82 +390,104 @@ attribute [instance] ReducedClosure.isClosedImmersion
 
 -- `S` is the base scheme, `b` a complex point of it, and `F j a` a complex point of the factor
 -- `Z j` over `b`, for `j` in the finite set `J` and `a` in the index set `A`.
-variable {S : Scheme} {b : Spec (of ℂ) ⟶ S} {J A : Type} [Finite J] {Z : J → Over S}
-  {F : (j : J) → A → (Over.mk b ⟶ Z j)}
+variable
+  {S : Scheme} {b : Spec (of ℂ) ⟶ S} {J A : Type} [Finite J]
+  {Z : J → Over S} {F : (j : J) → A → (Over.mk b ⟶ Z j)}
 
 /-- A reduced closure is a reduced scheme. -/
 instance (C : ReducedClosure F) : AlgebraicGeometry.IsReduced C.scheme.left :=
   C.isSeparatingFamily.1
 
-/-- The morphism from the closure `C.scheme` to the factor `Z j`: the inclusion into the product
-followed by the `j`-th projection. -/
+/--
+The morphism from the closure `C.scheme` to the factor `Z j`: the inclusion into the product
+followed by the `j`-th projection.
+-/
 def ReducedClosure.proj (C : ReducedClosure F) (j : J) : C.scheme ⟶ Z j := C.incl ≫ Pi.π Z j
 
 @[simp]
-lemma ReducedClosure.point_comp_proj (C : ReducedClosure F) (a : A) (j : J) :
-    C.point a ≫ C.proj j = F j a := by
+lemma ReducedClosure.point_comp_proj (C : ReducedClosure F) (a : A) (j : J)
+    : C.point a ≫ C.proj j = F j a := by
   simp [proj, reassoc_of% point_incl]
 
 /-- Every family of tuples of complex points has a reduced closure. -/
 instance : Nonempty (ReducedClosure F) := by
   obtain ⟨Y, i, e, h_closed, he, h_sep⟩ :=
     exists_reduced_closure fun a : A ↦ (Pi.lift fun j : J ↦ F j a).left
-  exact ⟨{ scheme := .mk (i ≫ (∏ᶜ Z).hom), incl := homMk i
-           point a := homMk (e a) (by simp [reassoc_of% he])
-           point_incl a := ext (he a)
-           isClosedImmersion := h_closed, isSeparatingFamily := h_sep }⟩
+  exact ⟨{
+    scheme := .mk (i ≫ (∏ᶜ Z).hom)
+    incl := homMk i
+    point a := homMk (e a) (by simp [reassoc_of% he])
+    point_incl a := ext (he a)
+    isClosedImmersion := h_closed
+    isSeparatingFamily := h_sep
+  }⟩
 
-/-- Two morphisms over `S` to a reduced closure `C.scheme` agree as soon as their composites with
-all projections `C.proj j` to the factors agree. -/
-lemma ReducedClosure.hom_ext (C : ReducedClosure F) {T : Over S} {f g : T ⟶ C.scheme}
-    (h : ∀ j : J, f ≫ C.proj j = g ≫ C.proj j) : f = g :=
+/--
+Two morphisms over `S` to a reduced closure `C.scheme` agree as soon as their composites with
+all projections `C.proj j` to the factors agree.
+-/
+lemma ReducedClosure.hom_ext
+    (C : ReducedClosure F)
+    {T : Over S} {f g : T ⟶ C.scheme} (h : ∀ j : J, f ≫ C.proj j = g ≫ C.proj j)
+    : f = g :=
   (mono_of_mono_left C.incl).right_cancellation f g (Pi.hom_ext _ _ h)
 
-/-- Let `C` and `C'` be reduced closures (reduced closed subschemes of `∏ᶜ Z` and `∏ᶜ Z'` over `S`
+/--
+Let `C` and `C'` be reduced closures (reduced closed subschemes of `∏ᶜ Z` and `∏ᶜ Z'` over `S`
 with dense complex points) of families `F` and `F'` of complex points indexed by the
 same set `A`. Maps `f j` from `C'` to the factors `Z j` that send the point `a` of `C'` to
 `F j (σ a)` come from a map `g` to the closure `C`, and `g` sends the point `a` to the point
 `σ a`. Here `S` is the base scheme and `F j a` is a complex point of `Z j` over the fixed complex
-point `b` of `S`, with `j` in the finite set `J` and `a` in `A`. -/
-lemma ReducedClosure.exists_lift (C : ReducedClosure F) {J' : Type} [Finite J'] {Z' : J' → Over S}
-    {F' : (j : J') → A → (Over.mk b ⟶ Z' j)} {C' : ReducedClosure F'}
+point `b` of `S`, with `j` in the finite set `J` and `a` in `A`.
+-/
+lemma ReducedClosure.exists_lift
+    (C : ReducedClosure F)
+    {J' : Type} [Finite J']
+    {Z' : J' → Over S} {F' : (j : J') → A → (Over.mk b ⟶ Z' j)} {C' : ReducedClosure F'}
     (σ : A → A) (f : (j : J) → (C'.scheme ⟶ Z j))
-    (h : ∀ (a : A) (j : J), C'.point a ≫ f j = F j (σ a)) :
-    ∃ g : C'.scheme ⟶ C.scheme,
+    (h : ∀ (a : A) (j : J), C'.point a ≫ f j = F j (σ a))
+    : ∃ g : C'.scheme ⟶ C.scheme,
       (∀ j : J, g ≫ C.proj j = f j) ∧ ∀ a : A, C'.point a ≫ g = C.point (σ a) := by
   -- The map `Pi.lift f` sends the dense points of the reduced scheme `C'.scheme` into the closed
   -- subscheme `C.scheme`, so it factors through it.
   have h_pt (a : A) : C.point (σ a) ≫ C.incl = C'.point a ≫ Pi.lift f :=
     (C.point_incl (σ a)).trans (Pi.hom_ext _ _ fun j ↦ by simp [h])
-  obtain ⟨g, hg⟩ := exists_lift_of_dense_preimage C.incl.left (Pi.lift f).left <|
-    C'.isSeparatingFamily.2.mono <| range_subset_iff.2 fun a ↦
-      ⟨(C.point (σ a)).left (IsLocalRing.closedPoint ℂ),
-        congrArg (fun y ↦ y.left (IsLocalRing.closedPoint ℂ)) (h_pt a)⟩
+  obtain ⟨g, hg⟩ :=
+    exists_lift_of_dense_preimage C.incl.left (Pi.lift f).left <| C'.isSeparatingFamily.2.mono <|
+      range_subset_iff.2 fun a ↦ ⟨
+        (C.point (σ a)).left (IsLocalRing.closedPoint ℂ),
+        congrArg (fun y ↦ y.left (IsLocalRing.closedPoint ℂ)) (h_pt a)
+      ⟩
   let g' : C'.scheme ⟶ C.scheme := homMk g (by simpa using hg =≫ hom _)
   have h_incl : g' ≫ C.incl = Pi.lift f := ext hg
   have h_proj (j : J) : g' ≫ C.proj j = f j := by simp [proj, reassoc_of% h_incl]
   exact ⟨g', h_proj, fun a ↦ C.hom_ext fun j ↦ by simp [h_proj, h]⟩
 
-/-- Chase–Harrison–Rosenberg. Let `B` be a finite `A`-algebra with `A → B` injective and `G` a
+/--
+Chase–Harrison–Rosenberg. Let `B` be a finite `A`-algebra with `A → B` injective and `G` a
 finite group. Assume: (a) `σ` is a right action of `G` on `B` by `A`-algebra maps, that is
 `σ 1 = id` and `σ (g * h) = σ h ∘ σ g`; (b) for every field `k` over `A` and any two `A`-algebra
 maps `x y : B → k` there is exactly one `g` with `x ∘ σ g = y`; (c) every element of `B` fixed
-by all `σ g` comes from `A`. Then `B` is étale over `A`. -/
-lemma etale_of_simply_transitive {A : Type*} {B : Type} {G : Type*} [CommRing A] [CommRing B]
-    [Algebra A B] [Module.Finite A B] [Group G] [Finite G]
-    (h_inj : Function.Injective (algebraMap A B)) (σ : G →* (B →ₐ[A] B)ᵐᵒᵖ)
+by all `σ g` comes from `A`. Then `B` is étale over `A`.
+-/
+lemma etale_of_simply_transitive
+    {A : Type*} {B : Type} {G : Type*}
+    [CommRing A] [CommRing B] [Algebra A B] [Module.Finite A B] [Group G] [Finite G]
+    (h_inj : Function.Injective (algebraMap A B))
+    (σ : G →* (B →ₐ[A] B)ᵐᵒᵖ)
     (h_points : ∀ (k : Type) [Field k] [Algebra A k] (x y : B →ₐ[A] k),
       ∃! g : G, ∀ b : B, x ((σ g).unop b) = y b)
-    (h_invariant : ∀ s : B, (∀ g : G, (σ g).unop s = s) → ∃ a : A, algebraMap A B a = s) :
-    Algebra.Etale A B := by
+    (h_invariant : ∀ s : B, (∀ g : G, (σ g).unop s = s) → ∃ a : A, algebraMap A B a = s)
+    : Algebra.Etale A B := by
   classical
   -- Find `x i`, `y i` in `B` with `∑ i, σ g (y i) * x i = if g = 1 then 1 else 0`. With the trace
   -- `t` they form a dual basis, so `B` is projective; and `∑ i, y i ⊗ x i` is a separability
   -- element, so `B` is unramified.
   let tr : B →ₗ[A] B := ∑ g : G, (σ g).unop.toLinearMap
-  let t : B →ₗ[A] A := tr.codRestrictOfInjective (Algebra.linearMap A B) h_inj fun s ↦
-    h_invariant (tr s) fun g ↦ by
-      simpa [tr] using Equiv.sum_comp (.mulRight g) fun h ↦ (σ h).unop s
+  let t : B →ₗ[A] A :=
+    tr.codRestrictOfInjective (Algebra.linearMap A B) h_inj fun s ↦
+      h_invariant (tr s) fun g ↦ by
+        simpa [tr] using Equiv.sum_comp (.mulRight g) fun h ↦ (σ h).unop s
   have ht (s : B) : algebraMap A B (t s) = ∑ g : G, (σ g).unop s := by
     simpa [tr] using tr.codRestrictOfInjective_comp_apply (Algebra.linearMap A B) h_inj _ s
   -- The kernels of the maps `b ⊗ b' ↦ σ g b * b'` are pairwise coprime: a maximal ideal over two
@@ -447,13 +510,15 @@ lemma etale_of_simply_transitive {A : Type*} {B : Type} {G : Type*} [CommRing A]
   have h_delta (g : G) : ∑ i, (σ g).unop (y i) * x i = if g = 1 then 1 else 0 := by
     simpa [𝔞, sub_eq_zero, single_apply, apply_ite] using hu g
   have h_dual (z : B) : ∑ i, t (z * y i) • x i = z :=
-    calc ∑ i, t (z * y i) • x i
+    calc
+      ∑ i, t (z * y i) • x i
       _ = ∑ g : G, (σ g).unop z * ∑ i, (σ g).unop (y i) * x i := by
         simp [Algebra.smul_def, ht, sum_mul, mul_sum, sum_comm (s := univ (α := G)), mul_assoc]
       _ = z := by simp [h_delta]
   -- Expand both sides in the dual basis and move the scalars across `⊗`.
   have h_swap (s : B) : ∑ i, (s * y i) ⊗ₜ[A] x i = ∑ i, x i ⊗ₜ[A] (s * y i) :=
-    calc ∑ j, (s * y j) ⊗ₜ[A] x j
+    calc
+      ∑ j, (s * y j) ⊗ₜ[A] x j
       _ = ∑ j, (∑ i, t (s * y j * y i) • x i) ⊗ₜ[A] x j := by simp only [h_dual]
       _ = ∑ i, x i ⊗ₜ[A] ∑ j, t (s * y i * y j) • x j := by
         simp only [sum_tmul, tmul_sum, smul_tmul]
@@ -463,7 +528,8 @@ lemma etale_of_simply_transitive {A : Type*} {B : Type} {G : Type*} [CommRing A]
     refine iff_exists_tensorProduct.2 ⟨∑ i, y i ⊗ₜ x i, fun s ↦ ?_, by simpa using h_delta 1⟩
     have h_symm : ∑ i, y i ⊗ₜ[A] x i = ∑ i, x i ⊗ₜ[A] y i := by simpa using h_swap 1
     rw [sub_mul, sub_eq_zero]
-    calc (1 : B) ⊗ₜ[A] s * ∑ i, y i ⊗ₜ[A] x i
+    calc
+      (1 : B) ⊗ₜ[A] s * ∑ i, y i ⊗ₜ[A] x i
       _ = (1 : B) ⊗ₜ[A] s * ∑ i, x i ⊗ₜ[A] y i := by rw [h_symm]
       _ = s ⊗ₜ[A] (1 : B) * ∑ i, y i ⊗ₜ[A] x i := by simp [mul_sum, h_swap]
   have h_projective : Projective A B :=
@@ -473,19 +539,22 @@ lemma etale_of_simply_transitive {A : Type*} {B : Type} {G : Type*} [CommRing A]
   have : Module.FinitePresentation A B := finitePresentation_of_projective A B
   exact .of_formallyUnramified_of_flat
 
-/-- Let `R` be a countable domain, with a given map to `ℂ`, all of whose ring maps to fields of
+/--
+Let `R` be a countable domain, with a given map to `ℂ`, all of whose ring maps to fields of
 characteristic 0 are injective. Let `W` be proper over `R`, `Z` separated, and `c : W ⟶ Z`
 surjective and invariant under an action `s` of a finite group `Δ` on `W` that is simply transitive
 on the fibres of `c` on complex points (`specOver R ℂ` is `Spec ℂ` over `Spec R`). Then `c` is a
 Galois covering with group `Δ` in the sense of `New.Variety.IsGaloisCovering`: simple transitivity
-holds for points with values in any field of characteristic 0. -/
-lemma isGaloisCovering_of_complex_points {R : CommRingCat} [IsDomain R] {W Z : Over (Spec R)}
-    [IsProper W.hom] [IsSeparated Z.hom] {c : W ⟶ Z} {Δ : FiniteGrp}
-    {s : Δ →* CategoryTheory.End W} [Countable R] [Algebra R ℂ]
+holds for points with values in any field of characteristic 0.
+-/
+lemma isGaloisCovering_of_complex_points
+    {R : CommRingCat} [IsDomain R]
+    {W Z : Over (Spec R)} [IsProper W.hom] [IsSeparated Z.hom]
+    {c : W ⟶ Z} {Δ : FiniteGrp} {s : Δ →* CategoryTheory.End W} [Countable R] [Algebra R ℂ]
     (hR : ∀ (k : Type) [Field k] [CharZero k] (f : R →+* k), Function.Injective f)
     (h_inv : ∀ g : Δ.toGrp, (s g).asHom ≫ c = c) (hc : AlgebraicGeometry.Surjective c.left)
-    (h_orbit : ∀ y z : specOver R ℂ ⟶ W, y ≫ c = z ≫ c → ∃! g : Δ.toGrp, y ≫ (s g).asHom = z) :
-    IsGaloisCovering c s := by
+    (h_orbit : ∀ y z : specOver R ℂ ⟶ W, y ≫ c = z ≫ c → ∃! g : Δ.toGrp, y ≫ (s g).asHom = z)
+    : IsGaloisCovering c s := by
   refine ⟨h_inv, hc, fun k _ _ y y' hy ↦ ?_⟩
   -- The pair `(y, y')` is a point of `W ×_Z W`. It factors through the residue field of its image
   -- `z`, which is countable and so embeds in `ℂ` over `R`.
@@ -497,8 +566,9 @@ lemma isGaloisCovering_of_complex_points {R : CommRingCat} [IsDomain R] {W Z : O
   set j : Spec (residueField _ z) ⟶ pullback c.left c.left := fromSpecResidueField _ z
   have : CharZero (residueField _ z) := φ.charZero
   -- `R` maps injectively to the countable residue field and to `ℂ`, so `ψ` exists.
-  obtain ⟨ψ, hψ⟩ : ∃ ψ : residueField _ z →+* ℂ,
-      ψ.comp (Spec.preimage (j ≫ p₁ ≫ W.hom)).hom = algebraMap R ℂ :=
+  obtain ⟨ψ, hψ⟩
+      : ∃ ψ : residueField _ z →+* ℂ,
+        ψ.comp (Spec.preimage (j ≫ p₁ ≫ W.hom)).hom = algebraMap R ℂ :=
     exists_ringHom_complex_extend (hR _ _) (hR ℂ _) (by simp [Cardinal.aleph0_le_continuum.trans'])
   -- Both projections of `specMap ψ ≫ j` are complex points over `R` with the same image in `Z`.
   have h_fibre : p₁ ≫ c.left = p₂ ≫ c.left := condition
@@ -513,16 +583,20 @@ lemma isGaloisCovering_of_complex_points {R : CommRingCat} [IsDomain R] {W Z : O
   -- The maps `specMap φ` and `specMap ψ` between spectra of fields are epi, so they cancel.
   simpa [y₁, y₂, OverMorphism.ext_iff, cancel_epi] using h_complex
 
-/-- Let `c : W ⟶ Z` be a Galois covering with group `Δ` acting through `s`, and `π : T ⟶ Z` a map
+/--
+Let `c : W ⟶ Z` be a Galois covering with group `Δ` acting through `s`, and `π : T ⟶ Z` a map
 from a scheme whose field-valued points have characteristic zero. If `p : X ⟶ W` lies over
 `r : X ⟶ T`, then two points of `X` with the same image under `r` have images under `p` in the
-same `Δ`-orbit. -/
-lemma IsGaloisCovering.exists_apply_eq_of_apply_eq.{u} {R : CommRingCat.{u}} {W Z : Over (Spec R)}
-    {c : W ⟶ Z} {Δ : FiniteGrp} {s : Δ →* CategoryTheory.End W} (hG : IsGaloisCovering c s)
+same `Δ`-orbit.
+-/
+lemma IsGaloisCovering.exists_apply_eq_of_apply_eq.{u}
+    {R : CommRingCat.{u}} {W Z : Over (Spec R)} {c : W ⟶ Z} {Δ : FiniteGrp}
+    {s : Δ →* CategoryTheory.End W} (hG : IsGaloisCovering c s)
     {T X : Scheme} {π : T ⟶ Z.left}
     (h_char : ∀ (K : Type u) [Field K], (Spec (of K) ⟶ T) → CharZero K)
-    {p : X ⟶ W.left} (r : X ⟶ T) (hr : p ≫ c.left = r ≫ π) (w v : X) (hv : r v = r w) :
-    ∃ g : Δ, (s g).asHom.left (p w) = p v := by
+    {p : X ⟶ W.left} (r : X ⟶ T) (hr : p ≫ c.left = r ≫ π)
+    (w v : X) (hv : r v = r w)
+    : ∃ g : Δ, (s g).asHom.left (p w) = p v := by
   -- Lift `(v, w)` to a point `t` of the fibre product and use its residue field.
   obtain ⟨t, rfl, rfl⟩ := Pullback.exists_preimage_pullback v w hv
   let j : Spec (residueField _ t) ⟶ pullback r r := fromSpecResidueField _ t
@@ -534,137 +608,161 @@ lemma IsGaloisCovering.exists_apply_eq_of_apply_eq.{u} {R : CommRingCat.{u}} {W 
   refine ⟨g, ?_⟩
   simpa [j] using congrArg (fun y ↦ y default) hg
 
-/-- Let `c : W ⟶ Z` be a Galois covering with group `Δ`, let `π : T ⟶ Z` be a map from a scheme
+/--
+Let `c : W ⟶ Z` be a Galois covering with group `Δ`, let `π : T ⟶ Z` be a map from a scheme
 whose field-valued points have characteristic zero, and let `p : X ⟶ W`, injective on points, lie
-over `r : X ⟶ T`. Then the fibres of `r` are finite. -/
-lemma IsGaloisCovering.finite_preimage_singleton.{u} {R : CommRingCat.{u}} {W Z : Over (Spec R)}
-    {c : W ⟶ Z} {Δ : FiniteGrp} {s : Δ →* CategoryTheory.End W} (hG : IsGaloisCovering c s)
+over `r : X ⟶ T`. Then the fibres of `r` are finite.
+-/
+lemma IsGaloisCovering.finite_preimage_singleton.{u}
+    {R : CommRingCat.{u}} {W Z : Over (Spec R)} {c : W ⟶ Z} {Δ : FiniteGrp}
+    {s : Δ →* CategoryTheory.End W} (hG : IsGaloisCovering c s)
     {T X : Scheme} {π : T ⟶ Z.left}
     (h_char : ∀ (K : Type u) [Field K], (Spec (of K) ⟶ T) → CharZero K)
-    {p : X ⟶ W.left} (hp : Function.Injective p) (r : X ⟶ T) (hr : p ≫ c.left = r ≫ π) (x : X) :
-    (r ⁻¹' {r x}).Finite :=
+    {p : X ⟶ W.left} (hp : Function.Injective p)
+    (r : X ⟶ T) (hr : p ≫ c.left = r ≫ π)
+    (x : X)
+    : (r ⁻¹' {r x}).Finite :=
   -- each fibre lies in the preimage of a `Δ`-orbit
   have h_orbit : r ⁻¹' {r x} ⊆ p ⁻¹' range fun g : Δ ↦ (s g).asHom.left (p x) :=
     hG.exists_apply_eq_of_apply_eq h_char r hr x
   ((finite_range _).preimage hp.injOn).subset h_orbit
 
-/-- Let `Spec B` be the pull-back of `c : W ⟶ Z` along `u : Spec A ⟶ Z`, with projection `p` to
+/--
+Let `Spec B` be the pull-back of `c : W ⟶ Z` along `u : Spec A ⟶ Z`, with projection `p` to
 `W`. A point `y` of `W` with values in an `A`-algebra `K` that lies over the point
 `Spec K ⟶ Spec A ⟶ Z` comes from an `A`-algebra map `B → K`. Here `specMap φ` is the morphism
-of spectra induced by a ring map `φ`. -/
-lemma exists_algHom_specMap_comp_eq {W Z : Scheme} {c : W ⟶ Z} {A B : Type} [CommRing A]
-    [CommRing B] [Algebra A B] {p : Spec (of B) ⟶ W} {u : Spec (of A) ⟶ Z}
-    (hp : IsPullback p (specMap (algebraMap A B)) c u) (K : Type) [CommRing K] [Algebra A K]
-    (y : Spec (of K) ⟶ W) (hy : y ≫ c = specMap (algebraMap A K) ≫ u) :
-    ∃ χ : B →ₐ[A] K, specMap χ ≫ p = y := by
+of spectra induced by a ring map `φ`.
+-/
+lemma exists_algHom_specMap_comp_eq
+    {W Z : Scheme} {c : W ⟶ Z} {A B : Type} [CommRing A] [CommRing B] [Algebra A B]
+    {p : Spec (of B) ⟶ W} {u : Spec (of A) ⟶ Z} (hp : IsPullback p (specMap (algebraMap A B)) c u)
+    (K : Type) [CommRing K] [Algebra A K]
+    (y : Spec (of K) ⟶ W) (hy : y ≫ c = specMap (algebraMap A K) ≫ u)
+    : ∃ χ : B →ₐ[A] K, specMap χ ≫ p = y := by
   let l : specOver A K ⟶ specOver A B := homMk (hp.lift y _ hy) (hp.lift_snd y _ hy)
   obtain ⟨χ, hχ⟩ := specOver.map_bijective.surjective l
   have h_left : specMap (χ : B →+* K) = hp.lift y _ hy := congrArg Hom.left hχ
   exact ⟨χ, by rw [h_left, hp.lift_fst]⟩
 
-/-- Let `c : W ⟶ Z` be a Galois covering with group `Δ` acting through `s`, and let `Spec B` be its
+/--
+Let `c : W ⟶ Z` be a Galois covering with group `Δ` acting through `s`, and let `Spec B` be its
 pull-back along `u : Spec A ⟶ Z`, where the field-valued points of `A` have characteristic zero and
 the projection `p : Spec B ⟶ W` is a monomorphism. Then `Δ` acts on the `A`-algebra `B` from the
 right, compatibly with `s` and simply transitively on the field-valued points of `B` over `A`.
 (Galois covering: `c` is surjective and `Δ` is simply transitive on its fibres of points in fields
-of characteristic zero; `specMap φ` is the morphism of spectra induced by `φ`.) -/
-lemma IsGaloisCovering.exists_simply_transitive_action {R : CommRingCat} {W Z : Over (Spec R)}
-    {c : W ⟶ Z} {Δ : FiniteGrp} {s : Δ →* CategoryTheory.End W} (hG : IsGaloisCovering c s)
+of characteristic zero; `specMap φ` is the morphism of spectra induced by `φ`.)
+-/
+lemma IsGaloisCovering.exists_simply_transitive_action
+    {R : CommRingCat} {W Z : Over (Spec R)} {c : W ⟶ Z} {Δ : FiniteGrp}
+    {s : Δ →* CategoryTheory.End W} (hG : IsGaloisCovering c s)
     {A B : Type} [CommRing A] [CommRing B] [Algebra A B]
     (h_char : ∀ (K : Type) [Field K], (Spec (of K) ⟶ Spec (of A)) → CharZero K)
     {p : Spec (of B) ⟶ W.left} {u : Spec (of A) ⟶ Z.left} [Mono p]
-    (hp : IsPullback p (specMap (algebraMap A B)) c.left u) :
-    ∃ σ : Δ →* (B →ₐ[A] B)ᵐᵒᵖ,
-      (∀ g : Δ, specMap (σ g).unop ≫ p = p ≫ (s g).asHom.left) ∧
-      ∀ (K : Type) [Field K] [Algebra A K] (x y : B →ₐ[A] K),
-        ∃! g : Δ, ∀ b : B, x ((σ g).unop b) = y b := by
+    (hp : IsPullback p (specMap (algebraMap A B)) c.left u)
+    : ∃ σ : Δ →* (B →ₐ[A] B)ᵐᵒᵖ,
+      (∀ g : Δ, specMap (σ g).unop ≫ p = p ≫ (s g).asHom.left)
+        ∧ ∀ (K : Type) [Field K] [Algebra A K] (x y : B →ₐ[A] K),
+          ∃! g : Δ, ∀ b : B, x ((σ g).unop b) = y b := by
   have h_exists (g : Δ) : ∃ χ : B →ₐ[A] B, specMap χ ≫ p = p ≫ (s g).asHom.left :=
     exists_algHom_specMap_comp_eq hp B (p ≫ (s g).asHom.left)
       (by simp [← comp_left, hG.comp_eq, hp.w])
   choose act h_act using h_exists
   -- As `p` is mono, identities between points of `W` are identities between ring maps.
-  have h_cancel {K : Type} [CommRing K] [Algebra A K] (x y : B →ₐ[A] K) :
-      specMap (x : B →+* K) ≫ p = specMap (y : B →+* K) ≫ p ↔ x = y := by
+  have h_cancel {K : Type} [CommRing K] [Algebra A K] (x y : B →ₐ[A] K)
+      : specMap (x : B →+* K) ≫ p = specMap (y : B →+* K) ≫ p ↔ x = y := by
     simp [cancel_mono, Spec.map_inj, ConcreteCategory.hom_ext_iff, AlgHom.ext_iff]
-  have h_comp {K : Type} [CommRing K] [Algebra A K] (x : B →ₐ[A] K) (g : Δ) :
-      specMap (x.comp (act g) : B →+* K) ≫ p = (specMap (x : B →+* K) ≫ p) ≫ (s g).asHom.left := by
+  have h_comp {K : Type} [CommRing K] [Algebra A K] (x : B →ₐ[A] K) (g : Δ)
+      : specMap (x.comp (act g) : B →+* K) ≫ p
+        = (specMap (x : B →+* K) ≫ p) ≫ (s g).asHom.left := by
     rw [Category.assoc, ← h_act, ← Spec.map_comp_assoc]
     rfl
   have h_id : specMap (RingHom.id B) = 𝟙 (Spec (of B)) := Spec.map_id _
   have h_one : act 1 = .id A B := (h_cancel _ _).1 (by simp [h_act, h_id])
   have h_mul (g h : Δ) : act (g * h) = (act h).comp (act g) :=
     (h_cancel _ _).1 (by simp [h_comp, h_act])
-  let σ : Δ →* (B →ₐ[A] B)ᵐᵒᵖ :=
-    { toFun g := .op (act g)
-      map_one' := congrArg MulOpposite.op h_one
-      map_mul' g h := congrArg MulOpposite.op (h_mul g h) }
+  let σ : Δ →* (B →ₐ[A] B)ᵐᵒᵖ := {
+    toFun g := .op (act g)
+    map_one' := congrArg MulOpposite.op h_one
+    map_mul' g h := congrArg MulOpposite.op (h_mul g h)
+  }
   refine ⟨σ, h_act, fun K _ _ x y ↦ ?_⟩
   have : CharZero K := h_char K (specMap (algebraMap A K))
-  have h_fibre :
-      (specMap (x : B →+* K) ≫ p) ≫ c.left = (specMap (y : B →+* K) ≫ p) ≫ c.left := by
+  have h_fibre : (specMap (x : B →+* K) ≫ p) ≫ c.left = (specMap (y : B →+* K) ≫ p) ≫ c.left := by
     simp [hp.w, ← Spec.map_comp_assoc, ← ofHom_comp]
   simpa [σ, ← h_comp, h_cancel, AlgHom.ext_iff] using hG.torsor K _ _ h_fibre
 
 section ProductOfFields
 
 -- `Ω m` is an algebra over the residue field of the reduced Artinian ring `N` at `m`.
-variable {N : Type*} [CommRing N] [IsArtinianRing N] [IsReduced N] {Ω : MaximalSpectrum N → Type*}
-  [∀ m, CommRing (Ω m)] [∀ m, Algebra N (Ω m)] [∀ m, Algebra (N ⧸ m.asIdeal) (Ω m)]
-  [∀ m, IsScalarTower N (N ⧸ m.asIdeal) (Ω m)]
+variable
+  {N : Type*} [CommRing N] [IsArtinianRing N] [IsReduced N]
+  {Ω : MaximalSpectrum N → Type*} [∀ m, CommRing (Ω m)] [∀ m, Algebra N (Ω m)]
+  [∀ m, Algebra (N ⧸ m.asIdeal) (Ω m)] [∀ m, IsScalarTower N (N ⧸ m.asIdeal) (Ω m)]
 
-/-- A reduced Artinian ring `N` embeds in any product over its maximal ideals `m` of faithful
-algebras over the residue fields `N ⧸ m`. -/
+/--
+A reduced Artinian ring `N` embeds in any product over its maximal ideals `m` of faithful
+algebras over the residue fields `N ⧸ m`.
+-/
 lemma algebraMap_pi_injective
-    (hΩ : ∀ m : MaximalSpectrum N, Function.Injective (algebraMap (N ⧸ m.asIdeal) (Ω m))) :
-    Function.Injective (algebraMap N (∀ m : MaximalSpectrum N, Ω m)) := fun x y h_eq ↦
-  (equivPi N).injective <| funext fun m ↦ hΩ m <| by
-    simpa [IsScalarTower.algebraMap_apply N (N ⧸ m.asIdeal) (Ω m)] using congrFun h_eq m
+    (hΩ : ∀ m : MaximalSpectrum N, Function.Injective (algebraMap (N ⧸ m.asIdeal) (Ω m)))
+    : Function.Injective (algebraMap N (∀ m : MaximalSpectrum N, Ω m)) := fun x y h_eq ↦
+  (equivPi N).injective <| funext fun m ↦
+    hΩ m <| by simpa [IsScalarTower.algebraMap_apply N (N ⧸ m.asIdeal) (Ω m)] using congrFun h_eq m
 
-/-- An element of the product of the `Ω m` whose components all come from the residue fields of
-the reduced Artinian ring `N` comes from `N`. -/
-lemma exists_algebraMap_pi_eq {z : ∀ m : MaximalSpectrum N, Ω m}
-    (hz : ∀ m : MaximalSpectrum N, z m ∈ Set.range (algebraMap (N ⧸ m.asIdeal) (Ω m))) :
-    ∃ v : N, algebraMap N (∀ m : MaximalSpectrum N, Ω m) v = z := by
+/--
+An element of the product of the `Ω m` whose components all come from the residue fields of
+the reduced Artinian ring `N` comes from `N`.
+-/
+lemma exists_algebraMap_pi_eq
+    {z : ∀ m : MaximalSpectrum N, Ω m}
+    (hz : ∀ m : MaximalSpectrum N, z m ∈ Set.range (algebraMap (N ⧸ m.asIdeal) (Ω m)))
+    : ∃ v : N, algebraMap N (∀ m : MaximalSpectrum N, Ω m) v = z := by
   choose w hw using hz
   obtain ⟨v, rfl⟩ := (equivPi N).surjective w
   exact ⟨v, funext fun m ↦ (IsScalarTower.algebraMap_apply _ _ _ _).trans (hw m)⟩
 
 end ProductOfFields
 
-/-- If `A` is a smooth algebra over a normal domain `P`, then `A` is integrally closed in
-`A ⊗[P] Frac P`. -/
-lemma exists_algebraMap_eq_of_isIntegral_of_smooth {P A : Type} [CommRing P] [IsDomain P]
-    [IsIntegrallyClosed P] [CommRing A] [Algebra P A] [Algebra.Smooth P A]
-    {v : A ⊗[P] FractionRing P} (hv : IsIntegral A v) :
-    ∃ x : A, algebraMap A (A ⊗[P] FractionRing P) x = v := by
+/--
+If `A` is a smooth algebra over a normal domain `P`, then `A` is integrally closed in
+`A ⊗[P] Frac P`.
+-/
+lemma exists_algebraMap_eq_of_isIntegral_of_smooth
+    {P A : Type}
+    [CommRing P] [IsDomain P] [IsIntegrallyClosed P] [CommRing A] [Algebra P A] [Algebra.Smooth P A]
+    {v : A ⊗[P] FractionRing P} (hv : IsIntegral A v)
+    : ∃ x : A, algebraMap A (A ⊗[P] FractionRing P) x = v := by
   -- Integral closure commutes with smooth base change, and `P` is its own integral closure.
   let F : Type := FractionRing P
-  have h_normal : Function.Surjective (algebraMap P (integralClosure P F)) :=
-    fun z ↦ (isIntegral_iff.mp z.prop).imp fun _ ↦ Subtype.ext
+  have h_normal : Function.Surjective (algebraMap P (integralClosure P F)) := fun z ↦
+    (isIntegral_iff.mp z.prop).imp fun _ ↦ Subtype.ext
   obtain ⟨w, hw⟩ : ∃ w : A ⊗[P] integralClosure P F, toIntegralClosure P A F w = ⟨v, hv⟩ :=
     toIntegralClosure_bijective_of_smooth.surjective _
   obtain ⟨x, rfl⟩ := includeLeft_surjective A A h_normal w
   exact ⟨x, congrArg Subtype.val hw⟩
 
-/-- Let `Spec B` be the pull-back of a Galois covering `c : W ⟶ Z` with group `Δ` along
+/--
+Let `Spec B` be the pull-back of a Galois covering `c : W ⟶ Z` with group `Δ` along
 `u : Spec A ⟶ Z`, where `A` has field-valued points of characteristic zero, `B` is integral over `A`
 and `p : Spec B ⟶ W` is a monomorphism. Let `σ` be the action of `Δ` on `B` compatible with the
 action `s` on `W` (`specMap f` is the morphism of spectra induced by `f`). If an ideal `I` of `B`
 contains the image of no nonzero element of `A` and contains all the conjugates `σ g b`, then `b` is
-nilpotent. -/
-lemma IsGaloisCovering.isNilpotent_of_forall_mem {R : CommRingCat} {W Z : Over (Spec R)}
-    {c : W ⟶ Z} {Δ : FiniteGrp} {s : Δ →* CategoryTheory.End W} (hG : IsGaloisCovering c s)
+nilpotent.
+-/
+lemma IsGaloisCovering.isNilpotent_of_forall_mem
+    {R : CommRingCat} {W Z : Over (Spec R)} {c : W ⟶ Z} {Δ : FiniteGrp}
+    {s : Δ →* CategoryTheory.End W} (hG : IsGaloisCovering c s)
     {A B : Type} [CommRing A] [CommRing B] [Algebra A B] [Algebra.IsIntegral A B]
     (h_char : ∀ (K : Type) [Field K], (Spec (of K) ⟶ Spec (of A)) → CharZero K)
     {p : Spec (of B) ⟶ W.left} {u : Spec (of A) ⟶ Z.left} [Mono p]
-    (hp : IsPullback p (specMap (algebraMap A B)) c.left u) {σ : Δ →* (B →ₐ[A] B)ᵐᵒᵖ}
-    (hσ : ∀ g : Δ, specMap (σ g).unop ≫ p = p ≫ (s g).asHom.left) {I : Ideal B}
-    (hI : I.comap (algebraMap A B) = ⊥) {b : B} (hb : ∀ g : Δ, (σ g).unop b ∈ I) :
-    IsNilpotent b := by
+    (hp : IsPullback p (specMap (algebraMap A B)) c.left u)
+    {σ : Δ →* (B →ₐ[A] B)ᵐᵒᵖ} (hσ : ∀ g : Δ, specMap (σ g).unop ≫ p = p ≫ (s g).asHom.left)
+    {I : Ideal B} (hI : I.comap (algebraMap A B) = ⊥)
+    {b : B} (hb : ∀ g : Δ, (σ g).unop b ∈ I)
+    : IsNilpotent b := by
   -- Every prime of `B` is conjugate to one containing `I`.
   refine nilpotent_iff_mem_prime.mpr fun 𝔮 h𝔮 ↦ ?_
-  obtain ⟨Q, hQ, hQ_prime, h_under⟩ :
-      ∃ Q ≥ I, Q.IsPrime ∧ Q.comap (algebraMap A B) = 𝔮.under A :=
+  obtain ⟨Q, hQ, hQ_prime, h_under⟩ : ∃ Q ≥ I, Q.IsPrime ∧ Q.comap (algebraMap A B) = 𝔮.under A :=
     exists_ideal_over_prime_of_isIntegral (𝔮.under A) I (hI.trans_le bot_le)
   let Q' : Spec (of B) := ⟨Q, hQ_prime⟩
   let 𝔮' : Spec (of B) := ⟨𝔮, h𝔮⟩
@@ -676,30 +774,37 @@ lemma IsGaloisCovering.isNilpotent_of_forall_mem {R : CommRingCat} {W Z : Over (
   have h_comap : Q.comap (σ g).unop = 𝔮 := congrArg PrimeSpectrum.asIdeal h_move
   exact h_comap.le (hQ (hb g))
 
-/-- Let `Ω` be a Galois extension of a field `K`, both algebras over `A`. If all `A`-algebra maps
-`B → Ω` take the same value at `z`, this value lies in `K`. -/
-lemma mem_range_algebraMap_of_forall_apply_eq {A B K Ω : Type*} [CommRing A] [CommRing B]
-    [Algebra A B] [Field K] [Field Ω] [Algebra K Ω] [IsGalois K Ω] [Algebra A K] [Algebra A Ω]
-    [IsScalarTower A K Ω] (χ : B →ₐ[A] Ω) {z : B} (hz : ∀ x : B →ₐ[A] Ω, x z = χ z) :
-    χ z ∈ Set.range (algebraMap K Ω) :=
+/--
+Let `Ω` be a Galois extension of a field `K`, both algebras over `A`. If all `A`-algebra maps
+`B → Ω` take the same value at `z`, this value lies in `K`.
+-/
+lemma mem_range_algebraMap_of_forall_apply_eq
+    {A B K Ω : Type*} [CommRing A] [CommRing B] [Algebra A B] [Field K] [Field Ω] [Algebra K Ω]
+    [IsGalois K Ω] [Algebra A K] [Algebra A Ω] [IsScalarTower A K Ω]
+    (χ : B →ₐ[A] Ω)
+    {z : B} (hz : ∀ x : B →ₐ[A] Ω, x z = χ z)
+    : χ z ∈ Set.range (algebraMap K Ω) :=
   (InfiniteGalois.mem_bot_iff_fixed _).mpr fun τ ↦ hz ((τ.restrictScalars A).toAlgHom.comp χ)
 
-/-- Let `c : W ⟶ Z` be a Galois covering with group `Δ`, with `W` proper and `Z` separated over
+/--
+Let `c : W ⟶ Z` be a Galois covering with group `Δ`, with `W` proper and `Z` separated over
 `R`. Let `A` be étale over a normal domain `P`, with field-valued points of characteristic zero, and
 let `Spec B` be the pull-back of `c` along `u : Spec A ⟶ Z`. If `B` is reduced and finite over `A`
 and the projection `p : Spec B ⟶ W` is a monomorphism, then `B` is étale over `A`.
 (Galois covering: `c` is surjective and `Δ`, acting through `s`, is simply transitive on its fibres
 of points in fields of characteristic zero; `specMap f` is the morphism of spectra induced by the
-ring map `f`.) -/
-lemma IsGaloisCovering.etale_of_isPullback {R : CommRingCat} {W Z : Over (Spec R)} [IsProper W.hom]
-    [IsSeparated Z.hom] {c : W ⟶ Z} {Δ : FiniteGrp} {s : Δ →* CategoryTheory.End W}
-    (hG : IsGaloisCovering c s) (P : Type) [CommRing P] [IsDomain P] [IsIntegrallyClosed P]
-    {A B : Type} [CommRing A] [Algebra P A] [Algebra.Etale P A]
-    [CommRing B] [IsReduced B] [Algebra A B] [Module.Finite A B]
+ring map `f`.)
+-/
+lemma IsGaloisCovering.etale_of_isPullback
+    {R : CommRingCat} {W Z : Over (Spec R)} [IsProper W.hom] [IsSeparated Z.hom]
+    {c : W ⟶ Z} {Δ : FiniteGrp} {s : Δ →* CategoryTheory.End W} (hG : IsGaloisCovering c s)
+    (P : Type) [CommRing P] [IsDomain P] [IsIntegrallyClosed P]
+    {A B : Type} [CommRing A] [Algebra P A] [Algebra.Etale P A] [CommRing B] [IsReduced B]
+    [Algebra A B] [Module.Finite A B]
     (h_char : ∀ (K : Type) [Field K], (Spec (of K) ⟶ Spec (of A)) → CharZero K)
     {p : Spec (of B) ⟶ W.left} {u : Spec (of A) ⟶ Z.left} [Mono p]
-    (hp : IsPullback p (specMap (algebraMap A B)) c.left u) :
-    Algebra.Etale A B := by
+    (hp : IsPullback p (specMap (algebraMap A B)) c.left u)
+    : Algebra.Etale A B := by
   -- The group `Δ` acts on `B`, simply transitively on field-valued points. By
   -- `etale_of_simply_transitive` it remains to see that `A → B` is injective with image `B^Δ`.
   obtain ⟨σ, hσ, h_points⟩ := hG.exists_simply_transitive_action h_char hp
@@ -719,14 +824,14 @@ lemma IsGaloisCovering.etale_of_isPullback {R : CommRingCat} {W Z : Over (Spec R
   have hN_inj : Function.Injective (algebraMap N (∀ m : MaximalSpectrum N, Ω m)) :=
     algebraMap_pi_injective fun _ ↦ RingHom.injective _
   have h_point (m : MaximalSpectrum N) : Nonempty (B →ₐ[A] Ω m) := by
-    obtain ⟨y, hy⟩ : ∃ y : Spec (of (Ω m)) ⟶ W.left,
-        y ≫ c.left = specMap (algebraMap A (Ω m)) ≫ u :=
+    obtain ⟨y, hy⟩
+        : ∃ y : Spec (of (Ω m)) ⟶ W.left, y ≫ c.left = specMap (algebraMap A (Ω m)) ≫ u :=
       exists_point_over c.left (hG.surjective.surj _)
     exact (exists_algHom_specMap_comp_eq hp (Ω m) y hy).nonempty
   let χ : B →ₐ[A] ∀ m : MaximalSpectrum N, Ω m := .pi fun m ↦ (h_point m).some
   have hχ (x : A) : χ (algebraMap A B x) = algebraMap N _ (algebraMap A N x) := χ.commutes x
-  have hA_inj : Function.Injective ((χ : B →+* ∀ m, Ω m).comp (algebraMap A B)) :=
-    fun x x' h ↦ includeLeft_injective (S := P) (IsFractionRing.injective P F)
+  have hA_inj : Function.Injective ((χ : B →+* ∀ m, Ω m).comp (algebraMap A B)) := fun x x' h ↦
+    includeLeft_injective (S := P) (IsFractionRing.injective P F)
       (hN_inj ((hχ x).symm.trans (h.trans (hχ x'))))
   refine etale_of_simply_transitive (.of_comp (f := χ) hA_inj) σ h_points fun z hz ↦ ?_
   -- All points of `B` in a component `Ω m` agree on the invariant `z`, so `χ z` lies in `N`.
@@ -748,22 +853,29 @@ lemma IsGaloisCovering.etale_of_isPullback {R : CommRingCat} {W Z : Over (Spec R
   have h_bot : (RingHom.ker χ).comap (algebraMap A B) = ⊥ := comap_bot_of_injective _ hA_inj
   exact ⟨x, sub_eq_zero.mp (hG.isNilpotent_of_forall_mem h_char hp hσ h_bot h_ker).eq_zero⟩
 
-/-- The base change of a reduced scheme along a flat preimmersion is reduced: its stalks are those
-of the scheme. -/
-lemma isReduced_pullback_of_flat {X Y T : Scheme} (f : X ⟶ T) (g : Y ⟶ T)
-    [IsReduced X] [Flat g] [IsPreimmersion g] : IsReduced (pullback f g) := by
-  have (x : ↥(pullback f g)) : IsReduced ((pullback f g).presheaf.stalk x) := ⟨fun a ha ↦ by
-    obtain ⟨b, rfl⟩ := (fst f g).stalkMap_surjective x a
-    simp [((IsNilpotent.map_iff (stalkMap_injective_of_flat _ _)).1 ha).eq_zero]⟩
+/--
+The base change of a reduced scheme along a flat preimmersion is reduced: its stalks are those
+of the scheme.
+-/
+lemma isReduced_pullback_of_flat
+    {X Y T : Scheme} (f : X ⟶ T) (g : Y ⟶ T) [IsReduced X] [Flat g] [IsPreimmersion g]
+    : IsReduced (pullback f g) := by
+  have (x : ↥(pullback f g)) : IsReduced ((pullback f g).presheaf.stalk x) :=
+    ⟨fun a ha ↦ by
+      obtain ⟨b, rfl⟩ := (fst f g).stalkMap_surjective x a
+      simp [((IsNilpotent.map_iff (stalkMap_injective_of_flat _ _)).1 ha).eq_zero]⟩
   exact isReduced_of_isReduced_stalk _
 
-/-- If the base change of `c : W ⟶ Z` to the fibre product `Z ×_T E` is smooth of relative dimension
+/--
+If the base change of `c : W ⟶ Z` to the fibre product `Z ×_T E` is smooth of relative dimension
 `0` and `Z ×_T E ⟶ E` of relative dimension `d`, then the base change of `c ≫ f : W ⟶ T` along any
-map factoring through `i : E ⟶ T` is smooth of relative dimension `d`. -/
-lemma smoothOfRelativeDimension_pullback_snd_comp (d : ℕ) {W Z T E K : Scheme} (c : W ⟶ Z)
-    (f : Z ⟶ T) (i : E ⟶ T) (ψ : K ⟶ E) [SmoothOfRelativeDimension d (snd f i)]
-    [SmoothOfRelativeDimension 0 (snd c (fst f i))] :
-    SmoothOfRelativeDimension d (snd (c ≫ f) (ψ ≫ i)) := by
+map factoring through `i : E ⟶ T` is smooth of relative dimension `d`.
+-/
+lemma smoothOfRelativeDimension_pullback_snd_comp
+    (d : ℕ)
+    {W Z T E K : Scheme} (c : W ⟶ Z) (f : Z ⟶ T) (i : E ⟶ T) (ψ : K ⟶ E)
+    [SmoothOfRelativeDimension d (snd f i)] [SmoothOfRelativeDimension 0 (snd c (fst f i))]
+    : SmoothOfRelativeDimension d (snd (c ≫ f) (ψ ≫ i)) := by
   have h_comp : SmoothOfRelativeDimension d (snd c (fst f i) ≫ snd f i) := by
     simpa using smoothOfRelativeDimension_comp 0 d (snd c (fst f i)) (snd f i)
   have h_square : IsPullback (fst c (fst f i)) (snd c (fst f i) ≫ snd f i) (c ≫ f) i :=
@@ -771,18 +883,21 @@ lemma smoothOfRelativeDimension_pullback_snd_comp (d : ℕ) {W Z T E K : Scheme}
   exact (smoothOfRelativeDimension_isStableUnderBaseChange d).1
     ((IsPullback.of_hasPullback (c ≫ f) (ψ ≫ i)).of_right' h_square) h_comp
 
-/-- Let `c : W ⟶ Z` be a Galois covering over `Spec R` for a domain `R`: `c` is surjective, and a
+/--
+Let `c : W ⟶ Z` be a Galois covering over `Spec R` for a domain `R`: `c` is surjective, and a
 finite group `Δ` acts on `W` over `Z` through `s`, simply transitively on the fibres over points
 with values in fields of characteristic 0. Suppose `W` is proper and reduced and `Z` is separated
 and smooth of relative dimension `d`. Then for any field `k` of characteristic 0 into which `R`
 injects, the base change of `W` to `k` is smooth of relative dimension `d` over `Spec k`
-(`specMap f` is the morphism of spectra induced by the ring map `f`). -/
-lemma IsGaloisCovering.smoothOfRelativeDimension_baseChange {R : CommRingCat} [IsDomain R]
-    {W Z : Over (Spec R)} [IsProper W.hom] [IsSeparated Z.hom] {c : W ⟶ Z} {Δ : FiniteGrp}
-    {s : Δ →* CategoryTheory.End W} (hG : IsGaloisCovering c s) (d : ℕ)
-    [IsReduced W.left] [SmoothOfRelativeDimension d Z.hom] (k : Type) [Field k] [CharZero k]
-    [Algebra R k] [FaithfulSMul R k] :
-    SmoothOfRelativeDimension d (pullback.snd W.hom (specMap (algebraMap R k))) := by
+(`specMap f` is the morphism of spectra induced by the ring map `f`).
+-/
+lemma IsGaloisCovering.smoothOfRelativeDimension_baseChange
+    {R : CommRingCat} [IsDomain R]
+    {W Z : Over (Spec R)} [IsProper W.hom] [IsSeparated Z.hom]
+    {c : W ⟶ Z} {Δ : FiniteGrp} {s : Δ →* CategoryTheory.End W} (hG : IsGaloisCovering c s)
+    (d : ℕ) [IsReduced W.left] [SmoothOfRelativeDimension d Z.hom]
+    (k : Type) [Field k] [CharZero k] [Algebra R k] [FaithfulSMul R k]
+    : SmoothOfRelativeDimension d (pullback.snd W.hom (specMap (algebraMap R k))) := by
   -- Pass to the function field of `R`, through which `R → k` factors. There `c` becomes a finite
   -- map `q` from a reduced scheme to a smooth one, and `q` is étale by `etale_of_isPullback`.
   let E : Type := (Spec R).functionField
@@ -826,7 +941,8 @@ lemma IsGaloisCovering.smoothOfRelativeDimension_baseChange {R : CommRingCat} [I
     isPullback _ _ _ _ (hV.SpecMap_appLE_fromSpec q hV' le_rfl).symm (by simp)
   -- `hf_etale` and `h_finite` become instances for the algebra structures given by the two maps
   algebraize [f, (q.appLE V (q ⁻¹ᵁ V) le_rfl).hom]
-  exact hG.etale_of_isPullback P (fun K _ y ↦ h_char K (y ≫ hV.fromSpec))
+  exact hG.etale_of_isPullback P
+    (fun K _ y ↦ h_char K (y ≫ hV.fromSpec))
     (h_affine.flip.paste_horiz (.of_hasPullback c.left π))
 
 end GaloisCovers

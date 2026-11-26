@@ -34,10 +34,12 @@ namespace New
 
 open Subgroup QZChar QuotientGroup Set Module Function IsScalarTower Algebra
 
-variable (Γ : Type)
+variable
+  (Γ : Type)
   {K L : Type} [Group Γ] [TopologicalSpace Γ] [Field K] [EmbeddedNumberField K]
   [MulSemiringAction Γ Ω] [IsProGalois Γ K Ω]
-  (χ : QZChar Γ) [Field L] [EmbeddedNumberField L] [Algebra K L]
+  (χ : QZChar Γ)
+  [Field L] [EmbeddedNumberField L] [Algebra K L]
 
 open Pointwise in
 /-- The image of the global Artin map from the finite ideles of `K` to `Γ^ab` is closed. -/
@@ -52,15 +54,17 @@ lemma isClosed_range_artinMap : IsClosed (artinMap (K := K) Γ).range.carrier :=
   have h_compact : IsCompact C := isCompact_idelesUnitOff_empty.image (by fun_prop)
   have h_range : (artinMap (K := K) Γ).range.carrier = ⋃ q : (𝔸f K)ˣ ⧸ H, artinMap Γ q.out • C := by
     show range (artinMap (K := K) Γ) = _
-    simp [← image_univ, H, C, univ_eq_iUnion_smul H, image_iUnion, image_smul_distrib,
-      ← coe_map, Subgroup.map_sup]
+    simp [← image_univ, H, C, univ_eq_iUnion_smul H, image_iUnion, image_smul_distrib, ← coe_map,
+      Subgroup.map_sup]
   rw [h_range]
   exact (isCompact_iUnion fun q : (𝔸f K)ˣ ⧸ H ↦ h_compact.smul (artinMap Γ q.out)).isClosed
 
-/-- The global Artin map from the finite ideles of `K` to the topological abelianisation `Γ^ab` of
+/--
+The global Artin map from the finite ideles of `K` to the topological abelianisation `Γ^ab` of
 the absolute Galois group `Γ` of `K` is surjective.
 
-A consequence of Artin's global reciprocity law. -/
+A consequence of Artin's global reciprocity law.
+-/
 lemma artinMap_surjective : Surjective (artinMap (K := K) Γ) := by
   -- The range of `artinMap` is closed, so by duality (`mem_of_forall_abelianLift`) it suffices to
   -- show that a character `ψ` killing it is trivial. In the fixed field of `ker ψ` every prime
@@ -77,14 +81,14 @@ lemma artinMap_surjective : Surjective (artinMap (K := K) Γ) := by
     rw [abelianLift_mk, ← QZChar.toHom_apply, ← MonoidHom.mem_ker]
     exact h_top.ge (mem_top g)
   -- `ψ` kills every local symbol, so all decomposition groups lie in `U` and every `v` splits.
-  have h_count (v : FinPlace K) :
-      {w : FinPlace F | w.below K = v ∧ w.q = v.q}.ncard = finrank K F := by
+  have h_count (v : FinPlace K)
+      : {w : FinPlace F | w.below K = v ∧ w.q = v.q}.ncard = finrank K F := by
     have h_dec : decompGroup Γ (placeOver v) ≤ U :=
       (v.isPlaceOver_placeOver.artinAt_trivial_iff_decompGroup_le ψ).mp fun x ↦
         hψ (artinAt Γ v x) (MonoidHom.mem_range.mpr ⟨locIdele v x, artinMap_locIdele v x⟩)
-    have h_card :
-        {w : FinPlace F | w.below K = v}.ncard * U.relIndex (decompGroup Γ (placeOver v)) =
-          finrank K F :=
+    have h_card
+        : {w : FinPlace F | w.below K = v}.ncard * U.relIndex (decompGroup Γ (placeOver v))
+          = finrank K F :=
       v.isPlaceOver_placeOver.ncard_above_mul_relIndex_eq_finrank (L := F) U
     have h_same_q (w : FinPlace F) (hw : w.below K = v) : w.q = v.q :=
       (v.isPlaceOver_placeOver.q_eq_and_comap_ne_self_of_decompGroup_le h_dec w hw).1
@@ -103,13 +107,16 @@ lemma artinMap_surjective : Surjective (artinMap (K := K) Γ) := by
 
 variable {Γ} [IsScalarTower K L Ω] [hχ : IsProGalois (ker χ) L Ω] [IsGalois K L]
 
-/-- Let L/K be a cyclic extension of number fields inside an algebraic closure Ω of ℚ. There is
-a continuous character χ : Gal(Ω/K) → ℚ/ℤ whose kernel acts on Ω as the Galois group of Ω/L. -/
-lemma exists_isProGalois_ker_of_isCyclic (h_cyc : IsCyclic Gal(L/K)) :
-    ∃ χ : QZChar Gal(Ω/K), IsProGalois (ker χ) L Ω := by
+/--
+Let L/K be a cyclic extension of number fields inside an algebraic closure Ω of ℚ. There is
+a continuous character χ : Gal(Ω/K) → ℚ/ℤ whose kernel acts on Ω as the Galois group of Ω/L.
+-/
+lemma exists_isProGalois_ker_of_isCyclic (h_cyc : IsCyclic Gal(L/K))
+    : ∃ χ : QZChar Gal(Ω/K), IsProGalois (ker χ) L Ω := by
   -- Pull back a faithful character `ψ` of the cyclic group `Gal(L/K)` along restriction `φ`.
-  obtain ⟨φ, hφ⟩ : ∃ φ : Gal(Ω/K) →ₜ* Gal(L/K),
-      ∀ (g : Gal(Ω/K)) (x : L), algebraMap L Ω (φ g • x) = g • algebraMap L Ω x :=
+  obtain ⟨φ, hφ⟩
+      : ∃ φ : Gal(Ω/K) →ₜ* Gal(L/K), ∀ (g : Gal(Ω/K)) (x : L),
+        algebraMap L Ω (φ g • x) = g • algebraMap L Ω x :=
     exists_galois_restrict _ _ (algebraMap L Ω) (by simp [← algebraMap_apply])
   obtain ⟨ψ, hψ⟩ : ∃ ψ : QZChar Gal(L/K), ker ψ = ⊥ :=
     exists_ker_eq_of_isCyclic ⟨⊥, by simp⟩ (quotientBot.isCyclic.mpr h_cyc)
@@ -125,18 +132,22 @@ lemma exists_isProGalois_ker_of_isCyclic (h_cyc : IsCyclic Gal(L/K)) :
 
 omit [EmbeddedNumberField K] [EmbeddedNumberField L] in
 variable [NumberField K] [NumberField L] in
-/-- Hasse's norm theorem. Let `L / K` be a cyclic extension of number fields. A totally positive `x`
+/--
+Hasse's norm theorem. Let `L / K` be a cyclic extension of number fields. A totally positive `x`
 in `K` that is a local norm (a limit of norms from `L` in the completion `LocField v` of `K` at `v`)
 at every finite place `v` is a norm.
 
 A case of the Hasse norm theorem, with x assumed totally positive, which is stronger than being a
-local norm at each real place. -/
-lemma hasse_norm [IsCyclic Gal(L/K)] (x : Kˣ)
+local norm at each real place.
+-/
+lemma hasse_norm
+    [IsCyclic Gal(L/K)]
+    (x : Kˣ)
     (h_loc : ∀ v : FinPlace K,
-      algebraMap K (LocField v) x ∈ closure
-        (range fun y : L ↦ algebraMap K (LocField v) (Algebra.norm K y)))
-    (hx_pos : IsTotallyPositive x.val) :
-    ∃ z : Lˣ, z.map (Algebra.norm K) = x := by
+      algebraMap K (LocField v) x
+        ∈ closure (range fun y : L ↦ algebraMap K (LocField v) (Algebra.norm K y)))
+    (hx_pos : IsTotallyPositive x.val)
+    : ∃ z : Lˣ, z.map (Algebra.norm K) = x := by
   -- Embed `L` in `Ω` and let `χ` cut it out. Then `x` is a norm exactly when the symbol `(χ, x)`
   -- vanishes in the Brauer group, which by Albert–Brauer–Hasse–Noether
   -- (`albert_brauer_hasse_noether`) can be checked place by place; total positivity takes care of
@@ -146,21 +157,24 @@ lemma hasse_norm [IsCyclic Gal(L/K)] (x : Kˣ)
   -- `α` is the symbol `(χ, x)` in the Brauer group.
   set α : (unitsModule Gal(Ω/K)).H2 :=
     cyclicClass (unitsModule Gal(Ω/K)).ρ χ (DiscreteUnits.ofBase Gal(Ω/K) Ω (Additive.ofMul x))
-  obtain ⟨U, hU_conj, hU_res⟩ : ∃ U : OpenSubgroup Gal(Ω/K),
-      (∀ c : Gal(Ω/K), IsComplexConj c → c ∈ U) ∧ (unitsModule Gal(Ω/K)).resH2 U α = 0 :=
+  obtain ⟨U, hU_conj, hU_res⟩
+      : ∃ U : OpenSubgroup Gal(Ω/K),
+        (∀ c : Gal(Ω/K), IsComplexConj c → c ∈ U) ∧ (unitsModule Gal(Ω/K)).resH2 U α = 0 :=
     hx_pos.exists_resH2_cyclicClass_eq_zero (χ := χ)
   -- At a finite place `v` the symbol vanishes since `x` is a limit of norms in `K_v`.
-  have h_dec {A : ClosurePlace} {v : FinPlace K} (hv : IsPlaceOver A v) :
-      (unitsModule Gal(Ω/K)).resH2 (decompGroup Gal(Ω/K) A) α = 0 :=
+  have h_dec {A : ClosurePlace} {v : FinPlace K} (hv : IsPlaceOver A v)
+      : (unitsModule Gal(Ω/K)).resH2 (decompGroup Gal(Ω/K) A) α = 0 :=
     hv.abelianLift_artinAt_eq_one_iff.mp (abelianLift_artinAt_eq_one_of_mem_closure (h_loc v))
   have hα_zero : α = 0 := albert_brauer_hasse_noether α h_dec U hU_conj hU_res
   exact (cyclicClass_eq_zero_iff_norm (J := hχ) x).mp hα_zero
 
 omit [IsGalois K L] in
-/-- If the kernel of `χ` is the Galois group of `Ω / L`, then the kernel of `χ ∘ artinMap` has index
-`[L : K]` in the finite ideles of `K`. -/
-lemma index_ker_abelianLift_comp_artinMap :
-    ((abelianLift χ).comp (artinMap Γ)).ker.index = finrank K L := by
+/--
+If the kernel of `χ` is the Galois group of `Ω / L`, then the kernel of `χ ∘ artinMap` has index
+`[L : K]` in the finite ideles of `K`.
+-/
+lemma index_ker_abelianLift_comp_artinMap
+    : ((abelianLift χ).comp (artinMap Γ)).ker.index = finrank K L := by
   -- The index of `(abelianLift χ).ker` is unchanged by pulling back along the surjection
   -- `artinMap Γ`, and along the quotient map from `Γ`, where the kernel becomes the group `ker χ`
   -- fixing `L`.
@@ -169,12 +183,14 @@ lemma index_ker_abelianLift_comp_artinMap :
     _ = (ker χ).index := (index_comap_of_surjective _ (mk'_surjective _)).symm
     _ = finrank K L := (eq_fixingSubgroup_of_isProGalois (Γ := Γ) (L := L)).right
 
-/-- The norm group of the extension `L / K` cut out by `χ`: a finite idele `a` of `K` is killed by
+/--
+The norm group of the extension `L / K` cut out by `χ`: a finite idele `a` of `K` is killed by
 `χ ∘ artinMap` exactly when it is a totally positive element of `Kˣ` times the norm of a finite
-idele of `L`. A case of the Artin reciprocity law. -/
-lemma abelianLift_artinMap_eq_one_iff (a : (𝔸f K)ˣ) :
-    abelianLift χ (artinMap Γ a) = 1 ↔
-      ∃ (x : Kˣ) (y : (𝔸f L)ˣ),
+idele of `L`. A case of the Artin reciprocity law.
+-/
+lemma abelianLift_artinMap_eq_one_iff (a : (𝔸f K)ˣ)
+    : abelianLift χ (artinMap Γ a) = 1
+      ↔ ∃ (x : Kˣ) (y : (𝔸f L)ˣ),
         IsTotallyPositive x.val ∧ a = principalIdele x * Units.map (adeleNorm K L) y := by
   -- Let `W` be the group generated by the totally positive elements and the norms from `L`. It lies
   -- in the kernel of `χ ∘ artinMap`, which has index `[L : K]`, while the second inequality
@@ -184,8 +200,8 @@ lemma abelianLift_artinMap_eq_one_iff (a : (𝔸f K)ˣ) :
   let W : Subgroup (𝔸f K)ˣ := P.map principalIdele ⊔ (Units.map (adeleNorm K L)).range
   -- `W` is open: an idele `b` near `1` is a unit everywhere and `χ` kills its local symbols,
   -- so it is a norm.
-  have h_norms_closed :
-      IsClosed ((idelesUnitOff ∅).map (Units.map (adeleNorm K L)) : Set (𝔸f K)ˣ) :=
+  have h_norms_closed
+      : IsClosed ((idelesUnitOff ∅).map (Units.map (adeleNorm K L)) : Set (𝔸f K)ˣ) :=
     (isCompact_idelesUnitOff_empty.image (by fun_prop)).isClosed
   have hW_open : IsOpen (W : Set (𝔸f K)ˣ) := by
     refine isOpen_of_mem_nhds _

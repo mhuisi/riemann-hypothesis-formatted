@@ -30,29 +30,36 @@ variable (𝔰 : Shape)
 lemma Shape.embedH_mem_besselS (h : U (1 : Matrix 𝔰.κ 𝔰.κ ℂ)) : embedH h ∈ besselS :=
   mem_partialUnitriangularGroup_of_mem_floorGroup (toBesselH_mem h)
 
-/-- For `h` in `U(κ)` and `g` in `G₁`, conjugation by `embedH h`, the image of `h` in `G₁`,
+/--
+For `h` in `U(κ)` and `g` in `G₁`, conjugation by `embedH h`, the image of `h` in `G₁`,
 preserves the unipotent group `besselU`: `embedH h * g * (embedH h)⁻¹ ∈ besselU` if and only if
-`g ∈ besselU`. -/
-lemma Shape.embedH_conj_mem_besselU_iff (h : U (1 : Matrix 𝔰.κ 𝔰.κ ℂ)) (g : 𝔰.G₁) :
-    embedH h * g * (embedH h)⁻¹ ∈ besselU ↔ g ∈ besselU :=
+`g ∈ besselU`.
+-/
+lemma Shape.embedH_conj_mem_besselU_iff (h : U (1 : Matrix 𝔰.κ 𝔰.κ ℂ)) (g : 𝔰.G₁)
+    : embedH h * g * (embedH h)⁻¹ ∈ besselU ↔ g ∈ besselU :=
   (mem_normalizer_iff.1 (besselS_le_normalizer_besselU (𝔰.embedH_mem_besselS h)) g).symm
 
-/-- The group `R = U ⋊ H`, as the subgroup of `G₁ × U(κ)` of pairs `(g, h)` with
-`(embedH h)⁻¹ g` in the unipotent group `besselU`. -/
+/--
+The group `R = U ⋊ H`, as the subgroup of `G₁ × U(κ)` of pairs `(g, h)` with
+`(embedH h)⁻¹ g` in the unipotent group `besselU`.
+-/
 def Shape.besselGraph : Subgroup (𝔰.G₁ × U (1 : Matrix 𝔰.κ 𝔰.κ ℂ)) :=
   .ofDiv {s : 𝔰.G₁ × U (1 : Matrix 𝔰.κ 𝔰.κ ℂ) | (embedH s.2)⁻¹ * s.1 ∈ besselU} ⟨1, by simp⟩
     fun s hs t ht ↦ by
-    -- For `s = h u` and `t = h' u'`, the unipotent part of `s t⁻¹` is `h' u u'⁻¹ h'⁻¹`.
-    simpa [mul_assoc] using (𝔰.embedH_conj_mem_besselU_iff t.2 _).2 (mul_mem hs (inv_mem ht))
+      -- For `s = h u` and `t = h' u'`, the unipotent part of `s t⁻¹` is `h' u u'⁻¹ h'⁻¹`.
+      simpa [mul_assoc] using (𝔰.embedH_conj_mem_besselU_iff t.2 _).2 (mul_mem hs (inv_mem ht))
 
-lemma Shape.mem_besselGraph {𝔰 : Shape} {s : 𝔰.G₁ × U (1 : Matrix 𝔰.κ 𝔰.κ ℂ)} :
-    s ∈ 𝔰.besselGraph ↔ (embedH s.2)⁻¹ * s.1 ∈ besselU := Iff.rfl
+lemma Shape.mem_besselGraph {𝔰 : Shape} {s : 𝔰.G₁ × U (1 : Matrix 𝔰.κ 𝔰.κ ℂ)}
+    : s ∈ 𝔰.besselGraph ↔ (embedH s.2)⁻¹ * s.1 ∈ besselU :=
+  Iff.rfl
 
-/-- A pair `s = (g, h)` lies in `R = besselGraph` if and only if `g (embedH h)⁻¹` lies in the
+/--
+A pair `s = (g, h)` lies in `R = besselGraph` if and only if `g (embedH h)⁻¹` lies in the
 unipotent group `besselU`: as the image `H` of `U(κ)` under `embedH` normalizes this group, the
-factor in `H` may be taken on either side. -/
-lemma Shape.mem_besselGraph_iff_mul_inv_mem {𝔰 : Shape} {s : 𝔰.G₁ × U (1 : Matrix 𝔰.κ 𝔰.κ ℂ)} :
-    s ∈ 𝔰.besselGraph ↔ s.1 * (embedH s.2)⁻¹ ∈ besselU := by
+factor in `H` may be taken on either side.
+-/
+lemma Shape.mem_besselGraph_iff_mul_inv_mem {𝔰 : Shape} {s : 𝔰.G₁ × U (1 : Matrix 𝔰.κ 𝔰.κ ℂ)}
+    : s ∈ 𝔰.besselGraph ↔ s.1 * (embedH s.2)⁻¹ ∈ besselU := by
   rw [Shape.mem_besselGraph, ← 𝔰.embedH_conj_mem_besselU_iff s.2, mul_inv_cancel_left]
 
 instance : IsClosed (SetLike.coe 𝔰.besselGraph) :=
@@ -63,8 +70,8 @@ instance : SecondCountableTopology 𝔰.besselGraph :=
 
 /-- The coordinates `(u, h) ↦ (h u, h)` on `R`, with inverse `(g, h) ↦ (h⁻¹ g, h)`. -/
 @[simps!]
-def Shape.besselGraphChart :
-    (𝔰.middleGram (1 : ℂ)).besselU × U (1 : Matrix 𝔰.κ 𝔰.κ ℂ) ≃ₜ 𝔰.besselGraph where
+def Shape.besselGraphChart
+    : (𝔰.middleGram (1 : ℂ)).besselU × U (1 : Matrix 𝔰.κ 𝔰.κ ℂ) ≃ₜ 𝔰.besselGraph where
   toFun q := ⟨(embedH q.2 * q.1.1, q.2), by simp [Shape.mem_besselGraph]⟩
   invFun s := (⟨(embedH s.1.2)⁻¹ * s.1.1, s.2⟩, s.1.2)
   left_inv q := by simp
@@ -78,13 +85,13 @@ instance : 𝔰.besselGraphMeasure.IsOpenPosMeasure :=
   𝔰.besselGraphChart.continuous.isOpenPosMeasure_map 𝔰.besselGraphChart.surjective
 
 /-- The measure `du dh` on `R` is finite on compact sets. -/
-instance Shape.besselGraphMeasure_finiteOnCompacts :
-    IsFiniteMeasureOnCompacts 𝔰.besselGraphMeasure :=
+instance Shape.besselGraphMeasure_finiteOnCompacts
+    : IsFiniteMeasureOnCompacts 𝔰.besselGraphMeasure :=
   Measure.IsFiniteMeasureOnCompacts.map _ 𝔰.besselGraphChart
 
 /-- The measure `du dh` on `R` (`besselGraphMeasure`) is invariant under right multiplication. -/
-instance Shape.besselGraphMeasure_isMulRightInvariant :
-    𝔰.besselGraphMeasure.IsMulRightInvariant := by
+instance Shape.besselGraphMeasure_isMulRightInvariant
+    : 𝔰.besselGraphMeasure.IsMulRightInvariant := by
   -- Right multiplication by `h' u'` sends `(u, h)` to `(h'⁻¹ u h' u', h h')`, and conjugation by
   -- `h'⁻¹` preserves `du`.
   refine ⟨𝔰.besselGraphChart.surjective.forall.2 fun (u', h') ↦ ?_⟩
@@ -94,27 +101,28 @@ instance Shape.besselGraphMeasure_isMulRightInvariant :
     measurePreserving_conj_bessel mem_besselU besselS_le_normalizer_besselU
       (𝔰.embedH_mem_besselS h'⁻¹)
   have h_semiconj : Function.Semiconj 𝔰.besselGraphChart (Prod.map (conj · * u') (· * h'))
-      (· * 𝔰.besselGraphChart (u', h')) :=
-    fun q ↦ Subtype.ext (by simp [conj, mul_assoc])
+      (· * 𝔰.besselGraphChart (u', h')) := fun q ↦
+    Subtype.ext (by simp [conj, mul_assoc])
   exact ((𝔰.besselGraphChart.measurable.measurePreserving _).of_semiconj
     ((h_conj.mul_right _ u').prod (measurePreserving_mul_right volume h')) h_semiconj
     (by fun_prop)).map_eq
 
 /-- The measure `du dh` on `R` (`besselGraphMeasure`) is invariant under left multiplication. -/
-instance Shape.besselGraphMeasure_isMulLeftInvariant :
-    𝔰.besselGraphMeasure.IsMulLeftInvariant := by
+instance Shape.besselGraphMeasure_isMulLeftInvariant : 𝔰.besselGraphMeasure.IsMulLeftInvariant := by
   -- Left multiplication by `h' u'` sends `(u, h)` to `(c h * u, h' h)` with `c h = h⁻¹ u' h`: over
   -- each `h` this is a left translation of `U`.
   refine ⟨𝔰.besselGraphChart.surjective.forall.2 fun (u', h') ↦ ?_⟩
   let c (k : U (1 : Matrix 𝔰.κ 𝔰.κ ℂ)) : (𝔰.middleGram (1 : ℂ)).besselU :=
     ⟨embedH k⁻¹ * u' * (embedH k⁻¹)⁻¹, (𝔰.embedH_conj_mem_besselU_iff k⁻¹ _).2 u'.2⟩
-  have h_skew : MeasurePreserving (fun q ↦ (h' * q.1, c q.1 * q.2))
+  have h_skew : MeasurePreserving
+      (fun q ↦ (h' * q.1, c q.1 * q.2))
       (volume.prod 𝔰.besselHaar) (volume.prod 𝔰.besselHaar) :=
     (measurePreserving_mul_left volume h').skew_product (by fun_prop)
       (.of_forall fun k ↦ map_mul_left_eq_self _ (c k))
-  have h_semiconj : Function.Semiconj 𝔰.besselGraphChart (fun q ↦ (c q.2 * q.1, h' * q.2))
-      (𝔰.besselGraphChart (u', h') * ·) :=
-    fun q ↦ Subtype.ext (by simp [c, mul_assoc])
+  have h_semiconj : Function.Semiconj 𝔰.besselGraphChart
+      (fun q ↦ (c q.2 * q.1, h' * q.2))
+      (𝔰.besselGraphChart (u', h') * ·) := fun q ↦
+    Subtype.ext (by simp [c, mul_assoc])
   exact ((𝔰.besselGraphChart.measurable.measurePreserving _).of_semiconj
     (Measure.measurePreserving_swap.comp (h_skew.comp Measure.measurePreserving_swap)) h_semiconj
     (by fun_prop)).map_eq
@@ -127,31 +135,39 @@ variable {𝔰}
 
 -- Keeps definitional checks from unfolding the finite sums.
 seal Finset.sum in
-/-- For `s = (g, h)` in `R = besselGraph`, the element `g` lies in the Bessel subgroup
-`besselS`. -/
+/--
+For `s = (g, h)` in `R = besselGraph`, the element `g` lies in the Bessel subgroup
+`besselS`.
+-/
 @[simp]
-lemma besselGraph_fst_mem_besselS (s : 𝔰.besselGraph) :
-    (s : 𝔰.G₁ × U (1 : Matrix 𝔰.κ 𝔰.κ ℂ)).1 ∈ besselS := by
+lemma besselGraph_fst_mem_besselS (s : 𝔰.besselGraph)
+    : (s : 𝔰.G₁ × U (1 : Matrix 𝔰.κ 𝔰.κ ℂ)).1 ∈ besselS := by
   obtain ⟨⟨g, h⟩, h_mem⟩ := s
   have h_unipotent : g * (embedH h)⁻¹ ∈ besselU :=
     (Shape.mem_besselGraph_iff_mul_inv_mem (s := (g, h))).1 h_mem
   exact mem_besselS.2 ⟨g * (embedH h)⁻¹, h_unipotent, embedH h, toBesselH_mem h, by simp⟩
 
-variable {ε : 𝔰.BesselIndex → ℤˣ} [SignFrame 𝔰.J₁ ε] {I : Type*} [Fintype I] [DecidableEq I]
+variable
+  {ε : 𝔰.BesselIndex → ℤˣ} [SignFrame 𝔰.J₁ ε]
+  {I : Type*} [Fintype I] [DecidableEq I]
   (l : HCParam ε) (rep : U (1 : Matrix 𝔰.κ 𝔰.κ ℂ) →* unitaryGroup I ℂ) (x : 𝔰.G₁)
   (v : EuclideanSpace ℂ I)
 
-/-- For a Harish-Chandra parameter `l`, with `c_λ = l.dsCoeffInFrame` its discrete-series
+/--
+For a Harish-Chandra parameter `l`, with `c_λ = l.dsCoeffInFrame` its discrete-series
 coefficient read in the frame of `SignFrame`, a unitary representation `rep` of `U(κ)` and a vector
 `v`, the integrand `c_λ(x⁻¹ s y) π(s)⁻¹ v` at `s` in `R`. For `s = (g, h)` the operator `π(s)⁻¹` is
 the scalar `wave (-simpleRootSum g)` times `rep h⁻¹` (through `besselValueRep`), where
-`wave c = exp (c - conj c)` and `simpleRootSum` is the sum of the superdiagonal frame entries. -/
+`wave c = exp (c - conj c)` and `simpleRootSum` is the sum of the superdiagonal frame entries.
+-/
 def besselIntegrand (y : 𝔰.G₁) (s : 𝔰.besselGraph) : EuclideanSpace ℂ I :=
-  l.dsCoeffInFrame (x⁻¹ * (s.1.1 * y)) • wave (-simpleRootSum s.1.1) •
-    (besselValueRep rep s.1.2⁻¹).1 v
+  l.dsCoeffInFrame (x⁻¹ * (s.1.1 * y)) • wave (- simpleRootSum s.1.1)
+    • (besselValueRep rep s.1.2⁻¹).1 v
 
-/-- The integral `∫_R c_λ(x⁻¹ s y) π(s)⁻¹ v ds` over `R` with the measure `du dh`, which defines
-the Bessel function. -/
+/--
+The integral `∫_R c_λ(x⁻¹ s y) π(s)⁻¹ v ds` over `R` with the measure `du dh`, which defines
+the Bessel function.
+-/
 def besselAverage (y : 𝔰.G₁) : EuclideanSpace ℂ I :=
   ∫ s : 𝔰.besselGraph, besselIntegrand l rep x v y s ∂𝔰.besselGraphMeasure
 

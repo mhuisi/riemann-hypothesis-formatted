@@ -27,15 +27,17 @@ variable (E : Type*) {ι : Type*} [Field E] [CMType E]
 noncomputable def principalAdeleUnits : Subgroup (𝔸 E)ˣ :=
   (Units.map (toAdele (E := E)).toMonoidHom).range
 
-/-- For a CM field E, the principal ideles, that is the image of E^× in the units of the adele ring,
+/--
+For a CM field E, the principal ideles, that is the image of E^× in the units of the adele ring,
 form a discrete subgroup: they map into the discrete set `New.ratAdeles E`, the image of E in the
-adeles. -/
+adeles.
+-/
 instance : DiscreteTopology (principalAdeleUnits E) := by
   -- The principal ideles lie in the preimage of the discrete set of rational adeles.
   have h_rat : IsDiscrete (ratAdeles E : Set (𝔸 E)) :=
     ⟨isCovolOneLattice_ratAdeles.toDiscreteTopology⟩
-  have h_subset :
-      (principalAdeleUnits E : Set (𝔸 E)ˣ) ⊆ Units.val ⁻¹' (ratAdeles E : Set (𝔸 E)) := by
+  have h_subset
+      : (principalAdeleUnits E : Set (𝔸 E)ˣ) ⊆ Units.val ⁻¹' (ratAdeles E : Set (𝔸 E)) := by
     simp [principalAdeleUnits, ratAdeles, Set.range_subset_iff]
   have h_discrete : IsDiscrete (Units.val ⁻¹' (ratAdeles E : Set (𝔸 E))) :=
     h_rat.preimage (by fun_prop) Units.val_injective
@@ -44,16 +46,18 @@ instance : DiscreteTopology (principalAdeleUnits E) := by
 @[simp]
 lemma piUnits_val_apply_ne_zero (a : (ι → ℂ)ˣ) (x : ι) : a.val x ≠ 0 := (a.isUnit.apply x).ne_zero
 
-/-- For a finite index type `ι`, the function `a ↦ ∏ x, (1 + (log |a x|) ^ 2)⁻¹` on the group
-`(ι → ℂ)ˣ` is integrable for Haar measure. -/
-lemma integrable_prod_inv_one_add_log_sq [Fintype ι] :
-    Integrable (fun a : (ι → ℂ)ˣ ↦ ∏ x : ι, (1 + Real.log ‖a.val x‖ ^ 2)⁻¹) haar := by
+/--
+For a finite index type `ι`, the function `a ↦ ∏ x, (1 + (log |a x|) ^ 2)⁻¹` on the group
+`(ι → ℂ)ˣ` is integrable for Haar measure.
+-/
+lemma integrable_prod_inv_one_add_log_sq [Fintype ι]
+    : Integrable (fun a : (ι → ℂ)ˣ ↦ ∏ x : ι, (1 + Real.log ‖a.val x‖ ^ 2)⁻¹) haar := by
   -- Push Haar measure forward along the map `L` sending `a` to `fun x ↦ log |a x|`. The image is
   -- translation invariant and finite on compact sets, hence a multiple of Lebesgue measure on
   -- `ι → ℝ`, for which `t ↦ ∏ x, (1 + t x ^ 2)⁻¹` is integrable.
   let L (a : (ι → ℂ)ˣ) (x : ι) : ℝ := Real.log ‖a.val x‖
-  have h_unit (t : ι → ℝ) (θ : ι → Circle) :
-      IsUnit fun x : ι ↦ exp (t x : ℝ) * (θ x : Circle) := by simp [Pi.isUnit_iff]
+  have h_unit (t : ι → ℝ) (θ : ι → Circle) : IsUnit fun x : ι ↦ exp (t x : ℝ) * (θ x : Circle) := by
+    simp [Pi.isUnit_iff]
   -- polar coordinates: the unit with moduli `exp (t x)` and phases `θ x`
   let polar (t : ι → ℝ) (θ : ι → Circle) : (ι → ℂ)ˣ := (h_unit t θ).unit
   have hL : Measurable L := by
@@ -88,7 +92,8 @@ lemma integrable_prod_inv_one_add_log_sq [Fintype ι] :
     rw [(haar.map L).isAddLeftInvariant_eq_smul volume]
     have h_volume : Integrable (fun t : ι → ℝ ↦ ∏ x : ι, (1 + t x ^ 2)⁻¹) := by
       rw [volume_pi]
-      exact Integrable.fintype_prod (f := fun _ (s : ℝ) ↦ (1 + s ^ 2)⁻¹)
+      exact Integrable.fintype_prod
+        (f := fun _ (s : ℝ) ↦ (1 + s ^ 2)⁻¹)
         fun _ ↦ integrable_inv_one_add_sq
     exact h_volume.smul_measure_nnreal
   exact h_int.comp_measurable hL

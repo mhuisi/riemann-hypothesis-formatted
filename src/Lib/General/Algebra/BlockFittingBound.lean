@@ -28,17 +28,23 @@ General linear algebra over a discrete valuation ring (elementary divisors).
 
 open IsDiscreteValuationRing Matrix Module Submodule Fintype Ideal LinearMap
 
-/-- Let O be a discrete valuation ring (`DVR O`) with normalized valuation v = `addVal O`, let
+/--
+Let O be a discrete valuation ring (`DVR O`) with normalized valuation v = `addVal O`, let
 ψ : A → M_d(O) be onto, N an A-submodule of A^ι, p ≠ 0 and b < v(p). Write `QuotSpan p` for O/p,
 on whose vectors indexed by d the matrices act by multiplication. If all w in ((O/p)^d)^ι with
 ∑ j, ψ(t j) • w_j = 0 for every t ∈ N lie in a submodule Z of length at most b, then some square
-matrix B with rows in N has v(det ψ(B)) ≤ b, where ψ(B) is read as a block matrix. -/
-lemma New.Selmer.exists_rows_addVal_det_le {O ι A d : Type} [CommRing O] [DVR O] [Fintype ι]
-    [DecidableEq ι] [Ring A] [Algebra O A] [Fintype d] [DecidableEq d] (ψ : A →ₐ[O] Matrix d d O)
-    (hψ : Function.Surjective ψ) (N : Submodule A (ι → A)) {p : O} (hp : p ≠ 0) {b : ℕ∞}
-    (hb : b < addVal O p) {Z : Submodule O (ι → d → QuotSpan p)} (hZ : length O Z ≤ b)
-    (hZ_mem : ∀ w : ι → d → QuotSpan p, (∀ t ∈ N, ∑ j : ι, ψ (t j) • w j = 0) → w ∈ Z) :
-    ∃ B : Matrix ι ι A,
+matrix B with rows in N has v(det ψ(B)) ≤ b, where ψ(B) is read as a block matrix.
+-/
+lemma New.Selmer.exists_rows_addVal_det_le
+    {O ι A d : Type} [CommRing O] [DVR O] [Fintype ι] [DecidableEq ι] [Ring A] [Algebra O A]
+    [Fintype d] [DecidableEq d]
+    (ψ : A →ₐ[O] Matrix d d O) (hψ : Function.Surjective ψ)
+    (N : Submodule A (ι → A))
+    {p : O} (hp : p ≠ 0)
+    {b : ℕ∞} (hb : b < addVal O p)
+    {Z : Submodule O (ι → d → QuotSpan p)} (hZ : length O Z ≤ b)
+    (hZ_mem : ∀ w : ι → d → QuotSpan p, (∀ t ∈ N, ∑ j : ι, ψ (t j) • w j = 0) → w ∈ Z)
+    : ∃ B : Matrix ι ι A,
       (∀ i : ι, B i ∈ N) ∧ addVal O (Matrix.comp ι ι d d O (B.map ψ)).det ≤ b := by
   -- Let σ(t) ∈ O^(ι × d) be the sum of the rows of the d × (ι × d) matrix ψ(t). As ψ is onto, σ(N)
   -- is the span of all rows of the ψ(t), t ∈ N. Apply duality to the lattice
@@ -91,16 +97,19 @@ abbrev DivisibleQuot : Type := FractionRing O ⧸ (1 : Submodule O (FractionRing
 
 /-- Division by `a`, from O/a to K/O: the class of t goes to the class of t/a. -/
 noncomputable def divQuot (a : O) : QuotSpan a →ₗ[O] DivisibleQuot O :=
-  (Ideal.span {a}).liftQ ((1 : Submodule O (FractionRing O)).mkQ ∘ₗ
-      LinearMap.toSpanSingleton O (FractionRing O) (algebraMap O (FractionRing O) a)⁻¹)
+  (Ideal.span {a}).liftQ
+    ((1 : Submodule O (FractionRing O)).mkQ
+      ∘ₗ LinearMap.toSpanSingleton O (FractionRing O) (algebraMap O (FractionRing O) a)⁻¹)
     (by
       rw [Ideal.span_singleton_le_iff_mem, mem_ker, LinearMap.comp_apply]
       rcases eq_or_ne a 0 with rfl | ha
       · simp
       · exact (Submodule.Quotient.mk_eq_zero _).2 (mem_one.2 ⟨1, by simp [Algebra.smul_def, ha]⟩))
 
-lemma divQuot_mk (a t : O) : divQuot a (Ideal.Quotient.mk _ t) =
-    Submodule.Quotient.mk (t • (algebraMap O (FractionRing O) a)⁻¹) := rfl
+lemma divQuot_mk (a t : O)
+    : divQuot a (Ideal.Quotient.mk _ t)
+      = Submodule.Quotient.mk (t • (algebraMap O (FractionRing O) a)⁻¹) :=
+  rfl
 
 lemma divQuot_injective {a : O} (ha : a ≠ 0) : Function.Injective (divQuot a) := by
   rw [injective_iff_map_eq_zero, Ideal.Quotient.mk_surjective.forall]
@@ -111,24 +120,30 @@ lemma divQuot_injective {a : O} (ha : a ≠ 0) : Function.Injective (divQuot a) 
   simp [map_mul, hs, ha, Algebra.smul_def, mul_left_comm (algebraMap O (FractionRing O) a)]
 
 /-- An element of K/O killed by `a ≠ 0` is the image of some x in O/a under division by `a`. -/
-lemma exists_divQuot_eq {a : O} (ha : a ≠ 0) {y : DivisibleQuot O} (hy : a • y = 0) :
-    ∃ x : QuotSpan a, divQuot a x = y := by
+lemma exists_divQuot_eq {a : O} (ha : a ≠ 0) {y : DivisibleQuot O} (hy : a • y = 0)
+    : ∃ x : QuotSpan a, divQuot a x = y := by
   obtain ⟨r, rfl⟩ := Submodule.Quotient.mk_surjective _ y
   rw [← Submodule.Quotient.mk_smul, Submodule.Quotient.mk_eq_zero, mem_one] at hy
   obtain ⟨s, hs⟩ := hy
   exact ⟨Ideal.Quotient.mk _ s, by simp [divQuot_mk, Algebra.smul_def, hs, ha, mul_comm _ r]⟩
 
 lemma exists_smul_eq_zero_divisibleQuot (y : DivisibleQuot O) : ∃ d : O, d ≠ 0 ∧ d • y = 0 := by
-  induction y using Submodule.Quotient.induction_on with | _ r =>
-  obtain ⟨d, s, hs⟩ := IsLocalization.exists_integer_multiple (nonZeroDivisors O) r
-  exact ⟨d, nonZeroDivisors.coe_ne_zero d, (Submodule.Quotient.mk_eq_zero _).2 (mem_one.2 ⟨s, hs⟩)⟩
+  induction y using Submodule.Quotient.induction_on with
+  | _ r =>
+    obtain ⟨d, s, hs⟩ := IsLocalization.exists_integer_multiple (nonZeroDivisors O) r
+    exact
+      ⟨d, nonZeroDivisors.coe_ne_zero d, (Submodule.Quotient.mk_eq_zero _).2 (mem_one.2 ⟨s, hs⟩)⟩
 
-/-- Let `X` be a torsion module over a discrete valuation ring `O` with additive valuation `v`. If
+/--
+Let `X` be a torsion module over a discrete valuation ring `O` with additive valuation `v`. If
 the `a`-torsion of `X` is not all of `X`, then it contains a copy of `O / a`, so its length is at
-least `v(a)`. -/
-lemma addVal_le_length_torsionBy {X : Type} [AddCommGroup X] [Module O X] {a : O}
-    (hX : ∀ z : X, ∃ a' : O, a' ≠ 0 ∧ a' • z = 0) (h_ne : torsionBy O X a ≠ ⊤) :
-    addVal O a ≤ length O (torsionBy O X a) := by
+least `v(a)`.
+-/
+lemma addVal_le_length_torsionBy
+    {X : Type} [AddCommGroup X] [Module O X]
+    {a : O}
+    (hX : ∀ z : X, ∃ a' : O, a' ≠ 0 ∧ a' • z = 0) (h_ne : torsionBy O X a ≠ ⊤)
+    : addVal O a ≤ length O (torsionBy O X a) := by
   obtain ⟨z, hz⟩ : ∃ z : X, a • z ≠ 0 := by simpa [eq_top_iff'] using h_ne
   -- The annihilator of `z` is generated by some `b`, which does not divide `a`; so `b = a c`.
   obtain ⟨b, hb⟩ : ∃ b : O, ∀ t : O, t • z = 0 ↔ b ∣ t :=
@@ -149,17 +164,20 @@ lemma addVal_le_length_torsionBy {X : Type} [AddCommGroup X] [Module O X] {a : O
   exact length_le_of_injective ((Ideal.span {a}).liftQ mulW h_ker.le)
     (LinearMap.ker_eq_bot.1 ((Ideal.span {a}).ker_liftQ_eq_bot' mulW h_ker))
 
-/-- Let O be a discrete valuation ring with normalized valuation v = `addVal O` and fraction field
+/--
+Let O be a discrete valuation ring with normalized valuation v = `addVal O` and fraction field
 K, and write `DivisibleQuot O` for K/O. Let ψ : A → M_d(O) be onto and N an A-submodule of A^ι.
 If all w in ((K/O)^d)^ι with ∑ j, ψ(t j) • w_j = 0 for every t ∈ N lie in a submodule Z of length
 at most b, then some square matrix B with rows in N has v(det ψ(B)) ≤ b, where ψ(B) is read as a
-block matrix. A matrix acts on (K/O)^d by multiplication. -/
-lemma exists_rows_addVal_det_le_of_divisible {ι A d : Type} [Fintype ι] [DecidableEq ι] [Ring A]
-    [Algebra O A] [Fintype d] [DecidableEq d] (ψ : A →ₐ[O] Matrix d d O)
-    (hψ : Function.Surjective ψ) (N : Submodule A (ι → A)) {b : ℕ}
-    {Z : Submodule O (ι → d → DivisibleQuot O)} (hZ : length O Z ≤ b)
-    (hZ_mem : ∀ w : ι → d → DivisibleQuot O, (∀ t ∈ N, ∑ j : ι, ψ (t j) • w j = 0) → w ∈ Z) :
-    ∃ B : Matrix ι ι A,
+block matrix. A matrix acts on (K/O)^d by multiplication.
+-/
+lemma exists_rows_addVal_det_le_of_divisible
+    {ι A d : Type} [Fintype ι] [DecidableEq ι] [Ring A] [Algebra O A] [Fintype d] [DecidableEq d]
+    (ψ : A →ₐ[O] Matrix d d O) (hψ : Function.Surjective ψ)
+    (N : Submodule A (ι → A))
+    {b : ℕ} {Z : Submodule O (ι → d → DivisibleQuot O)} (hZ : length O Z ≤ b)
+    (hZ_mem : ∀ w : ι → d → DivisibleQuot O, (∀ t ∈ N, ∑ j : ι, ψ (t j) • w j = 0) → w ∈ Z)
+    : ∃ B : Matrix ι ι A,
       (∀ i : ι, B i ∈ N) ∧ addVal O (Matrix.comp ι ι d d O (B.map ψ)).det ≤ b := by
   -- Take `p = ϖ ^ (b + 1)`. Division by `p` embeds the vectors modulo `p` killed by `N` in `Z`.
   obtain ⟨ϖ, hϖ⟩ := exists_irreducible O

@@ -22,9 +22,11 @@ variable (h : DirichletLNonvanishingRightOfHalf)
 
 include h
 
-/-- Assume `DirichletLNonvanishingRightOfHalf` (hypothesis `h`): Dirichlet L-functions do not vanish
+/--
+Assume `DirichletLNonvanishingRightOfHalf` (hypothesis `h`): Dirichlet L-functions do not vanish
 for Re s > 1/2, the pole excepted. Then `DirichletLZerosOnLine` holds: every zero s of a Dirichlet
-L-function with 0 < Re s < 1 has Re s = 1/2. -/
+L-function with 0 < Re s < 1 has Re s = 1/2.
+-/
 lemma New.zeros_on_line : DirichletLZerosOnLine := by
   intro N _ χ s h_pos h_lt h_zero
   have hs0 : 1 - s ≠ 1 := by aesop
@@ -41,9 +43,11 @@ lemma New.zeros_on_line : DirichletLZerosOnLine := by
   rw [sub_re, one_re] at h_le'
   linarith
 
-/-- Assume `DirichletLNonvanishingRightOfHalf` (hypothesis `h`): Dirichlet L-functions do not vanish
+/--
+Assume `DirichletLNonvanishingRightOfHalf` (hypothesis `h`): Dirichlet L-functions do not vanish
 for Re s > 1/2, the pole excepted. Then `RiemannZetaZerosOnLine` holds: every zero s of ζ outside
-{1, −2, −4, …} has Re s = 1/2. -/
+{1, −2, −4, …} has Re s = 1/2.
+-/
 lemma New.zeta_zeros_on_line : RiemannZetaZerosOnLine := by
   intro s h_zero h_nontriv hs1
   have hs0 : s ≠ 0 := by grind [riemannZeta_zero]
